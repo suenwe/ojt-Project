@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'username',
@@ -20,6 +21,7 @@ use Illuminate\Notifications\Notifiable;
     'two_factor_expires_at',
     'website',
     'ip_address',
+    'birthday' => 'date',
 ])]
 
 #[Hidden(['password', 'two_factor_code'])]
@@ -43,5 +45,35 @@ class User extends Authenticatable
             'password' => 'hashed',
             'two_factor_expires_at' => 'datetime',
         ];
+    }
+
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Post::class, 'user_id', 'user_id');
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class, 'user_id', 'user_id');
+    }
+
+    public function reactions(): HasMany
+    {
+        return $this->hasMany(Reaction::class, 'user_id', 'user_id');
+    }
+
+    public function postViews(): HasMany
+    {
+        return $this->hasMany(PostView::class, 'user_id', 'user_id');
+    }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class, 'reporter_id', 'user_id');
+    }
+
+    public function receivedNotifications(): HasMany
+    {
+        return $this->hasMany(ShowNotification::class, 'user_id', 'user_id');
     }
 }

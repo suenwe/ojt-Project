@@ -24,6 +24,7 @@ return new class extends Migration
             $table->timestamp('two_factor_expires_at')->nullable();
             $table->string('website')->nullable();
             $table->string('IP_address', 45)->nullable();
+            $table->date('birthday')->nullable();
         });
     }
 
