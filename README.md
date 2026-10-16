@@ -44,6 +44,3 @@ test suite does not require a running PostgreSQL server.
 
 ## Upstream notes
 
-Updated by
-Updated by
-Update test
