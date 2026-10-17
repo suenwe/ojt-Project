@@ -6,9 +6,9 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Vibely | Forgot Password</title>
+    <title>Knowvia | Forgot Password</title>
 
-    <!-- Shared Vibely CSS -->
+    <!-- Shared Knowvia CSS -->
     <link rel="stylesheet"
           href="{{ asset('assets/prototype.css') }}">
 
@@ -127,10 +127,10 @@
 
     <section class="panel forgot-card">
 
-        <!-- Vibely Branding -->
+        <!-- Knowvia Branding -->
         <div class="forgot-brand">
             <span class="brand-mark">V</span>
-            <h1>Vibely</h1>
+            <h1>Knowvia</h1>
         </div>
 
         <h2 class="forgot-title">

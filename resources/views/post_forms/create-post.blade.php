@@ -2,9 +2,9 @@
 
 @section('content')
 <header class="topbar">
-    <a class="brand" href="{{ url('/') }}" aria-label="Vibely home">
+    <a class="brand" href="{{ url('/') }}" aria-label="Knowvia home">
         <span class="brand-mark">V</span>
-        <span>Vibely</span>
+        <span>Knowvia</span>
     </a>
 
     <div class="top-actions">

@@ -1,4 +1,4 @@
-# Vibely
+# Knowvia
 
 Laravel 13 application configured to use PostgreSQL.
 

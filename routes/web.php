@@ -16,11 +16,6 @@ Route::get('/auth-preview', function () {
     return view('ui_forms.login');
 });
 
-//for admin ui preview
-Route::get('/admin-preview', function () {
-    return view('admin_ui.dashboard');
-});
-
 Route::get('/ui-preview/{form}', function (string $form) {
     $forms = [
         'change-password',

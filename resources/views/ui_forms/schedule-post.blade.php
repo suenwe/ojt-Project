@@ -6,9 +6,9 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Vibely | Schedule Post</title>
+    <title>Knowvia | Schedule Post</title>
 
-    <!-- Shared Vibely Design -->
+    <!-- Shared Knowvia Design -->
     <link rel="stylesheet"
           href="{{ asset('assets/prototype.css') }}">
 
@@ -242,7 +242,7 @@
 
     <a class="brand" href="#schedule">
         <span class="brand-mark">V</span>
-        Vibely
+        Knowvia
     </a>
 
     <div class="top-actions">

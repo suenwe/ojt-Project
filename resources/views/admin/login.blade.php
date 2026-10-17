@@ -3,12 +3,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Administrator sign in · {{ config('app.name', 'Vibely') }}</title>
+    <title>Administrator sign in · {{ config('app.name', 'Knowvia') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="admin-login-body">
     <main class="login-card">
-        <a class="login-brand" href="{{ url('/') }}"><span class="brand-mark">V</span><span><strong>Vibely</strong><small>ADMIN CONSOLE</small></span></a>
+        <a class="login-brand" href="{{ url('/') }}"><span class="brand-mark">V</span><span><strong>Knowvia</strong><small>ADMIN CONSOLE</small></span></a>
         <p class="eyebrow">ADMINISTRATOR ACCESS</p>
         <h1>Welcome back</h1>
         <p class="login-subtitle">Sign in with an administrator account to continue.</p>

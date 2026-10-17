@@ -3,12 +3,12 @@
 @section('content')
     <main class="auth-shell">
         <section class="auth-intro">
-            <a class="brand auth-brand" href="/" aria-label="Vibely home">
+            <a class="brand auth-brand" href="/" aria-label="Knowvia home">
                 <span class="brand-mark">V</span>
-                <span>Vibely</span>
+                <span>Knowvia</span>
             </a>
             <div>
-                <p class="auth-eyebrow">Welcome to Vibely</p>
+                <p class="auth-eyebrow">Welcome to Knowvia</p>
                 <h1>Learn, share, and grow together.</h1>
                 <p class="auth-description">Connect with your community, share what you are working on, and keep up with the conversations that matter to you.</p>
             </div>
