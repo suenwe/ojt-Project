@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vibely | Report Post Preview</title>
+    <title>Knowvia | Report Post Preview</title>
     <link rel="stylesheet" href="{{ asset('assets/prototype.css') }}">
 
     <style>
-        /* Report form preview uses the shared Vibely stylesheet. */
+        /* Report form preview uses the shared Knowvia stylesheet. */
         .rp-main { display: grid; min-width: 0; gap: 17px; }
         .rp-notice { padding: 12px 14px; color: var(--brand); background: var(--brand-soft); border: 1px solid var(--line); border-radius: 7px; font-size: 12px; }
         .rp-example { padding: 18px; }
@@ -48,7 +48,7 @@
 </head>
 <body>
     <header class="topbar">
-        <a class="brand" href="#report-preview"><span class="brand-mark">V</span> Vibely</a>
+        <a class="brand" href="#report-preview"><span class="brand-mark">V</span> Knowvia</a>
         <div class="top-actions">
             <a class="top-link" href="/ui-preview/create-post">Create Post</a>
             <span class="avatar" aria-label="Signed-in demo user Alex Morgan">AM</span>
@@ -109,7 +109,7 @@
                     </div>
                 </div>
                 <span class="rp-post-category">General Discussion</span>
-                <p class="rp-post-copy">Hello everyone! I'm sharing this sample post so we can test the report feature in Vibely.</p>
+                <p class="rp-post-copy">Hello everyone! I'm sharing this sample post so we can test the report feature in Knowvia.</p>
             </article>
 
             <p class="rp-result" id="report-result" role="status" hidden></p>

@@ -6,9 +6,9 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Vibely | Create Account</title>
+    <title>Knowvia | Create Account</title>
 
-    <!-- Shared Vibely CSS -->
+    <!-- Shared Knowvia CSS -->
     <link rel="stylesheet"
           href="{{ asset('assets/prototype.css') }}">
 
@@ -169,7 +169,7 @@
         <!-- Brand -->
         <div class="register-brand">
             <span class="brand-mark">V</span>
-            <h1>Vibely</h1>
+            <h1>Knowvia</h1>
         </div>
 
         <h2 class="register-title">
@@ -177,7 +177,7 @@
         </h2>
 
         <p class="subtext">
-            Join Vibely and connect with your community.
+            Join Knowvia and connect with your community.
         </p>
 
         <p class="required-note">

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Admin console · {{ config('app.name', 'Vibely') }}</title>
+    <title>Admin console · {{ config('app.name', 'Knowvia') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="admin-body">
@@ -12,7 +12,7 @@
         <aside class="sidebar">
             <a class="brand" href="{{ route('admin.dashboard') }}">
                 <span class="brand-mark">V</span>
-                <span><strong>Vibely</strong><small>ADMIN CONSOLE</small></span>
+                <span><strong>Knowvia</strong><small>ADMIN CONSOLE</small></span>
             </a>
 
             <div class="nav-label">WORKSPACE</div>
@@ -344,7 +344,7 @@
                     </section>
                 @endif
 
-                <footer class="page-footer"><span>Vibely Admin Console</span><span>Manage your community with care</span></footer>
+                <footer class="page-footer"><span>Knowvia Admin Console</span><span>Manage your community with care</span></footer>
             </div>
         </main>
     </div>

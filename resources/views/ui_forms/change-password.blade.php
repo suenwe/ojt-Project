@@ -6,9 +6,9 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Vibely | Change Password</title>
+    <title>Knowvia | Change Password</title>
 
-    <!-- Shared Vibely CSS -->
+    <!-- Shared Knowvia CSS -->
     <link rel="stylesheet"
           href="{{ asset('assets/prototype.css') }}">
 
@@ -161,10 +161,10 @@
 
     <section class="panel password-card">
 
-        <!-- Vibely Logo -->
+        <!-- Knowvia Logo -->
         <div class="password-brand">
             <span class="brand-mark">V</span>
-            <h1>Vibely</h1>
+            <h1>Knowvia</h1>
         </div>
 
         <h2 class="password-title">
@@ -172,7 +172,7 @@
         </h2>
 
         <p class="subtext">
-            Keep your Vibely account secure
+            Keep your Knowvia account secure
             by updating your password.
         </p>
 

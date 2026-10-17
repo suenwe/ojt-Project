@@ -6,9 +6,9 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Vibely | Sign In</title>
+    <title>Knowvia | Sign In</title>
 
-    <!-- Shared Vibely Design -->
+    <!-- Shared Knowvia Design -->
     <link rel="stylesheet"
           href="{{ asset('assets/prototype.css') }}">
 
@@ -172,12 +172,12 @@
 
     <section class="panel login-card">
 
-        <!-- Vibely Logo -->
+        <!-- Knowvia Logo -->
         <div class="login-brand">
 
             <span class="brand-mark">V</span>
 
-            <h1>Vibely</h1>
+            <h1>Knowvia</h1>
 
         </div>
 
