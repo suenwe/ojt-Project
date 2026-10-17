@@ -15,3 +15,11 @@ Route::get('/auth-preview', function () {
 Route::get('/admin-preview', function () {
     return view('admin_ui.dashboard');
 });
+
+Route::get('/create-post', function () {
+    return view('welcome', ['hidePosts' => true, 'isScheduling' => false]);
+})->name('posts.create');
+
+Route::get('/schedule-post', function () {
+    return view('welcome', ['hidePosts' => true, 'isScheduling' => true]);
+})->name('posts.schedule');

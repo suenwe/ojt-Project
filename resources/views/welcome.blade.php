@@ -2,7 +2,7 @@
 
 @section('content')
     <header class="topbar">
-        <a class="brand" href="#home" aria-label="Vibely home">
+        <a class="brand" href="{{ url('/') }}" aria-label="Vibely home">
             <span class="brand-mark">V</span>
             <span>Vibely</span>
         </a>
@@ -53,8 +53,8 @@
 
             <div class="feed-actions">
                 <div class="feed-action-buttons">
-                    <a class="btn" href="#create-post">Create post</a>
-                    <a class="btn secondary" href="#schedule-post">Schedule post</a>
+                    <a class="btn" href="{{ route('posts.create') }}">Create post</a>
+                    <a class="btn secondary" href="{{ route('posts.schedule') }}">Schedule post</a>
                 </div>
                 <label class="sort-control" for="post-sort">
                     Sort by:
@@ -72,33 +72,37 @@
                 </label>
             </div>
 
-            <section class="feed-list" aria-label="Latest posts">
-                <article class="panel post-card">
-                    <div class="post-header">
-                        <span class="avatar">JC</span>
-                        <div class="post-author">
-                            <strong>James Carter</strong>
-                            <small>Today at 10:30 AM</small>
+            @if($hidePosts ?? false)
+                @include('post_forms.form', ['isScheduling' => $isScheduling ?? false])
+            @else
+                <section class="feed-list" aria-label="Latest posts">
+                    <article class="panel post-card">
+                        <div class="post-header">
+                            <span class="avatar">JC</span>
+                            <div class="post-author">
+                                <strong>James Carter</strong>
+                                <small>Today at 10:30 AM</small>
+                            </div>
+                            <span class="post-category">Technology</span>
                         </div>
-                        <span class="post-category">Technology</span>
-                    </div>
-                    <p class="post-text">Finished the first pass at the Posts migration today. The category relationship was confusing at first, but it finally started to make sense.</p>
-                    <div class="post-visual">Your community updates will appear here.</div>
-                    <div class="post-counts"><span>24 reactions</span><span>2 comments · 18 views</span></div>
-                    <div class="post-actions">
-                        <button class="post-action" type="button">♡ React</button>
-                        <button class="post-action" type="button">Comment</button>
-                    </div>
-                    <div class="comment-area">
-                        <div class="comment-row"><strong>Sarah Wilson</strong> Nice! I had the same issue with the foreign key.</div>
-                        <form class="comment-form" action="#" method="POST">
-                            @csrf
-                            <input type="text" name="content" placeholder="Write a comment..." aria-label="Write a comment">
-                            <button class="btn small" type="submit">Send</button>
-                        </form>
-                    </div>
-                </article>
-            </section>
+                        <p class="post-text">Finished the first pass at the Posts migration today. The category relationship was confusing at first, but it finally started to make sense.</p>
+                        <div class="post-visual">Your community updates will appear here.</div>
+                        <div class="post-counts"><span>24 reactions</span><span>2 comments · 18 views</span></div>
+                        <div class="post-actions">
+                            <button class="post-action" type="button">♡ React</button>
+                            <button class="post-action" type="button">Comment</button>
+                        </div>
+                        <div class="comment-area">
+                            <div class="comment-row"><strong>Sarah Wilson</strong> Nice! I had the same issue with the foreign key.</div>
+                            <form class="comment-form" action="#" method="POST">
+                                @csrf
+                                <input type="text" name="content" placeholder="Write a comment..." aria-label="Write a comment">
+                                <button class="btn small" type="submit">Send</button>
+                            </form>
+                        </div>
+                    </article>
+                </section>
+            @endif
 
         </main>
 
