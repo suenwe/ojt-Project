@@ -1,0 +1,240 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Vibely | Forgot Password</title>
+
+    <!-- Shared Vibely CSS -->
+    <link rel="stylesheet"
+          href="{{ asset('assets/prototype.css') }}">
+
+    <style>
+        .forgot-container {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px 16px;
+        }
+
+        .forgot-card {
+            width: 100%;
+            max-width: 440px;
+            padding: 32px;
+        }
+
+        .forgot-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .forgot-brand h1 {
+            margin: 0;
+            font-size: 28px;
+            color: var(--brand);
+        }
+
+        .forgot-title {
+            text-align: center;
+            font-size: 21px;
+            margin-bottom: 8px;
+        }
+
+        .forgot-card .subtext {
+            text-align: center;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .required-note {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 18px;
+        }
+
+        .required-star {
+            color: var(--red);
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        .form-group .field {
+            width: 100%;
+            padding: 12px;
+        }
+
+        .form-group .field:focus {
+            border-color: var(--brand);
+            outline: 2px solid var(--brand-soft);
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 12px;
+        }
+
+        .back-link {
+            margin-top: 24px;
+            text-align: center;
+        }
+
+        .back-link a {
+            color: var(--brand);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .preview-message {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 5px;
+            background: var(--green-soft);
+            color: var(--green);
+            font-size: 12px;
+        }
+
+        .preview-message[hidden] {
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .forgot-card {
+                padding: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="forgot-container">
+
+    <section class="panel forgot-card">
+
+        <!-- Vibely Branding -->
+        <div class="forgot-brand">
+            <span class="brand-mark">V</span>
+            <h1>Vibely</h1>
+        </div>
+
+        <h2 class="forgot-title">
+            Forgot Password?
+        </h2>
+
+        <p class="subtext">
+            Enter your email address below.
+            We'll help you request a password
+            reset link.
+        </p>
+
+        <p class="required-note">
+            Fields marked
+            <span class="required-star">*</span>
+            are required.
+        </p>
+
+        <!-- Frontend Preview Only -->
+        <form id="forgot-form">
+
+            <div class="form-group">
+
+                <label for="email">
+                    Email Address
+                    <span class="required-star">*</span>
+                </label>
+
+                <input
+                    class="field"
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter your registered email"
+                    autocomplete="email"
+                    required
+                >
+
+            </div>
+
+            <button
+                class="btn reset-btn"
+                type="submit"
+            >
+                Send Reset Link
+            </button>
+
+            <!-- Preview Result -->
+            <p
+                id="preview-message"
+                class="preview-message"
+                role="status"
+                hidden
+            ></p>
+
+        </form>
+
+        <p class="back-link">
+            <a href="/ui-preview/login">
+                ← Back to Sign In
+            </a>
+        </p>
+
+    </section>
+
+</main>
+
+<script>
+    const forgotForm = document.getElementById(
+        'forgot-form'
+    );
+
+    const emailInput = document.getElementById(
+        'email'
+    );
+
+    const previewMessage = document.getElementById(
+        'preview-message'
+    );
+
+    // Hide message when email is edited
+    emailInput.addEventListener('input', function() {
+        previewMessage.hidden = true;
+    });
+
+    // Frontend Validation Preview
+    forgotForm.addEventListener('submit', function(event) {
+
+        event.preventDefault();
+
+        previewMessage.hidden = true;
+
+        if (!forgotForm.reportValidity()) {
+            return;
+        }
+
+        previewMessage.textContent =
+            'Email format is valid. ' +
+            'This is a frontend preview. ' +
+            'No password reset email was sent.';
+
+        previewMessage.hidden = false;
+    });
+</script>
+
+</body>
+</html>

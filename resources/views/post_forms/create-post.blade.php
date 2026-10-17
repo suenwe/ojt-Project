@@ -34,7 +34,7 @@
                 <details class="account-settings">
                     <summary class="account-icon" title="Settings" aria-label="Open settings">⚙</summary>
                     <nav aria-label="Account settings">
-                        <a href="{{ url('/') }}#profile-settings">Profile settings</a>
+                        <a href="/ui-preview/edit-profile">Profile settings</a>
                         <a href="{{ url('/') }}#logout">Sign out</a>
                     </nav>
                 </details>
