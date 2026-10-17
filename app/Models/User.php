@@ -6,9 +6,9 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'username',
@@ -21,10 +21,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'two_factor_expires_at',
     'website',
     'ip_address',
+    'browser',
+    'banned_at',
+    'ban_reason',
     'birthday' => 'date',
 ])]
 
-#[Hidden(['password', 'two_factor_code'])]
+#[Hidden(['password', 'remember_token', 'two_factor_code'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -44,6 +47,7 @@ class User extends Authenticatable
             'created_date' => 'datetime',
             'password' => 'hashed',
             'two_factor_expires_at' => 'datetime',
+            'banned_at' => 'datetime',
         ];
     }
 
@@ -75,5 +79,10 @@ class User extends Authenticatable
     public function receivedNotifications(): HasMany
     {
         return $this->hasMany(ShowNotification::class, 'user_id', 'user_id');
+    }
+
+    public function accessLogs(): HasMany
+    {
+        return $this->hasMany(UserAccessLog::class, 'user_id', 'user_id');
     }
 }
