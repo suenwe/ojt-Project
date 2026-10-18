@@ -19,6 +19,10 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/schedule-post', function () {
         return view('welcome', ['hidePosts' => true, 'isScheduling' => true]);
     })->name('posts.schedule');
+
+    Route::get('/profile', function () {
+        return view('welcome', ['showProfileSettings' => true]);
+    })->name('profile.edit');
 });
 
 Route::middleware('guest')->group(function (): void {

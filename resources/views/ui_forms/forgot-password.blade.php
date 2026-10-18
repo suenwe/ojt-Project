@@ -37,13 +37,13 @@
 
         .forgot-brand h1 {
             margin: 0;
-            font-size: 28px;
+            font-size: var(--text-3xl);
             color: var(--brand);
         }
 
         .forgot-title {
             text-align: center;
-            font-size: 21px;
+            font-size: var(--text-xl);
             margin-bottom: 8px;
         }
 
@@ -55,7 +55,7 @@
 
         .required-note {
             color: var(--muted);
-            font-size: 12px;
+            font-size: var(--text-sm);
             margin-bottom: 18px;
         }
 
@@ -70,7 +70,7 @@
         .form-group label {
             display: block;
             margin-bottom: 7px;
-            font-size: 13px;
+            font-size: var(--text-md);
             font-weight: 650;
         }
 
@@ -96,7 +96,7 @@
 
         .back-link a {
             color: var(--brand);
-            font-size: 13px;
+            font-size: var(--text-md);
             font-weight: 700;
         }
 
@@ -106,7 +106,7 @@
             border-radius: 5px;
             background: var(--green-soft);
             color: var(--green);
-            font-size: 12px;
+            font-size: var(--text-sm);
         }
 
         .preview-message[hidden] {
@@ -116,7 +116,7 @@
         .form-errors {
             margin-bottom: 16px;
             color: var(--red);
-            font-size: 13px;
+            font-size: var(--text-md);
         }
 
         .form-errors p {

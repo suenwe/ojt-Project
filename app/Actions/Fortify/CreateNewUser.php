@@ -14,6 +14,7 @@ class CreateNewUser implements CreatesNewUsers
         Validator::make($input, [
             'username' => ['required', 'string', 'min:3', 'max:30'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'phone_number' => ['nullable', 'string', 'max:30'],
             'birthday' => ['required', 'date', 'before_or_equal:today'],
             'password' => [
                 'required',
@@ -26,6 +27,7 @@ class CreateNewUser implements CreatesNewUsers
         return User::create([
             'username' => $input['username'],
             'email' => $input['email'],
+            'phone_number' => $input['phone_number'] ?? null,
             'birthday' => $input['birthday'],
             'password' => $input['password'],
             'role' => 'user',

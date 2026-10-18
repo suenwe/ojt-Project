@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 #[Fillable([
     'username',
@@ -24,7 +25,7 @@ use Illuminate\Notifications\Notifiable;
     'browser',
     'banned_at',
     'ban_reason',
-    'birthday' => 'date',
+    'birthday',
 ])]
 
 #[Hidden(['password', 'remember_token', 'two_factor_code'])]
@@ -48,7 +49,40 @@ class User extends Authenticatable
             'password' => 'hashed',
             'two_factor_expires_at' => 'datetime',
             'banned_at' => 'datetime',
+            'birthday' => 'date',
         ];
+    }
+
+    /**
+     * Get the profile photo as a data URI, or null when the member has no usable photo.
+     */
+    public function photoDataUri(): ?string
+    {
+        $photo = $this->photo;
+
+        if (is_resource($photo)) {
+            $photo = stream_get_contents($photo, -1, 0);
+        }
+
+        if (! is_string($photo) || $photo === '') {
+            return null;
+        }
+
+        $mimeType = (new \finfo(FILEINFO_MIME_TYPE))->buffer($photo);
+
+        if (! in_array($mimeType, ['image/jpeg', 'image/png'], true)) {
+            return null;
+        }
+
+        return 'data:'.$mimeType.';base64,'.base64_encode($photo);
+    }
+
+    /**
+     * Get up to two uppercase letters of the username for the avatar fallback.
+     */
+    public function initials(): string
+    {
+        return Str::upper(Str::substr($this->username, 0, 2));
     }
 
     public function posts(): HasMany

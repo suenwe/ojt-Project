@@ -15,12 +15,14 @@ class ExampleTest extends TestCase
         $this->get('/')->assertRedirect(route('login'));
     }
 
-    public function test_signed_in_members_can_open_the_main_page(): void
+    public function test_signed_in_members_see_their_own_name_on_the_main_page(): void
     {
         $this->withoutVite();
 
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->create(['username' => 'skywalker']))
             ->get('/')
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('skywalker')
+            ->assertDontSee('Alex Morgan');
     }
 }

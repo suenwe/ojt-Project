@@ -37,13 +37,13 @@
 
         .login-brand h1 {
             margin: 0;
-            font-size: 28px;
+            font-size: var(--text-3xl);
             color: var(--brand);
         }
 
         .login-title {
             text-align: center;
-            font-size: 21px;
+            font-size: var(--text-xl);
             margin-bottom: 5px;
         }
 
@@ -54,7 +54,7 @@
 
         .required-note {
             color: var(--muted);
-            font-size: 12px;
+            font-size: var(--text-sm);
             margin-bottom: 18px;
         }
 
@@ -69,7 +69,7 @@
         .form-group label {
             display: block;
             margin-bottom: 7px;
-            font-size: 13px;
+            font-size: var(--text-md);
             font-weight: 650;
         }
 
@@ -99,7 +99,7 @@
             border: none;
             background: transparent;
             color: var(--brand);
-            font-size: 12px;
+            font-size: var(--text-sm);
             font-weight: 700;
             cursor: pointer;
         }
@@ -118,14 +118,14 @@
             align-items: center;
             gap: 7px;
             color: var(--ink);
-            font-size: 12px;
+            font-size: var(--text-sm);
             cursor: pointer;
         }
 
         .form-options a,
         .signup-text a {
             color: var(--brand);
-            font-size: 12px;
+            font-size: var(--text-sm);
             font-weight: 700;
         }
 
@@ -138,11 +138,11 @@
             margin-top: 24px;
             text-align: center;
             color: var(--muted);
-            font-size: 13px;
+            font-size: var(--text-md);
         }
 
         .signup-text a {
-            font-size: 13px;
+            font-size: var(--text-md);
         }
 
         .preview-message {
@@ -151,7 +151,7 @@
             background: var(--green-soft);
             color: var(--green);
             border-radius: 5px;
-            font-size: 12px;
+            font-size: var(--text-sm);
         }
 
         .preview-message[hidden] {
@@ -166,7 +166,7 @@
         .form-errors {
             margin-bottom: 16px;
             color: var(--red);
-            font-size: 13px;
+            font-size: var(--text-md);
         }
 
         .form-errors p {

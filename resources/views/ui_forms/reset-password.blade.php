@@ -37,13 +37,13 @@
 
         .reset-brand h1 {
             margin: 0;
-            font-size: 28px;
+            font-size: var(--text-3xl);
             color: var(--brand);
         }
 
         .reset-title {
             text-align: center;
-            font-size: 21px;
+            font-size: var(--text-xl);
             margin-bottom: 8px;
         }
 
@@ -55,7 +55,7 @@
 
         .required-note {
             color: var(--muted);
-            font-size: 12px;
+            font-size: var(--text-sm);
             margin-bottom: 18px;
         }
 
@@ -70,7 +70,7 @@
         .form-group label {
             display: block;
             margin-bottom: 7px;
-            font-size: 13px;
+            font-size: var(--text-md);
             font-weight: 650;
         }
 
@@ -100,7 +100,7 @@
             border: none;
             background: transparent;
             color: var(--brand);
-            font-size: 12px;
+            font-size: var(--text-sm);
             font-weight: 700;
             cursor: pointer;
         }
@@ -108,7 +108,7 @@
         .password-hint {
             margin-top: 6px;
             color: var(--muted);
-            font-size: 12px;
+            font-size: var(--text-sm);
         }
 
         .reset-btn {
@@ -123,14 +123,14 @@
 
         .back-link a {
             color: var(--brand);
-            font-size: 13px;
+            font-size: var(--text-md);
             font-weight: 700;
         }
 
         .form-errors {
             margin-bottom: 16px;
             color: var(--red);
-            font-size: 13px;
+            font-size: var(--text-md);
         }
 
         .form-errors p {

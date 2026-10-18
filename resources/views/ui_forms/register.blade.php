@@ -38,13 +38,13 @@
         .register-brand h1 {
             margin: 0;
             color: var(--brand);
-            font-size: 28px;
+            font-size: var(--text-3xl);
         }
 
         .register-title {
             text-align: center;
             margin-bottom: 5px;
-            font-size: 20px;
+            font-size: var(--text-xl);
         }
 
         .register-card .subtext {
@@ -54,7 +54,7 @@
 
         .required-note {
             color: var(--muted);
-            font-size: 12px;
+            font-size: var(--text-sm);
             margin-bottom: 18px;
         }
 
@@ -69,7 +69,7 @@
         .form-group label {
             display: block;
             margin-bottom: 7px;
-            font-size: 13px;
+            font-size: var(--text-md);
             font-weight: 650;
         }
 
@@ -87,7 +87,7 @@
             display: block;
             margin-top: 5px;
             color: var(--muted);
-            font-size: 11px;
+            font-size: var(--text-xs);
         }
 
         .password-wrapper {
@@ -106,7 +106,7 @@
             border: none;
             background: transparent;
             color: var(--brand);
-            font-size: 12px;
+            font-size: var(--text-sm);
             font-weight: 650;
             cursor: pointer;
         }
@@ -114,7 +114,7 @@
         .form-error {
             margin-top: 6px;
             color: var(--red);
-            font-size: 12px;
+            font-size: var(--text-sm);
         }
 
         .register-btn {
@@ -126,7 +126,7 @@
         .login-text {
             margin-top: 23px;
             text-align: center;
-            font-size: 13px;
+            font-size: var(--text-md);
             color: var(--muted);
         }
 
@@ -141,7 +141,7 @@
             background: var(--green-soft);
             color: var(--green);
             border-radius: 5px;
-            font-size: 12px;
+            font-size: var(--text-sm);
         }
 
         .preview-message[hidden] {
@@ -160,7 +160,7 @@
         .form-errors {
             margin-bottom: 16px;
             color: var(--red);
-            font-size: 13px;
+            font-size: var(--text-md);
         }
 
         .form-errors p {
