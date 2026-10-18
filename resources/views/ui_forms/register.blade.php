@@ -187,12 +187,13 @@
         </p>
 
         <!-- Frontend Preview Form -->
-        <form id="register-form">
+        <form id="register-form" method="POST" action="{{ route('register.store') }}">
+            @csrf
 
             <!-- Username -->
             <div class="form-group">
 
-                <label for="name">
+                <label for="username">
                     Username
                     <span class="required-star">*</span>
                 </label>
@@ -200,8 +201,8 @@
                 <input
                     class="field"
                     type="text"
-                    id="name"
-                    name="name"
+                    id="username"
+                    name="username"
                     placeholder="Enter your username"
                     minlength="3"
                     maxlength="30"
@@ -236,15 +237,15 @@
 
 <!-- Phone Number (Optional) -->
 <div class="form-group">
-    <label for="phone">
+    <label for="phone_number">
         Phone Number (Optional)
     </label>
 
     <input
         class="field"
         type="tel"
-        id="phone"
-        name="phone"
+        id="phone_number"
+        name="phone_number"
         placeholder="e.g. 09xxxxxxxxx"
         autocomplete="tel"
         maxlength="20"
@@ -377,7 +378,7 @@
         <p class="login-text">
             Already have an account?
 
-            <a href="/ui-preview/login">
+            <a href="{{ route('login') }}">
                 Sign In
             </a>
         </p>
@@ -480,26 +481,13 @@
         });
     });
 
-    // Frontend preview submit
+    // Validate passwords before submitting to Laravel Fortify.
     form.addEventListener('submit', function(event) {
-
-        // Prevent sending data to a server
-        event.preventDefault();
-
-        previewMessage.hidden = true;
-
         validatePasswords();
 
         if (!form.reportValidity()) {
-            return;
+            event.preventDefault();
         }
-
-        previewMessage.textContent =
-            'Validation passed! ' +
-            'This is a frontend preview. ' +
-            'No account was created.';
-
-        previewMessage.hidden = false;
     });
 </script>
 

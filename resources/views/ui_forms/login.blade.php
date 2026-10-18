@@ -196,7 +196,8 @@
         </p>
 
         <!-- Frontend UI Preview Only -->
-        <form id="login-form">
+        <form id="login-form" method="POST" action="{{ route('login.store') }}">
+            @csrf
 
             <!-- Email -->
             <div class="form-group">
@@ -268,7 +269,7 @@
 
                 </label>
 
-                <a href="/ui-preview/forgot-password">
+                <a href="{{ route('password.request') }}">
                     Forgot Password?
                 </a>
 
@@ -296,7 +297,7 @@
         <p class="signup-text">
             Don't have an account?
 
-            <a href="/ui-preview/register">
+            <a href="{{ route('register') }}">
                 Sign Up
             </a>
         </p>
@@ -365,30 +366,6 @@
 
     });
 
-    // Frontend Preview Submit
-    loginForm.addEventListener(
-        'submit',
-        function(event) {
-
-            // Prevent actual login request
-            event.preventDefault();
-
-            previewMessage.hidden = true;
-
-            // Browser validation
-            if (!loginForm.reportValidity()) {
-                return;
-            }
-
-            // Display preview message
-            previewMessage.textContent =
-                'Form validation passed! ' +
-                'This is a frontend preview. ' +
-                'No login request was sent.';
-
-            previewMessage.hidden = false;
-        }
-    );
 </script>
 
 </body>
