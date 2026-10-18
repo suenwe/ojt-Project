@@ -63,8 +63,11 @@
                     <details class="account-settings">
                         <summary class="account-icon" title="Settings" aria-label="Open settings">⚙</summary>
                         <nav aria-label="Account settings">
-                            <a href="/ui-preview/edit-profile">Profile settings</a>
-                            <a href="#logout">Sign out</a>
+                            <a href="#profile-settings">Profile settings</a>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button class="account-menu-button" type="submit">Sign out</button>
+                            </form>
                         </nav>
                     </details>
                 </div>

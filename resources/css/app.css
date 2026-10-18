@@ -92,6 +92,8 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible {
 .bell-icon::after { content: ""; position: absolute; left: 1px; bottom: 2px; width: 14px; height: 4px; border-top: 1.5px solid currentColor; border-radius: 50%; box-shadow: 6px 3px 0 -4px currentColor; }
 .account-settings nav { position: absolute; top: 40px; right: 0; z-index: 3; display: grid; min-width: 160px; padding: 7px; background: var(--surface); border: 1px solid var(--line); border-radius: 7px; box-shadow: var(--shadow); }
 .account-settings nav a { padding: 8px 10px; color: var(--muted); border-radius: 5px; }
+.account-settings nav .account-menu-button { width: 100%; padding: 8px 10px; color: var(--muted); font: inherit; text-align: left; cursor: pointer; background: none; border: 0; border-radius: 5px; }
+.account-settings nav .account-menu-button:hover { color: var(--brand); background: var(--brand-soft); }
 .account-settings nav a:hover { color: var(--brand); background: var(--brand-soft); }
 .theme-toggle { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .theme-toggle:checked + .theme-toggle-label { color: var(--brand); background: var(--brand-soft); }

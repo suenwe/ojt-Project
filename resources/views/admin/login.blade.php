@@ -15,7 +15,7 @@
         @if ($errors->any())
             <div class="alert alert-error" role="alert"><span>!</span><div>{{ $errors->first() }}</div></div>
         @endif
-        <form method="POST" action="{{ route('admin.login') }}" class="stacked-form login-form">
+        <form method="POST" action="{{ route('admin.login.store') }}" class="stacked-form login-form">
             @csrf
             <label for="email">Email address</label>
             <input id="email" name="email" type="email" autocomplete="username" value="{{ old('email') }}" placeholder="admin@example.com" required autofocus>

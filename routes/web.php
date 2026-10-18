@@ -7,54 +7,25 @@ use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminUserController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
+Route::middleware('auth')->group(function (): void {
+    Route::get('/', function () {
+        return view('welcome');
+    });
+
+    Route::get('/create-post', function () {
+        return view('welcome', ['hidePosts' => true, 'isScheduling' => false]);
+    })->name('posts.create');
+
+    Route::get('/schedule-post', function () {
+        return view('welcome', ['hidePosts' => true, 'isScheduling' => true]);
+    })->name('posts.schedule');
 });
-
-// Authentication UI preview.
-Route::get('/auth-preview', function () {
-    return view('ui_forms.login');
-});
-
-Route::get('/ui-preview/{form}', function (string $form) {
-    $forms = [
-        'change-password',
-        'create-post',
-        'edit-profile',
-        'forgot-password',
-        'login',
-        'register',
-        'report-post',
-        'schedule-post',
-    ];
-
-    abort_unless(in_array($form, $forms, true), 404);
-
-    return view("ui_forms.{$form}");
-})->whereIn('form', [
-    'change-password',
-    'create-post',
-    'edit-profile',
-    'forgot-password',
-    'login',
-    'register',
-    'report-post',
-    'schedule-post',
-]);
-
-Route::get('/create-post', function () {
-    return view('welcome', ['hidePosts' => true, 'isScheduling' => false]);
-})->name('posts.create');
-
-Route::get('/schedule-post', function () {
-    return view('welcome', ['hidePosts' => true, 'isScheduling' => true]);
-})->name('posts.schedule');
 
 Route::middleware('guest')->group(function (): void {
-    Route::get('/admin/login', [AdminAuthController::class, 'create'])->name('login');
+    Route::get('/admin/login', [AdminAuthController::class, 'create'])->name('admin.login');
     Route::post('/admin/login', [AdminAuthController::class, 'store'])
         ->middleware('throttle:5,1')
-        ->name('admin.login');
+        ->name('admin.login.store');
 });
 
 Route::middleware(['auth', 'admin'])

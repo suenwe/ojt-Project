@@ -163,6 +163,15 @@
                 padding: 22px;
             }
         }
+        .form-errors {
+            margin-bottom: 16px;
+            color: var(--red);
+            font-size: 13px;
+        }
+
+        .form-errors p {
+            margin: 0 0 4px;
+        }
     </style>
 </head>
 
@@ -196,7 +205,16 @@
         </p>
 
         <!-- Frontend UI Preview Only -->
-        <form id="login-form">
+        <form id="login-form" method="POST" action="{{ route('login.store') }}">
+            @csrf
+
+            @if ($errors->any())
+                <div class="form-errors" role="alert">
+                    @foreach ($errors->all() as $error)
+                        <p>{{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
 
             <!-- Email -->
             <div class="form-group">
@@ -211,6 +229,7 @@
                     type="email"
                     id="email"
                     name="email"
+                    value="{{ old('email') }}"
                     placeholder="Enter your email"
                     autocomplete="email"
                     required
@@ -268,7 +287,7 @@
 
                 </label>
 
-                <a href="/ui-preview/forgot-password">
+                <a href="{{ route('password.request') }}">
                     Forgot Password?
                 </a>
 
@@ -282,13 +301,13 @@
                 Sign In
             </button>
 
-            <!-- Validation Preview Message -->
+            <!-- Status Message (e.g. after a password reset) -->
             <p
                 id="preview-message"
                 class="preview-message"
                 role="status"
-                hidden
-            ></p>
+                @unless (session('status')) hidden @endunless
+            >{{ session('status') }}</p>
 
         </form>
 
@@ -296,7 +315,7 @@
         <p class="signup-text">
             Don't have an account?
 
-            <a href="/ui-preview/register">
+            <a href="{{ route('register') }}">
                 Sign Up
             </a>
         </p>
@@ -365,30 +384,6 @@
 
     });
 
-    // Frontend Preview Submit
-    loginForm.addEventListener(
-        'submit',
-        function(event) {
-
-            // Prevent actual login request
-            event.preventDefault();
-
-            previewMessage.hidden = true;
-
-            // Browser validation
-            if (!loginForm.reportValidity()) {
-                return;
-            }
-
-            // Display preview message
-            previewMessage.textContent =
-                'Form validation passed! ' +
-                'This is a frontend preview. ' +
-                'No login request was sent.';
-
-            previewMessage.hidden = false;
-        }
-    );
 </script>
 
 </body>
