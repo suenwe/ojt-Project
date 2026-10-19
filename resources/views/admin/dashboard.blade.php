@@ -58,7 +58,11 @@
 
         <main class="main-panel">
             <header class="topbar">
-                <div class="breadcrumbs"><span>Workspace</span><span class="crumb-divider">/</span><strong>{{ [
+                <div class="breadcrumbs">
+                    @if ($section !== 'overview')
+                        @include('partials.page-back', ['fallback' => route('admin.dashboard')])
+                    @endif
+                    <span>Workspace</span><span class="crumb-divider">/</span><strong>{{ [
                     'overview' => 'Overview',
                     'reports' => 'Report queue',
                     'users' => 'User management',

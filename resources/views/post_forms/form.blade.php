@@ -97,7 +97,7 @@
         </p>
         <div class="composer-footer">
             <div class="composer-tools account-tools">
-                <a class="btn secondary" href="{{ route('home') }}">Cancel</a>
+                <a class="btn secondary" href="{{ route('home') }}" data-composer-cancel>Cancel</a>
                 <button class="btn" type="submit">
                     {{ $editingPost ? 'Save Changes' : ($isScheduling ? 'Schedule Post' : 'Publish Post') }}
                 </button>

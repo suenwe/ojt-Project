@@ -134,6 +134,37 @@ class PostControllerTest extends TestCase
             ->assertDontSee('>Schedule post</a>', false);
     }
 
+    public function test_home_feed_has_a_closed_post_form_whose_photo_button_opens_the_file_picker(): void
+    {
+        Category::query()->firstOrCreate(['category_type' => 'Technology']);
+
+        $response = $this->actingAs(User::factory()->create())->get(route('home'));
+
+        $response->assertOk();
+        $response->assertSee('action="'.route('posts.store').'"', false);
+        $response->assertSee('<label class="icon-button" for="post-media"', false);
+        $response->assertSee('<div class="composer-inline" data-composer-form  hidden >', false);
+        $response->assertSee('>Technology</option>', false);
+    }
+
+    public function test_post_form_stays_open_on_the_home_feed_after_a_failed_post(): void
+    {
+        $member = User::factory()->create();
+
+        $response = $this->actingAs($member)
+            ->from(route('home'))
+            ->followingRedirects()
+            ->post(route('posts.store'), [
+                'content' => 'Keep this draft',
+                'category_id' => 999,
+                'post_type' => 'Discussion',
+            ]);
+
+        $response->assertOk();
+        $response->assertSee('<div class="composer-inline" data-composer-form >', false);
+        $response->assertSee('Keep this draft');
+    }
+
     public function test_feed_shows_an_empty_state_when_there_are_no_posts(): void
     {
         $this->actingAs(User::factory()->create())

@@ -32,80 +32,114 @@
 </style>
 
     <header class="topbar">
-        <a class="brand" href="{{ url('/') }}" aria-label="Knowvia home">
-            <span class="brand-mark">K</span>
-            <span>Knowvia</span>
-        </a>
+        <div class="topbar-inner">
+            <a class="brand" href="{{ url('/') }}" aria-label="Knowvia home">
+                <span class="brand-mark">K</span>
+                <span>Knowvia</span>
+            </a>
 
-        <div class="top-actions">
-            <input class="theme-toggle" id="top-theme-toggle" type="checkbox">
-            <label class="icon-button theme-toggle-label" for="top-theme-toggle" title="Toggle theme" aria-label="Toggle light and dark theme">◐</label>
-            <details class="top-menu">
-                <summary class="icon-button" aria-label="Open main menu">☰</summary>
-                <nav aria-label="Main menu">
-                    <a href="{{ route('home') }}">Home</a>
-                    <a href="{{ route('posts.create') }}">Create a post</a>
-                    <a href="{{ route('posts.schedule') }}">Schedule a post</a>
-                    <a href="{{ route('users.show', auth()->user()) }}">My profile</a>
-                    <a href="{{ route('profile.edit') }}">Profile settings</a>
-                </nav>
-            </details>
+            <form class="search-box top-search" action="#" method="GET" role="search">
+                <span aria-hidden="true">⌕</span>
+                <input type="search" name="search" placeholder="Search Knowvia" aria-label="Search posts, people and hashtags">
+            </form>
+
+            <div class="top-actions">
+                <span class="icon-button" title="Notifications (coming soon)" aria-label="Notifications (coming soon)" role="img">
+                    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+                        <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                        <path d="M10 20.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <input class="theme-toggle" id="top-theme-toggle" type="checkbox">
+                <label class="icon-button theme-toggle-label" for="top-theme-toggle" title="Toggle theme" aria-label="Toggle light and dark theme">◐</label>
+                <details class="account-settings">
+                    <summary class="icon-button" title="Account" aria-label="Open account menu">
+                        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+                            <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                        </svg>
+                    </summary>
+                    <nav aria-label="Account menu">
+                        <a href="{{ route('profile.edit') }}">Profile settings</a>
+                        @if (auth()->user()->role === 'admin')
+                            <a href="{{ route('admin.dashboard') }}">Admin dashboard</a>
+                        @endif
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button class="account-menu-button" type="submit">Sign out</button>
+                        </form>
+                    </nav>
+                </details>
+            </div>
         </div>
     </header>
 
     <div class="app-layout">
         <aside class="sidebar">
-            <section class="panel account-card">
+            <a class="panel account-card" href="{{ route('users.show', auth()->user()) }}">
                 @if ($photoDataUri = auth()->user()->photoDataUri())
-                    <img class="avatar avatar-large avatar-photo" src="{{ $photoDataUri }}" alt="{{ auth()->user()->username }} profile photo">
+                    <img class="avatar avatar-large avatar-photo" src="{{ $photoDataUri }}" alt="" aria-hidden="true">
                 @else
-                    <span class="avatar avatar-large" aria-label="Member profile">{{ auth()->user()->initials() }}</span>
+                    <span class="avatar avatar-large" aria-hidden="true">{{ auth()->user()->initials() }}</span>
                 @endif
                 <div class="account-copy">
-                    <a class="post-author-link" href="{{ route('users.show', auth()->user()) }}"><strong>{{ auth()->user()->username }}</strong></a>
+                    <strong>{{ auth()->user()->username }}</strong>
+                    <span class="subtext">View your profile</span>
                 </div>
-                <div class="account-tools">
-                    <span class="account-icon bell-icon" title="Notifications" aria-label="Notifications"></span>
-                    <details class="account-settings">
-                        <summary class="account-icon" title="Settings" aria-label="Open settings">⚙</summary>
-                        <nav aria-label="Account settings">
-                            <a href="{{ route('users.show', auth()->user()) }}">My profile</a>
-                            <a href="{{ route('profile.edit') }}">Profile settings</a>
-                            @if (auth()->user()->role === 'admin')
-                                <a href="{{ route('admin.dashboard') }}">Admin dashboard</a>
-                            @endif
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button class="account-menu-button" type="submit">Sign out</button>
-                            </form>
-                        </nav>
-                    </details>
-                </div>
-            </section>
+            </a>
+
+            <nav class="panel main-nav" aria-label="Main menu">
+                @foreach ([
+                    ['Home', route('home'), request()->routeIs('home')],
+                    ['My profile', route('users.show', auth()->user()), request()->routeIs('users.show') && ($isOwnProfile ?? false)],
+                    ['Scheduled posts', route('posts.schedule'), request()->routeIs('posts.schedule')],
+                ] as [$navLabel, $navUrl, $isCurrentPage])
+                    <a class="{{ $isCurrentPage ? 'is-active' : '' }}" href="{{ $navUrl }}" @if ($isCurrentPage) aria-current="page" @endif>{{ $navLabel }}</a>
+                @endforeach
+            </nav>
         </aside>
 
         <main class="main-column" id="home">
-            @unless (($showProfileSettings ?? false) || isset($member))
-            <div class="feed-toolbar">
-                <form class="search-box" action="#" method="GET" role="search">
-                    <span aria-hidden="true">⌕</span>
-                    <input type="search" name="search" placeholder="Search posts and hashtags" aria-label="Search posts and hashtags">
-                    <button class="search-submit" type="submit" aria-label="Submit search">↵</button>
-                </form>
+            @unless (request()->routeIs('home'))
+                @include('partials.page-back', ['fallback' => route('home')])
+            @endunless
+
+            @if (request()->routeIs('home'))
+            @php($composerStartsOpen = old('content') !== null)
+            <section class="panel composer-prompt" aria-label="Create a post" data-composer-prompt @if ($composerStartsOpen) hidden @endif>
+                @if ($photoDataUri)
+                    <img class="avatar avatar-photo" src="{{ $photoDataUri }}" alt="" aria-hidden="true">
+                @else
+                    <span class="avatar" aria-hidden="true">{{ auth()->user()->initials() }}</span>
+                @endif
+                <button class="composer-prompt-input" type="button" data-composer-open>What's on your mind?</button>
+                <label class="icon-button" for="post-media" title="Add photos or videos" aria-label="Add photos or videos">
+                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                        <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                        <circle cx="9" cy="9.5" r="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                        <path d="M4 17l5-5 4 4 2.5-2.5L20 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                    </svg>
+                </label>
+                <a class="icon-button" href="{{ route('posts.schedule') }}" title="Schedule post" aria-label="Schedule post">
+                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                        <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M3.5 9.5h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                </a>
+            </section>
+
+            <div class="composer-inline" data-composer-form @unless ($composerStartsOpen) hidden @endunless>
+                @include('post_forms.form', ['isScheduling' => false])
             </div>
 
-            <div class="feed-actions">
-                <div class="feed-action-buttons">
-                    <a class="btn" href="{{ route('posts.create') }}">Create post</a>
-                </div>
+            <div class="feed-sort">
                 <label class="sort-control" for="post-sort">
-                    Sort by:
-                    <select class="field filter-select" id="post-sort" name="sort" aria-label="Sort posts">
-                        <option value="category">Category</option>
+                    <select class="sort-select" id="post-sort" name="sort" aria-label="Sort posts">
                         <option value="newest">Newest</option>
                         <option value="reacted">Most reacted</option>
+                        <option value="category">By topic</option>
                     </select>
-                    <select class="field category-filter" name="category" aria-label="Filter by topic">
+                    <select class="sort-select category-filter" name="category" aria-label="Filter by topic">
                         <option>All topics</option>
                         <option>Technology</option>
                         <option>Community</option>
@@ -113,7 +147,7 @@
                     </select>
                 </label>
             </div>
-            @endunless
+            @endif
 
             @if ($showProfileSettings ?? false)
                 @include('profile_forms.settings', ['user' => auth()->user()])

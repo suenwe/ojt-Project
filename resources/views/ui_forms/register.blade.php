@@ -167,6 +167,7 @@
             margin: 0 0 4px;
         }
     </style>
+    @include('partials.saved-theme')
 </head>
 
 <body>
@@ -174,6 +175,10 @@
 <main class="register-container">
 
     <section class="panel register-card">
+
+        <a class="card-back" href="{{ route('login') }}">
+            <span aria-hidden="true">←</span> Back
+        </a>
 
         <!-- Brand -->
         <div class="register-brand">
@@ -219,6 +224,7 @@
                     class="field"
                     type="text"
                     id="username"
+                    data-clearable
                     name="username"
                     value="{{ old('username') }}"
                     placeholder="Enter your username"
@@ -246,6 +252,7 @@
         class="field"
         type="email"
         id="email"
+        data-clearable
         name="email"
         value="{{ old('email') }}"
         placeholder="Enter your email"
@@ -264,6 +271,7 @@
         class="field"
         type="tel"
         id="phone_number"
+        data-clearable
         name="phone_number"
         value="{{ old('phone_number') }}"
         placeholder="e.g. 09xxxxxxxxx"
@@ -288,6 +296,7 @@
                     class="field"
                     type="date"
                     id="birthday"
+                    data-clearable
                     name="birthday"
                     value="{{ old('birthday') }}"
                     max="{{ date('Y-m-d') }}"
@@ -310,6 +319,7 @@
                         class="field"
                         type="password"
                         id="password"
+                        data-clearable
                         name="password"
                         placeholder="Create your password"
                         minlength="8"
@@ -349,6 +359,7 @@
                         class="field"
                         type="password"
                         id="password_confirmation"
+                        data-clearable
                         name="password_confirmation"
                         placeholder="Confirm your password"
                         minlength="8"
@@ -511,6 +522,8 @@
         }
     });
 </script>
+
+<script src="{{ asset('assets/clear-fields.js') }}"></script>
 
 </body>
 </html>

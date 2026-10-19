@@ -1,7 +1,13 @@
 <article class="panel post-card">
     <div class="post-header">
         @if ($post->user)
-            <a class="avatar" href="{{ route('users.show', $post->user) }}" aria-hidden="true" tabindex="-1">{{ $post->user->initials() }}</a>
+            <a class="avatar" href="{{ route('users.show', $post->user) }}" aria-hidden="true" tabindex="-1">
+                @if ($post->user->photoFile())
+                    <img class="avatar-photo-fill" src="{{ route('users.photo', $post->user) }}" alt="" loading="lazy">
+                @else
+                    {{ $post->user->initials() }}
+                @endif
+            </a>
         @else
             <span class="avatar" aria-hidden="true">?</span>
         @endif

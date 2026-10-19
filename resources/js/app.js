@@ -75,3 +75,46 @@ document.querySelectorAll('[data-table-search]').forEach((input) => {
         });
     });
 });
+
+const composerPrompt = document.querySelector('[data-composer-prompt]');
+const composerForm = document.querySelector('[data-composer-form]');
+
+if (composerPrompt && composerForm) {
+    const openComposer = (focusSelector) => {
+        composerPrompt.hidden = true;
+        composerForm.hidden = false;
+        composerForm.querySelector(focusSelector)?.focus();
+    };
+
+    composerPrompt.querySelector('[data-composer-open]').addEventListener('click', () => openComposer('#post-content'));
+
+    composerForm.querySelector('#post-media').addEventListener('change', (event) => {
+        if (event.target.files.length > 0) {
+            openComposer('#post-content');
+        }
+    });
+
+    composerForm.querySelector('[data-composer-cancel]').addEventListener('click', (event) => {
+        event.preventDefault();
+        composerForm.querySelector('form').reset();
+        composerForm.hidden = true;
+        composerPrompt.hidden = false;
+    });
+}
+
+const themeToggle = document.querySelector('.theme-toggle');
+
+if (themeToggle) {
+    themeToggle.checked = document.documentElement.dataset.theme === 'dark';
+
+    themeToggle.addEventListener('change', () => {
+        const theme = themeToggle.checked ? 'dark' : 'light';
+        document.documentElement.dataset.theme = theme;
+
+        try {
+            localStorage.setItem('knowvia-theme', theme);
+        } catch (error) {
+            // Storage can be blocked; the choice then lasts until the page is left.
+        }
+    });
+}

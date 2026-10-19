@@ -143,6 +143,7 @@
             }
         }
     </style>
+    @include('partials.saved-theme')
 </head>
 
 <body>
