@@ -80,12 +80,8 @@ class ScheduledPostController extends Controller
             ]);
         }
 
-        $user = $request->user() ?? User::query()->orderBy('user_id')->first();
-        if (!$user) {
-            return back()->withInput()->withErrors([
-                'content' => 'No user account exists yet. Run the database seeder before creating posts.',
-            ]);
-        }
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
 
         $categoryType = match ($validated['category']) {
             'Sports' => 'Sport',
