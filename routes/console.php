@@ -1,8 +1,11 @@
 <?php
 
 use App\Models\User;
+use App\Rules\UniqueUsername;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 use Symfony\Component\Console\Command\Command;
 
 Artisan::command('inspire', function () {
@@ -52,11 +55,22 @@ Artisan::command('admin:create', function () {
         return Command::FAILURE;
     }
 
-    $password = (string) $this->secret('Password (at least 8 characters)');
+    if (UniqueUsername::isTaken($username)) {
+        $this->error('That username is already taken. Choose another one.');
+
+        return Command::FAILURE;
+    }
+
+    $password = (string) $this->secret('Password (at least 8 characters, with a number and a symbol)');
     $confirmation = (string) $this->secret('Confirm password');
 
-    if (mb_strlen($password) < 8 || ! hash_equals($password, $confirmation)) {
-        $this->error('The password must contain at least 8 characters and both entries must match.');
+    $passwordCheck = Validator::make(
+        ['password' => $password, 'password_confirmation' => $confirmation],
+        ['password' => ['required', 'confirmed', Password::min(8)->numbers()->symbols()]],
+    );
+
+    if ($passwordCheck->fails()) {
+        $this->error('The password must have at least 8 characters, a number and a symbol, and both entries must match.');
 
         return self::FAILURE;
     }

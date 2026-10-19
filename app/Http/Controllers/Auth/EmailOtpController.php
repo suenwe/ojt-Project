@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Rules\UniqueUsername;
 use App\Services\EmailOtpService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -86,6 +87,14 @@ class EmailOtpController extends Controller
 
                 return redirect()->route('register')->withErrors([
                     'email' => 'An account with this email already exists. Sign in instead.',
+                ]);
+            }
+
+            if (UniqueUsername::isTaken($challenge['data']['username'])) {
+                $emailOtp->clear();
+
+                return redirect()->route('register')->withErrors([
+                    'username' => 'This username was taken while you were verifying. Please choose another one.',
                 ]);
             }
 

@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Auth\EmailOtpController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\DeleteAccountController;
+use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ScheduledPostController;
 use Illuminate\Support\Facades\Route;
@@ -27,9 +29,15 @@ Route::middleware('auth')->group(function (): void {
         ->whereNumber('post')
         ->name('schedule-post.destroy');
 
+    Route::get('/users/{user}', MemberProfileController::class)
+        ->whereNumber('user')
+        ->name('users.show');
+
     Route::get('/profile', function () {
         return view('welcome', ['showProfileSettings' => true]);
     })->name('profile.edit');
+
+    Route::delete('/profile', DeleteAccountController::class)->name('profile.destroy');
 });
 
 Route::middleware('guest')->group(function (): void {

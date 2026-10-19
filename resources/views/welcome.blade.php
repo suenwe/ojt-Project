@@ -60,13 +60,14 @@
                     <span class="avatar avatar-large" aria-label="Member profile">{{ auth()->user()->initials() }}</span>
                 @endif
                 <div class="account-copy">
-                    <strong>{{ auth()->user()->username }}</strong>
+                    <a class="post-author-link" href="{{ route('users.show', auth()->user()) }}"><strong>{{ auth()->user()->username }}</strong></a>
                 </div>
                 <div class="account-tools">
                     <span class="account-icon bell-icon" title="Notifications" aria-label="Notifications"></span>
                     <details class="account-settings">
                         <summary class="account-icon" title="Settings" aria-label="Open settings">⚙</summary>
                         <nav aria-label="Account settings">
+                            <a href="{{ route('users.show', auth()->user()) }}">My profile</a>
                             <a href="{{ route('profile.edit') }}">Profile settings</a>
                             @if (auth()->user()->role === 'admin')
                                 <a href="{{ route('admin.dashboard') }}">Admin dashboard</a>
@@ -82,7 +83,7 @@
         </aside>
 
         <main class="main-column" id="home">
-            @unless ($showProfileSettings ?? false)
+            @unless (($showProfileSettings ?? false) || isset($member))
             <div class="feed-toolbar">
                 <form class="search-box" action="#" method="GET" role="search">
                     <span aria-hidden="true">⌕</span>
@@ -115,6 +116,8 @@
 
             @if ($showProfileSettings ?? false)
                 @include('profile_forms.settings', ['user' => auth()->user()])
+            @elseif (isset($member))
+                @include('profile_forms.show')
             @elseif ($hidePosts ?? false)
                 @include('post_forms.form', ['isScheduling' => $isScheduling ?? false])
             @else
