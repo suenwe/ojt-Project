@@ -348,6 +348,13 @@ body.admin-body .report-details p { color: #77788b; font-size: var(--text-xs); l
 body.admin-body .queue-actions { align-items: center; border-top: 1px solid #f0eff5; display: flex; justify-content: space-between; margin-top: 13px; padding-top: 12px; }
 body.admin-body .action-hint, body.admin-body .reviewed-note { color: #a0a0ae; font-size: var(--text-xs); }
 body.admin-body .button-group { display: flex; gap: 7px; }
+body.admin-body .user-action-group { display: grid; grid-template-columns: repeat(2, max-content); gap: 6px; align-items: center; min-width: 150px; }
+body.admin-body .user-action-group .user-ban-form { display: contents; }
+body.admin-body .user-action-group .ban-reason-input { grid-column: 1 / -1; order: -1; width: 100%; min-width: 0; }
+@media (max-width: 1320px) {
+    body.admin-body .member-table th, body.admin-body .member-table td { padding-left: 8px; padding-right: 8px; }
+    body.admin-body .member-table th:first-child, body.admin-body .member-table td:first-child { padding-left: 16px; }
+}
 body.admin-body .reviewed-note { border-top: 1px solid #f0eff5; margin-top: 13px; padding-top: 12px; }
 body.admin-body .settings-layout { align-items: start; display: grid; gap: 17px; grid-template-columns: minmax(230px, .72fr) minmax(0, 1.3fr); }
 body.admin-body .settings-form-panel, body.admin-body .settings-list-panel { margin: 0; }
