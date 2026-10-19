@@ -242,8 +242,10 @@ class AdminDashboardTest extends TestCase
             ->assertSee('data-confirm-cancel', false);
     }
 
-    public function test_successful_report_review_bans_the_post_author(): void
+    public function test_successful_report_review_suspends_the_post_author_for_three_days_and_notifies_them(): void
     {
+        $this->travelTo('2026-10-19 12:00:00');
+        Notification::fake();
         $admin = User::factory()->create(['role' => 'admin']);
         $author = User::factory()->create();
         $reporter = User::factory()->create();
@@ -272,10 +274,13 @@ class AdminDashboardTest extends TestCase
             'ban_reason' => 'Confirmed report #'.$report->report_id.': Bullying, harassment or abuse',
         ]);
         $this->assertNotNull($author->fresh()->banned_at);
+        $this->assertSame('2026-10-22 12:00:00', $author->fresh()->ban_expires_at->format('Y-m-d H:i:s'));
+        Notification::assertSentTo($author, ReportConfirmed::class);
     }
 
     public function test_dismissing_a_report_does_not_ban_the_post_author(): void
     {
+        Notification::fake();
         $admin = User::factory()->create(['role' => 'admin']);
         $author = User::factory()->create();
         $report = $this->makeReport($author);
@@ -286,6 +291,50 @@ class AdminDashboardTest extends TestCase
 
         $this->assertDatabaseHas('reports', ['report_id' => $report->report_id, 'status' => 'invalid']);
         $this->assertNull($author->fresh()->banned_at);
+        Notification::assertNothingSent();
+    }
+
+    public function test_confirming_a_report_does_not_shorten_an_existing_indefinite_admin_ban(): void
+    {
+        Notification::fake();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $author = User::factory()->create([
+            'banned_at' => now()->subDay(),
+            'ban_expires_at' => null,
+            'ban_reason' => 'Manual admin ban',
+        ]);
+        $report = $this->makeReport($author);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.reports.review', $report), ['decision' => 'valid'])
+            ->assertRedirect(route('admin.dashboard', ['section' => 'reports']))
+            ->assertSessionHas('status', 'Report confirmed. The post author remains under an indefinite admin suspension.');
+
+        $this->assertDatabaseHas('users', [
+            'user_id' => $author->user_id,
+            'ban_reason' => 'Manual admin ban',
+            'ban_expires_at' => null,
+        ]);
+        Notification::assertSentTo($author, ReportConfirmed::class);
+    }
+
+    public function test_expired_report_suspension_is_cleared_when_the_member_returns(): void
+    {
+        $this->travelTo('2026-10-19 12:00:00');
+        $member = User::factory()->create([
+            'banned_at' => now()->subDays(3),
+            'ban_expires_at' => now()->subSecond(),
+            'ban_reason' => 'Confirmed report #1',
+        ]);
+
+        $this->actingAs($member)->get(route('home'))->assertOk();
+
+        $this->assertDatabaseHas('users', [
+            'user_id' => $member->user_id,
+            'banned_at' => null,
+            'ban_expires_at' => null,
+            'ban_reason' => null,
+        ]);
     }
 
     public function test_admin_can_manage_categories_restricted_terms_and_notifications(): void

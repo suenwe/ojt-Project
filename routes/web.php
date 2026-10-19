@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\EmailOtpController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduledPostController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,9 +35,9 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/report-post', function (\Illuminate\Http\Request $request) {
         return view('ui_forms.report-post', ['postId' => $request->query('post_id')]);
     })->name('report.post');
-    Route::post('/report-post', function () {
-        return redirect()->route('home')->with('success', 'Thank you. Your report has been submitted to the moderators.');
-    })->name('report.store');
+    Route::post('/report-post', [ReportController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('report.store');
 
     Route::get('/profile', function () {
         return view('welcome', ['showProfileSettings' => true]);

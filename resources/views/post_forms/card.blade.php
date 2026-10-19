@@ -15,7 +15,7 @@
                 aria-expanded="false"
             >&hellip;</button>
             <div class="post-report-menu" hidden>
-                <button type="button" class="open-post-report">Report Post</button>
+                <button type="button" class="open-post-report" data-post-id="{{ $post->post_id }}">Report Post</button>
             </div>
         </div>
     </div>

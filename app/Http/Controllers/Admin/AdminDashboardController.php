@@ -27,7 +27,7 @@ class AdminDashboardController extends Controller
         $users = null;
         if (in_array($section, ['overview', 'users'], true)) {
             $userQuery = User::query()
-                ->select(['user_id', 'username', 'email', 'photo', 'birthday', 'browser', 'IP_address', 'role', 'banned_at', 'created_date']);
+                ->select(['user_id', 'username', 'email', 'photo', 'birthday', 'browser', 'IP_address', 'role', 'banned_at', 'ban_expires_at', 'created_date']);
 
             if ($section === 'overview') {
                 $userQuery->where('role', '!=', 'admin');
@@ -50,10 +50,20 @@ class AdminDashboardController extends Controller
                 }
 
                 if ($status === 'banned') {
-                    $userQuery->whereNotNull('banned_at');
+                    $userQuery->whereNotNull('banned_at')
+                        ->where(function ($query): void {
+                            $query->whereNull('ban_expires_at')
+                                ->orWhere('ban_expires_at', '>', now());
+                        });
                     $userFilters['status'] = $status;
                 } elseif ($status === 'active') {
-                    $userQuery->whereNull('banned_at');
+                    $userQuery->where(function ($query): void {
+                        $query->whereNull('banned_at')
+                            ->orWhere(function ($query): void {
+                                $query->whereNotNull('ban_expires_at')
+                                    ->where('ban_expires_at', '<=', now());
+                            });
+                    });
                     $userFilters['status'] = $status;
                 }
             }
@@ -75,7 +85,7 @@ class AdminDashboardController extends Controller
         ]) ?: null;
         $accessLogs = $section === 'access-logs'
             ? UserAccessLog::query()
-                ->with('user:user_id,username,email,role,banned_at')
+                ->with('user:user_id,username,email,role,banned_at,ban_expires_at')
                 ->when($accessLogUserId, fn ($query) => $query->where('user_id', $accessLogUserId))
                 ->latest('accessed_at')
                 ->paginate(25, ['*'], 'logs_page')
@@ -106,7 +116,13 @@ class AdminDashboardController extends Controller
                 'users' => User::query()->where('role', '!=', 'admin')->count(),
                 'pending_reports' => Report::query()->where('status', 'pending')->count(),
                 'categories' => Category::query()->count(),
-                'banned_users' => User::query()->whereNotNull('banned_at')->count(),
+                'banned_users' => User::query()
+                    ->whereNotNull('banned_at')
+                    ->where(function ($query): void {
+                        $query->whereNull('ban_expires_at')
+                            ->orWhere('ban_expires_at', '>', now());
+                    })
+                    ->count(),
             ],
         ]);
     }

@@ -26,11 +26,13 @@ class AdminUserController extends Controller
         if ($validated['action'] === 'ban') {
             $user->forceFill([
                 'banned_at' => $user->banned_at ?? now(),
+                'ban_expires_at' => null,
                 'ban_reason' => $validated['ban_reason'] ?: 'Banned by an administrator.',
             ])->save();
         } else {
             $user->forceFill([
                 'banned_at' => null,
+                'ban_expires_at' => null,
                 'ban_reason' => null,
             ])->save();
         }

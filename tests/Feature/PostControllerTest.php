@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Keyword;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -80,6 +81,25 @@ class PostControllerTest extends TestCase
                 'post_type' => 'Gossip',
             ])
             ->assertSessionHasErrors(['category_id', 'post_type']);
+
+        $this->assertSame(0, Post::query()->count());
+    }
+
+    public function test_restricted_keyword_blocks_post_and_returns_a_specific_notice(): void
+    {
+        $author = User::factory()->create();
+        $category = Category::query()->firstOrCreate(['category_type' => 'Technology']);
+        Keyword::query()->create(['keyword_text' => 'restricted phrase']);
+
+        $this->actingAs($author)
+            ->post(route('posts.store'), [
+                'content' => 'This RESTRICTED PHRASE should not be published.',
+                'category_id' => $category->category_id,
+                'post_type' => 'Discussion',
+            ])
+            ->assertSessionHasErrors([
+                'content' => 'Your post contains the restricted keyword "restricted phrase" and cannot be published.',
+            ]);
 
         $this->assertSame(0, Post::query()->count());
     }

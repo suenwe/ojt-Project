@@ -159,30 +159,35 @@
             <button type="button" class="rp-close" id="close-post-report" aria-label="Close report form">&times;</button>
         </div>
 
-        <form id="post-report-form">
+        <form id="post-report-form" method="POST" action="{{ route('report.store') }}">
+            @csrf
+            <input type="hidden" id="post-report-id" name="post_id" value="{{ old('post_id') }}">
             <div class="rp-field-group">
                 <label for="post-report-reason">Report Reason <span class="rp-required">*</span></label>
-                <select class="field" id="post-report-reason" name="reason" required>
+                <select class="field" id="post-report-reason" name="report_type" required>
                     <option value="">Select a reason</option>
-                    <option value="Problem involving someone under 18">Problem involving someone under 18</option>
-                    <option value="Bullying, harassment or abuse">Bullying, harassment or abuse</option>
-                    <option value="Suicide or self-harm">Suicide or self-harm</option>
-                    <option value="Violent, hateful or disturbing content">Violent, hateful or disturbing content</option>
-                    <option value="Selling or promoting restricted items">Selling or promoting restricted items</option>
-                    <option value="Adult content">Adult content</option>
-                    <option value="Scam, fraud or false information">Scam, fraud or false information</option>
-                    <option value="Intellectual property">Intellectual property</option>
-                    <option value="I don&#x27;t want to see this">I don't want to see this</option>
+                    <option value="Problem involving someone under 18" @selected(old('report_type') === 'Problem involving someone under 18')>Problem involving someone under 18</option>
+                    <option value="Bullying, harassment or abuse" @selected(old('report_type') === 'Bullying, harassment or abuse')>Bullying, harassment or abuse</option>
+                    <option value="Suicide or self-harm" @selected(old('report_type') === 'Suicide or self-harm')>Suicide or self-harm</option>
+                    <option value="Violent, hateful or disturbing content" @selected(old('report_type') === 'Violent, hateful or disturbing content')>Violent, hateful or disturbing content</option>
+                    <option value="Selling or promoting restricted items" @selected(old('report_type') === 'Selling or promoting restricted items')>Selling or promoting restricted items</option>
+                    <option value="Adult content" @selected(old('report_type') === 'Adult content')>Adult content</option>
+                    <option value="Scam, fraud or false information" @selected(old('report_type') === 'Scam, fraud or false information')>Scam, fraud or false information</option>
+                    <option value="Intellectual property" @selected(old('report_type') === 'Intellectual property')>Intellectual property</option>
+                    <option value="I don&#x27;t want to see this" @selected(old('report_type') === "I don't want to see this")>I don't want to see this</option>
                 </select>
             </div>
 
+            @error('report_type')<p class="form-error" role="alert">{{ $message }}</p>@enderror
+            @error('post_id')<p class="form-error" role="alert">{{ $message }}</p>@enderror
             <div class="rp-field-group">
                 <label for="post-report-details">Additional Details (Optional)</label>
-                <textarea class="field" id="post-report-details" name="details" maxlength="500" placeholder="Describe your concern (optional)..."></textarea>
+                <textarea class="field" id="post-report-details" name="reason" maxlength="500" placeholder="Describe your concern (optional)...">{{ old('reason') }}</textarea>
                 <span class="rp-count" id="post-report-count">0 / 500</span>
             </div>
+            @error('reason')<p class="form-error" role="alert">{{ $message }}</p>@enderror
 
-            <p class="rp-privacy">Reports will be reviewed by the moderation team once the backend is connected. This preview does not send any report.</p>
+            <p class="rp-privacy">Reports are sent to the admin team for review.</p>
 
             <div class="rp-actions">
                 <button type="button" class="btn secondary" id="cancel-post-report">Cancel</button>
@@ -204,6 +209,11 @@
             const details = document.getElementById('post-report-details');
             const count = document.getElementById('post-report-count');
             const result = document.getElementById('post-report-result');
+            const reportPostId = document.getElementById('post-report-id');
+
+            @if ($errors->has('report_type') || $errors->has('post_id') || $errors->has('reason'))
+                dialog.showModal();
+            @endif
 
             function closeAllMenus(exceptWrap) {
                 document.querySelectorAll('.post-report-menu-wrap').forEach((wrap) => {
@@ -233,6 +243,7 @@
                 if (openReport) {
                     closeAllMenus(null);
                     form.reset();
+                    reportPostId.value = openReport.dataset.postId;
                     count.textContent = '0 / 500';
                     dialog.showModal();
                     reason.focus();
@@ -257,13 +268,6 @@
                 count.textContent = details.value.length + ' / 500';
             });
 
-            form.addEventListener('submit', (event) => {
-                event.preventDefault();
-                if (!form.reportValidity()) return;
-                result.textContent = 'Report form validated successfully (preview only). No report was submitted to the server.';
-                result.hidden = false;
-                hideReport();
-            });
         })();
     </script>
 @endsection

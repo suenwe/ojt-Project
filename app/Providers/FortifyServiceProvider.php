@@ -44,7 +44,9 @@ class FortifyServiceProvider extends ServiceProvider
                 return null;
             }
 
-            if ($user->banned_at !== null) {
+            $user->clearExpiredBan();
+
+            if ($user->isBanned()) {
                 throw ValidationException::withMessages([
                     Fortify::username() => 'This account has been suspended.',
                 ]);

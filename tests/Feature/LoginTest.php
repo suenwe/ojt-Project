@@ -37,6 +37,29 @@ class LoginTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_expired_report_ban_is_cleared_and_member_can_sign_in(): void
+    {
+        $this->travelTo('2026-10-19 12:00:00');
+        $user = User::factory()->create([
+            'banned_at' => now()->subDays(3),
+            'ban_expires_at' => now()->subSecond(),
+            'ban_reason' => 'Confirmed report #1',
+        ]);
+
+        $this->post(route('login.store'), [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertRedirect('/');
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertDatabaseHas('users', [
+            'user_id' => $user->user_id,
+            'banned_at' => null,
+            'ban_expires_at' => null,
+            'ban_reason' => null,
+        ]);
+    }
+
     public function test_wrong_password_is_rejected(): void
     {
         $user = User::factory()->create();

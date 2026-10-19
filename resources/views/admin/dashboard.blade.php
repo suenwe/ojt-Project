@@ -184,15 +184,15 @@
                                         </div>
                                         @if ($report->status === 'pending')
                                             <div class="queue-actions">
-                                                <span class="action-hint">Confirming this report permanently bans the post author.</span>
+                                                <span class="action-hint">Confirming this report suspends the post author for three days.</span>
                                                 <div class="button-group">
                                                     <form method="POST" action="{{ route('admin.reports.review', $report) }}" data-confirm="This report will be marked invalid. The post author will not be banned." data-confirm-title="Dismiss this report?" data-confirm-action="Dismiss report">
                                                         @csrf @method('PATCH')<input type="hidden" name="decision" value="invalid">
                                                         <button class="button button-outline button-small" type="submit">Dismiss report</button>
                                                     </form>
-                                                    <form method="POST" action="{{ route('admin.reports.review', $report) }}" data-confirm="The report will be marked valid and the post author will be banned." data-confirm-title="Confirm report and ban author?" data-confirm-action="Confirm and ban">
+                                                    <form method="POST" action="{{ route('admin.reports.review', $report) }}" data-confirm="The report will be marked valid and the post author will be suspended for three days." data-confirm-title="Confirm report and suspend author?" data-confirm-action="Confirm and suspend">
                                                         @csrf @method('PATCH')<input type="hidden" name="decision" value="valid">
-                                                        <button class="button button-danger button-small" type="submit">Confirm &amp; ban author</button>
+                                                        <button class="button button-danger button-small" type="submit">Confirm &amp; suspend for 3 days</button>
                                                     </form>
                                                 </div>
                                             </div>
@@ -235,7 +235,7 @@
                                                 <td><span class="browser-cell">{{ $log->browser ?: 'Unknown' }}</span></td>
                                                 <td><code class="ip-cell">{{ $log->ip_address ?: 'Unknown' }}</code></td>
                                                 <td><span class="request-cell"><strong>{{ $log->method }}</strong> {{ $log->path ?: '/' }}</span><small class="route-cell">{{ $log->route_name ?: 'Unmatched route' }}</small></td>
-                                                <td><span class="status-pill {{ $log->user?->banned_at ? 'status-banned' : 'status-active' }}">{{ $log->user?->banned_at ? 'Banned' : ($log->user ? 'Active' : 'Deleted') }}</span></td>
+                                                <td><span class="status-pill {{ $log->user?->isBanned() ? 'status-banned' : 'status-active' }}">{{ $log->user?->isBanned() ? 'Banned' : ($log->user ? 'Active' : 'Deleted') }}</span></td>
                                             </tr>
                                         @endforeach
                                     </tbody>
