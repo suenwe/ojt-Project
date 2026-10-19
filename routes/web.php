@@ -5,6 +5,9 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Auth\EmailOtpController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function (): void {
@@ -26,11 +29,43 @@ Route::middleware('auth')->group(function (): void {
 });
 
 Route::middleware('guest')->group(function (): void {
+    Route::get('/login', [LoginController::class, 'create'])->name('login');
+    Route::post('/login', [LoginController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('login.store');
+
+    Route::get('/register', [LoginController::class, 'register'])->name('register');
+    Route::post('/register', [LoginController::class, 'storeRegistration'])
+        ->middleware('throttle:3,1')
+        ->name('register.store');
+
+    Route::get('/forgot-password', [PasswordResetController::class, 'create'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendCode'])
+        ->middleware('throttle:3,1')
+        ->name('password.email');
+
+    Route::get('/reset-password', [PasswordResetController::class, 'edit'])->name('otp.password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'update'])
+        ->middleware('throttle:3,1')
+        ->name('password.update');
+
     Route::get('/admin/login', [AdminAuthController::class, 'create'])->name('admin.login');
     Route::post('/admin/login', [AdminAuthController::class, 'store'])
         ->middleware('throttle:5,1')
         ->name('admin.login.store');
 });
+
+Route::get('/verify-email-code', [EmailOtpController::class, 'create'])->name('verification-code.challenge');
+Route::post('/verify-email-code', [EmailOtpController::class, 'verify'])
+    ->middleware('throttle:6,1')
+    ->name('verification-code.verify');
+Route::post('/verify-email-code/resend', [EmailOtpController::class, 'resend'])
+    ->middleware('throttle:3,1')
+    ->name('verification-code.resend');
+
+Route::post('/logout', [LoginController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('logout');
 
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')
