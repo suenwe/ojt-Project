@@ -28,7 +28,7 @@ class SendTwoFactorCode extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Your Vibely verification code')
+            ->subject('Your Knowvia verification code')
             ->greeting('Hello!')
             ->line('Your verification code is: '.$this->code)
             ->line('This code expires in one minute and can only be used once.')

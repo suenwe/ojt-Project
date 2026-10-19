@@ -9,7 +9,10 @@ use App\Models\Post;
 use App\Models\Report;
 use App\Models\User;
 use App\Models\UserAccessLog;
+use App\Notifications\ReportConfirmed;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Tests\TestCase;
 
 class AdminDashboardTest extends TestCase
@@ -33,7 +36,7 @@ class AdminDashboardTest extends TestCase
 
         $this->get(route('login'))
             ->assertOk()
-            ->assertSee('Welcome Back!');
+            ->assertSee('Use your Knowvia email and password.');
     }
 
     public function test_admin_returns_to_the_dashboard_after_signing_in_on_the_shared_page(): void
@@ -205,7 +208,7 @@ class AdminDashboardTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
 
         foreach ([
-            'overview' => 'Good to see you',
+            'overview' => 'Members, reports and categories at a glance.',
             'reports' => 'Report queue',
             'users' => 'User management',
             'access-logs' => 'User access log',
@@ -249,8 +252,10 @@ class AdminDashboardTest extends TestCase
             ->assertSee('data-confirm-cancel', false);
     }
 
-    public function test_successful_report_review_bans_the_post_author(): void
+    public function test_successful_report_review_suspends_the_post_author_for_three_days_and_notifies_them(): void
     {
+        $this->travelTo('2026-10-19 12:00:00');
+        NotificationFacade::fake();
         $admin = User::factory()->create(['role' => 'admin']);
         $author = User::factory()->create();
         $reporter = User::factory()->create();
@@ -279,10 +284,13 @@ class AdminDashboardTest extends TestCase
             'ban_reason' => 'Confirmed report #'.$report->report_id.': Bullying, harassment or abuse',
         ]);
         $this->assertNotNull($author->fresh()->banned_at);
+        $this->assertSame('2026-10-22 12:00:00', $author->fresh()->ban_expires_at->format('Y-m-d H:i:s'));
+        NotificationFacade::assertSentTo($author, ReportConfirmed::class);
     }
 
     public function test_dismissing_a_report_does_not_ban_the_post_author(): void
     {
+        NotificationFacade::fake();
         $admin = User::factory()->create(['role' => 'admin']);
         $author = User::factory()->create();
         $report = $this->makeReport($author);
@@ -293,6 +301,50 @@ class AdminDashboardTest extends TestCase
 
         $this->assertDatabaseHas('reports', ['report_id' => $report->report_id, 'status' => 'invalid']);
         $this->assertNull($author->fresh()->banned_at);
+        NotificationFacade::assertNothingSent();
+    }
+
+    public function test_confirming_a_report_does_not_shorten_an_existing_indefinite_admin_ban(): void
+    {
+        NotificationFacade::fake();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $author = User::factory()->create([
+            'banned_at' => now()->subDay(),
+            'ban_expires_at' => null,
+            'ban_reason' => 'Manual admin ban',
+        ]);
+        $report = $this->makeReport($author);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.reports.review', $report), ['decision' => 'valid'])
+            ->assertRedirect(route('admin.dashboard', ['section' => 'reports']))
+            ->assertSessionHas('status', 'Report confirmed. The post author remains under an indefinite admin suspension.');
+
+        $this->assertDatabaseHas('users', [
+            'user_id' => $author->user_id,
+            'ban_reason' => 'Manual admin ban',
+            'ban_expires_at' => null,
+        ]);
+        NotificationFacade::assertSentTo($author, ReportConfirmed::class);
+    }
+
+    public function test_expired_report_suspension_is_cleared_when_the_member_returns(): void
+    {
+        $this->travelTo('2026-10-19 12:00:00');
+        $member = User::factory()->create([
+            'banned_at' => now()->subDays(3),
+            'ban_expires_at' => now()->subSecond(),
+            'ban_reason' => 'Confirmed report #1',
+        ]);
+
+        $this->actingAs($member)->get(route('home'))->assertOk();
+
+        $this->assertDatabaseHas('users', [
+            'user_id' => $member->user_id,
+            'banned_at' => null,
+            'ban_expires_at' => null,
+            'ban_reason' => null,
+        ]);
     }
 
     public function test_admin_can_manage_categories_restricted_terms_and_notifications(): void
@@ -328,6 +380,59 @@ class AdminDashboardTest extends TestCase
             'notification_type' => 'Community news',
             'notification_text' => 'A refreshed message.',
         ]);
+    }
+
+    public function test_admin_creates_another_admin_account_from_the_dashboard(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard', ['section' => 'users']))
+            ->assertOk()
+            ->assertSee('Create admin account');
+
+        $this->post(route('admin.admins.store'), [
+            'username' => 'newadmin',
+            'email' => 'new.admin@example.test',
+            'password' => 'Admin123!',
+            'password_confirmation' => 'Admin123!',
+        ])
+            ->assertRedirect(route('admin.dashboard', ['section' => 'users']))
+            ->assertSessionHas('status');
+
+        $newAdmin = User::query()->where('email', 'new.admin@example.test')->sole();
+        $this->assertSame('admin', $newAdmin->role);
+        $this->assertTrue(Hash::check('Admin123!', $newAdmin->password));
+    }
+
+    public function test_members_cannot_create_admin_accounts(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->post(route('admin.admins.store'), [
+                'username' => 'sneaky',
+                'email' => 'sneaky@example.test',
+                'password' => 'Admin123!',
+                'password_confirmation' => 'Admin123!',
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('users', ['email' => 'sneaky@example.test']);
+    }
+
+    public function test_creating_an_admin_rejects_a_weak_password_and_a_taken_username(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'username' => 'Boss']);
+
+        $this->actingAs($admin)
+            ->post(route('admin.admins.store'), [
+                'username' => 'boss',
+                'email' => 'second@example.test',
+                'password' => 'weakpass',
+                'password_confirmation' => 'weakpass',
+            ])
+            ->assertSessionHasErrorsIn('createAdmin', ['username', 'password']);
+
+        $this->assertDatabaseMissing('users', ['email' => 'second@example.test']);
     }
 
     private function makeReport(User $author): Report

@@ -153,7 +153,7 @@
 
         <!-- Knowvia Branding -->
         <div class="reset-brand">
-            <span class="brand-mark">V</span>
+            <span class="brand-mark">K</span>
             <h1>Knowvia</h1>
         </div>
 

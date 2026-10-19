@@ -76,18 +76,19 @@ class PostPublisher
      *
      * @throws Throwable
      */
-    public function update(Post $post, array $data, array $files): Post
+    public function update(Post $post, array $data, array $files, ?CarbonInterface $newDateTime = null): Post
     {
         $oldPaths = [];
         $storedPaths = [];
 
         try {
-            DB::transaction(function () use ($post, $data, $files, &$oldPaths, &$storedPaths): void {
+            DB::transaction(function () use ($post, $data, $files, $newDateTime, &$oldPaths, &$storedPaths): void {
                 $post->update([
                     'descriptions' => trim($data['content']),
                     'category_id' => (int) $data['category_id'],
                     'post_type' => $data['post_type'],
                     'hashtag' => trim((string) ($data['hashtag'] ?? '')) ?: null,
+                    'date_time' => $newDateTime ?? $post->date_time,
                 ]);
 
                 if ($files === []) {

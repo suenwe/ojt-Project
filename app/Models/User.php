@@ -24,6 +24,7 @@ use Illuminate\Support\Str;
     'ip_address',
     'browser',
     'banned_at',
+    'ban_expires_at',
     'ban_reason',
     'birthday',
 ])]
@@ -49,8 +50,26 @@ class User extends Authenticatable
             'password' => 'hashed',
             'two_factor_expires_at' => 'datetime',
             'banned_at' => 'datetime',
+            'ban_expires_at' => 'datetime',
             'birthday' => 'date',
         ];
+    }
+
+    public function isBanned(): bool
+    {
+        return $this->banned_at !== null
+            && ($this->ban_expires_at === null || $this->ban_expires_at->isFuture());
+    }
+
+    public function clearExpiredBan(): void
+    {
+        if ($this->banned_at !== null && ! $this->isBanned()) {
+            $this->forceFill([
+                'banned_at' => null,
+                'ban_expires_at' => null,
+                'ban_reason' => null,
+            ])->save();
+        }
     }
 
     /**

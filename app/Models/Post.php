@@ -47,6 +47,43 @@ class Post extends Model
         });
     }
 
+    /**
+     * Count the hashtags used in recent visible posts, most used first.
+     *
+     * @return array<string, int> hashtag => number of posts that use it
+     */
+    public static function popularHashtags(int $limit = 5, int $days = 30): array
+    {
+        $counts = [];
+
+        static::query()
+            ->visibleInFeed()
+            ->whereNotNull('hashtag')
+            ->where('date_time', '>=', now()->subDays($days))
+            ->latest('date_time')
+            ->limit(500)
+            ->pluck('hashtag')
+            ->each(function (string $hashtags) use (&$counts): void {
+                preg_match_all('/#[\pL\pN_]+/u', $hashtags, $matches);
+
+                foreach (array_unique(array_map('mb_strtolower', $matches[0])) as $tag) {
+                    $counts[$tag] = ($counts[$tag] ?? 0) + 1;
+                }
+            });
+
+        arsort($counts);
+
+        return array_slice($counts, 0, $limit, true);
+    }
+
+    /**
+     * Whether the post is scheduled and its time has not come yet.
+     */
+    public function isUpcomingScheduled(): bool
+    {
+        return $this->state === 'scheduled' && $this->date_time?->isFuture() === true;
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'user_id');

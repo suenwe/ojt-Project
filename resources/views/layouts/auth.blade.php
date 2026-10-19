@@ -22,7 +22,7 @@
     <main class="auth-shell">
         <section class="auth-intro">
             <a class="brand auth-brand" href="/" aria-label="Knowvia home">
-                <span class="brand-mark">V</span>
+                <span class="brand-mark">K</span>
                 <span>Knowvia</span>
             </a>
             <div>

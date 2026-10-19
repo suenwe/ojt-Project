@@ -84,6 +84,94 @@ class ScheduledPostControllerTest extends TestCase
         $this->assertModelMissing($post);
     }
 
+    public function test_author_moves_a_scheduled_post_to_a_new_time(): void
+    {
+        $this->freezeTime();
+        $author = User::factory()->create();
+        $category = Category::query()->firstOrCreate(['category_type' => 'Technology']);
+        $post = Post::query()->create([
+            'descriptions' => 'Planned post',
+            'category_id' => $category->category_id,
+            'post_type' => 'Discussion',
+            'state' => 'scheduled',
+            'date_time' => now()->addDay(),
+            'user_id' => $author->user_id,
+        ]);
+        $newTime = now()->addDays(3)->setTime(9, 30);
+
+        $this->actingAs($author)
+            ->get(route('posts.edit', $post))
+            ->assertOk()
+            ->assertSee('Edit Scheduled Post')
+            ->assertSee('value="'.$post->date_time->format('Y-m-d\TH:i').'"', false);
+
+        $this->put(route('posts.update', $post), [
+            'content' => 'Planned post, moved',
+            'category_id' => $category->category_id,
+            'post_type' => 'Discussion',
+            'scheduled_at' => $newTime->format('Y-m-d\TH:i'),
+        ])
+            ->assertRedirect(route('posts.schedule'))
+            ->assertSessionHas('status', 'Your scheduled post was updated.');
+
+        $post->refresh();
+        $this->assertSame('scheduled', $post->state);
+        $this->assertSame($newTime->format('Y-m-d H:i'), $post->date_time->format('Y-m-d H:i'));
+        $this->assertSame('Planned post, moved', $post->descriptions);
+    }
+
+    public function test_a_scheduled_post_cannot_be_moved_into_the_past(): void
+    {
+        $author = User::factory()->create();
+        $category = Category::query()->firstOrCreate(['category_type' => 'Technology']);
+        $post = Post::query()->create([
+            'descriptions' => 'Planned post',
+            'category_id' => $category->category_id,
+            'post_type' => 'Discussion',
+            'state' => 'scheduled',
+            'date_time' => now()->addDay(),
+            'user_id' => $author->user_id,
+        ]);
+
+        $this->actingAs($author)
+            ->put(route('posts.update', $post), [
+                'content' => 'Planned post',
+                'category_id' => $category->category_id,
+                'post_type' => 'Discussion',
+                'scheduled_at' => now()->subHour()->format('Y-m-d\TH:i'),
+            ])
+            ->assertSessionHasErrors(['scheduled_at' => 'Please choose a future date and time.']);
+
+        $this->assertTrue($post->fresh()->date_time->isFuture());
+    }
+
+    public function test_editing_a_published_post_does_not_ask_for_a_time(): void
+    {
+        $author = User::factory()->create();
+        $category = Category::query()->firstOrCreate(['category_type' => 'Technology']);
+        $post = Post::query()->create([
+            'descriptions' => 'Already live',
+            'category_id' => $category->category_id,
+            'post_type' => 'Discussion',
+            'state' => 'published',
+            'date_time' => now()->subDay(),
+            'user_id' => $author->user_id,
+        ]);
+        $originalTime = $post->date_time->format('Y-m-d H:i');
+
+        $this->actingAs($author)
+            ->get(route('posts.edit', $post))
+            ->assertDontSee('Schedule date and time');
+
+        $this->put(route('posts.update', $post), [
+            'content' => 'Still live',
+            'category_id' => $category->category_id,
+            'post_type' => 'Discussion',
+        ])->assertRedirect(route('home'));
+
+        $this->assertSame($originalTime, $post->fresh()->date_time->format('Y-m-d H:i'));
+    }
+
     public function test_members_only_see_their_own_scheduled_posts(): void
     {
         Post::query()->create([

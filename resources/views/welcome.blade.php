@@ -33,7 +33,7 @@
 
     <header class="topbar">
         <a class="brand" href="{{ url('/') }}" aria-label="Knowvia home">
-            <span class="brand-mark">V</span>
+            <span class="brand-mark">K</span>
             <span>Knowvia</span>
         </a>
 
@@ -43,10 +43,11 @@
             <details class="top-menu">
                 <summary class="icon-button" aria-label="Open main menu">☰</summary>
                 <nav aria-label="Main menu">
-                    <a href="#posts">Posts</a>
-                    <a href="#schedules">Schedules</a>
-                    <a href="#bookmarks">Saved posts</a>
-                    <a href="#help">Help and support</a>
+                    <a href="{{ route('home') }}">Home</a>
+                    <a href="{{ route('posts.create') }}">Create a post</a>
+                    <a href="{{ route('posts.schedule') }}">Schedule a post</a>
+                    <a href="{{ route('users.show', auth()->user()) }}">My profile</a>
+                    <a href="{{ route('profile.edit') }}">Profile settings</a>
                 </nav>
             </details>
         </div>
@@ -96,7 +97,6 @@
             <div class="feed-actions">
                 <div class="feed-action-buttons">
                     <a class="btn" href="{{ route('posts.create') }}">Create post</a>
-                    <a class="btn secondary" href="{{ route('posts.schedule') }}">Schedule post</a>
                 </div>
                 <label class="sort-control" for="post-sort">
                     Sort by:
@@ -143,16 +143,31 @@
 
         <aside class="rightbar">
             <section class="panel right-panel">
-                <h3>Explore</h3>
-                <p class="subtext">Browse posts by hashtag.</p>
+                <h3>Popular hashtags</h3>
+                <p class="subtext">From posts in the last 30 days.</p>
                 <div class="category-list">
-                    <a class="category-link" href="#laravel"><span>#laravel</span><strong>12</strong></a>
-                    <a class="category-link" href="#postgresql"><span>#postgresql</span><strong>8</strong></a>
-                    <a class="category-link" href="#webdevelopment"><span>#webdevelopment</span><strong>5</strong></a>
+                    @forelse ($popularHashtags as $hashtag => $postCount)
+                        <div class="category-link"><span>{{ $hashtag }}</span><strong>{{ $postCount }}</strong></div>
+                    @empty
+                        <p class="subtext">Hashtags from new posts will show up here.</p>
+                    @endforelse
                 </div>
             </section>
         </aside>
     </div>
+
+    <a
+        class="schedule-fab {{ request()->routeIs('posts.schedule') ? 'is-active' : '' }}"
+        href="{{ route('posts.schedule') }}"
+        title="Schedule a post"
+        aria-label="Schedule a post"
+    >
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+            <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M3.5 9.5h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M12 12.5v3l2 1.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </a>
 
     <dialog class="rp-dialog" id="post-report-dialog" aria-labelledby="post-report-title">
         <div class="rp-dialog-heading">
@@ -163,30 +178,35 @@
             <button type="button" class="rp-close" id="close-post-report" aria-label="Close report form">&times;</button>
         </div>
 
-        <form id="post-report-form">
+        <form id="post-report-form" method="POST" action="{{ route('report.store') }}">
+            @csrf
+            <input type="hidden" id="post-report-id" name="post_id" value="{{ old('post_id') }}">
             <div class="rp-field-group">
                 <label for="post-report-reason">Report Reason <span class="rp-required">*</span></label>
-                <select class="field" id="post-report-reason" name="reason" required>
+                <select class="field" id="post-report-reason" name="report_type" required>
                     <option value="">Select a reason</option>
-                    <option value="Problem involving someone under 18">Problem involving someone under 18</option>
-                    <option value="Bullying, harassment or abuse">Bullying, harassment or abuse</option>
-                    <option value="Suicide or self-harm">Suicide or self-harm</option>
-                    <option value="Violent, hateful or disturbing content">Violent, hateful or disturbing content</option>
-                    <option value="Selling or promoting restricted items">Selling or promoting restricted items</option>
-                    <option value="Adult content">Adult content</option>
-                    <option value="Scam, fraud or false information">Scam, fraud or false information</option>
-                    <option value="Intellectual property">Intellectual property</option>
-                    <option value="I don&#x27;t want to see this">I don't want to see this</option>
+                    <option value="Problem involving someone under 18" @selected(old('report_type') === 'Problem involving someone under 18')>Problem involving someone under 18</option>
+                    <option value="Bullying, harassment or abuse" @selected(old('report_type') === 'Bullying, harassment or abuse')>Bullying, harassment or abuse</option>
+                    <option value="Suicide or self-harm" @selected(old('report_type') === 'Suicide or self-harm')>Suicide or self-harm</option>
+                    <option value="Violent, hateful or disturbing content" @selected(old('report_type') === 'Violent, hateful or disturbing content')>Violent, hateful or disturbing content</option>
+                    <option value="Selling or promoting restricted items" @selected(old('report_type') === 'Selling or promoting restricted items')>Selling or promoting restricted items</option>
+                    <option value="Adult content" @selected(old('report_type') === 'Adult content')>Adult content</option>
+                    <option value="Scam, fraud or false information" @selected(old('report_type') === 'Scam, fraud or false information')>Scam, fraud or false information</option>
+                    <option value="Intellectual property" @selected(old('report_type') === 'Intellectual property')>Intellectual property</option>
+                    <option value="I don&#x27;t want to see this" @selected(old('report_type') === "I don't want to see this")>I don't want to see this</option>
                 </select>
             </div>
 
+            @error('report_type')<p class="form-error" role="alert">{{ $message }}</p>@enderror
+            @error('post_id')<p class="form-error" role="alert">{{ $message }}</p>@enderror
             <div class="rp-field-group">
                 <label for="post-report-details">Additional Details (Optional)</label>
-                <textarea class="field" id="post-report-details" name="details" maxlength="500" placeholder="Describe your concern (optional)..."></textarea>
+                <textarea class="field" id="post-report-details" name="reason" maxlength="500" placeholder="Describe your concern (optional)...">{{ old('reason') }}</textarea>
                 <span class="rp-count" id="post-report-count">0 / 500</span>
             </div>
+            @error('reason')<p class="form-error" role="alert">{{ $message }}</p>@enderror
 
-            <p class="rp-privacy">Reports will be reviewed by the moderation team once the backend is connected. This preview does not send any report.</p>
+            <p class="rp-privacy">Reports are sent to the admin team for review.</p>
 
             <div class="rp-actions">
                 <button type="button" class="btn secondary" id="cancel-post-report">Cancel</button>
@@ -208,6 +228,11 @@
             const details = document.getElementById('post-report-details');
             const count = document.getElementById('post-report-count');
             const result = document.getElementById('post-report-result');
+            const reportPostId = document.getElementById('post-report-id');
+
+            @if ($errors->has('report_type') || $errors->has('post_id') || $errors->has('reason'))
+                dialog.showModal();
+            @endif
 
             function closeAllMenus(exceptWrap) {
                 document.querySelectorAll('.post-report-menu-wrap').forEach((wrap) => {
@@ -237,6 +262,7 @@
                 if (openReport) {
                     closeAllMenus(null);
                     form.reset();
+                    reportPostId.value = openReport.dataset.postId;
                     count.textContent = '0 / 500';
                     dialog.showModal();
                     reason.focus();
@@ -261,13 +287,6 @@
                 count.textContent = details.value.length + ' / 500';
             });
 
-            form.addEventListener('submit', (event) => {
-                event.preventDefault();
-                if (!form.reportValidity()) return;
-                result.textContent = 'Report form validated successfully (preview only). No report was submitted to the server.';
-                result.hidden = false;
-                hideReport();
-            });
         })();
     </script>
 @endsection

@@ -61,8 +61,10 @@ class EmailOtpController extends Controller
         if (in_array($challenge['purpose'], ['login', 'admin_login'], true)) {
             $isAdminLogin = $challenge['purpose'] === 'admin_login';
 
+            $user?->clearExpiredBan();
+
             if (! $user
-                || $user->banned_at !== null
+                || $user->isBanned()
                 || ($isAdminLogin && $user->role !== 'admin')) {
                 $emailOtp->clear();
 
@@ -153,7 +155,9 @@ class EmailOtpController extends Controller
         if ($challenge['user_id'] !== null) {
             $user = User::query()->find($challenge['user_id']);
 
-            if (! $user || $user->banned_at !== null
+            $user?->clearExpiredBan();
+
+            if (! $user || $user->isBanned()
                 || ($challenge['purpose'] === 'admin_login' && $user->role !== 'admin')) {
                 $emailOtp->clear();
 

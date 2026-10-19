@@ -1,8 +1,9 @@
 @php($editingPost = $editingPost ?? null)
+@php($isRescheduling = $editingPost?->isUpcomingScheduled() ?? false)
 <section class="panel composer">
-    <h2 class="composer-title">{{ $editingPost ? 'Edit Post' : ($isScheduling ? 'Schedule a Post' : 'Create a Post') }}</h2>
+    <h2 class="composer-title">{{ $isRescheduling ? 'Edit Scheduled Post' : ($editingPost ? 'Edit Post' : ($isScheduling ? 'Schedule a Post' : 'Create a Post')) }}</h2>
     <p class="subtext">
-        {{ $editingPost ? 'Change your post and save it.' : ($isScheduling ? 'Choose when your post should be published.' : "What's on your mind today?") }}
+        {{ $isRescheduling ? 'Change your post or move it to a different time.' : ($editingPost ? 'Change your post and save it.' : ($isScheduling ? 'Choose when your post should be published.' : "What's on your mind today?")) }}
     </p>
 
     @if (session('status'))
@@ -65,14 +66,14 @@
             placeholder="#learning #knowvia"
         >
 
-        @if ($isScheduling)
+        @if ($isScheduling || $isRescheduling)
             <label for="post-scheduled-at">Schedule date and time</label>
             <input
                 class="field"
                 id="post-scheduled-at"
                 name="scheduled_at"
                 type="datetime-local"
-                value="{{ old('scheduled_at') }}"
+                value="{{ old('scheduled_at', $editingPost?->date_time?->format('Y-m-d\TH:i')) }}"
                 min="{{ now()->addMinute()->format('Y-m-d\TH:i') }}"
                 required
             >
@@ -119,11 +120,14 @@
                         @if ($scheduledPost->media_count) · {{ $scheduledPost->media_count }} {{ \Illuminate\Support\Str::plural('file', $scheduledPost->media_count) }} @endif
                     </small>
                 </div>
-                <form method="POST" action="{{ route('schedule-post.destroy', $scheduledPost) }}" onsubmit="return confirm('Cancel this scheduled post?');">
-                    @csrf
-                    @method('DELETE')
-                    <button class="btn secondary small" type="submit">Cancel</button>
-                </form>
+                <div class="scheduled-post-actions">
+                    <a class="btn secondary small" href="{{ route('posts.edit', $scheduledPost) }}">Edit</a>
+                    <form method="POST" action="{{ route('schedule-post.destroy', $scheduledPost) }}" onsubmit="return confirm('Cancel this scheduled post?');">
+                        @csrf
+                        @method('DELETE')
+                        <button class="btn secondary small" type="submit">Cancel</button>
+                    </form>
+                </div>
             </div>
         @empty
             <p class="subtext">You have no upcoming scheduled posts.</p>

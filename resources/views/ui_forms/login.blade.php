@@ -184,18 +184,18 @@
         <!-- Knowvia Logo -->
         <div class="login-brand">
 
-            <span class="brand-mark">V</span>
+            <span class="brand-mark">K</span>
 
             <h1>Knowvia</h1>
 
         </div>
 
         <h2 class="login-title">
-            Welcome Back!
+            Sign in
         </h2>
 
         <p class="subtext">
-            Sign in to connect with your community.
+            Use your Knowvia email and password.
         </p>
 
         <p class="required-note">

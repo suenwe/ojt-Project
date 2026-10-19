@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Keyword;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -82,6 +83,55 @@ class PostControllerTest extends TestCase
             ->assertSessionHasErrors(['category_id', 'post_type']);
 
         $this->assertSame(0, Post::query()->count());
+    }
+
+    public function test_restricted_keyword_blocks_post_and_returns_a_specific_notice(): void
+    {
+        $author = User::factory()->create();
+        $category = Category::query()->firstOrCreate(['category_type' => 'Technology']);
+        Keyword::query()->create(['keyword_text' => 'restricted phrase']);
+
+        $this->actingAs($author)
+            ->post(route('posts.store'), [
+                'content' => 'This RESTRICTED PHRASE should not be published.',
+                'category_id' => $category->category_id,
+                'post_type' => 'Discussion',
+            ])
+            ->assertSessionHasErrors([
+                'content' => 'Your post contains the restricted keyword "restricted phrase" and cannot be published.',
+            ]);
+
+        $this->assertSame(0, Post::query()->count());
+    }
+
+    public function test_sidebar_shows_real_popular_hashtags_from_recent_posts(): void
+    {
+        $author = User::factory()->create();
+        foreach (['#laravel #php', '#Laravel', '#design'] as $hashtags) {
+            Post::query()->create([
+                'descriptions' => 'Tagged post',
+                'hashtag' => $hashtags,
+                'state' => 'published',
+                'date_time' => now()->subDay(),
+                'user_id' => $author->user_id,
+            ]);
+        }
+
+        $this->assertSame(['#laravel' => 2, '#php' => 1, '#design' => 1], Post::popularHashtags());
+
+        $this->actingAs($author)
+            ->get(route('home'))
+            ->assertSeeInOrder(['Popular hashtags', '#laravel', '2'])
+            ->assertDontSee('#postgresql');
+    }
+
+    public function test_schedule_is_reached_from_the_round_calendar_button(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->get(route('home'))
+            ->assertSee('class="schedule-fab', false)
+            ->assertSee('aria-label="Schedule a post"', false)
+            ->assertDontSee('>Schedule post</a>', false);
     }
 
     public function test_feed_shows_an_empty_state_when_there_are_no_posts(): void

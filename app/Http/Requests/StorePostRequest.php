@@ -2,10 +2,13 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Keyword;
+use App\Models\Post;
 use App\Services\PostPublisher;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StorePostRequest extends FormRequest
 {
@@ -33,11 +36,23 @@ class StorePostRequest extends FormRequest
             'media.*' => ['file', 'max:25600', 'mimetypes:image/jpeg,image/png,image/webp,video/mp4,video/webm'],
         ];
 
-        if ($this->routeIs('schedule-post.store')) {
+        if ($this->routeIs('schedule-post.store') || $this->isReschedulingPost()) {
             $rules['scheduled_at'] = ['required', 'date', 'after:now'];
         }
 
         return $rules;
+    }
+
+    /**
+     * Whether this request edits a post that is still waiting for its scheduled time.
+     */
+    public function isReschedulingPost(): bool
+    {
+        $post = $this->route('post');
+
+        return $this->routeIs('posts.update')
+            && $post instanceof Post
+            && $post->isUpcomingScheduled();
     }
 
     /**
@@ -60,7 +75,22 @@ class StorePostRequest extends FormRequest
     public function after(): array
     {
         return [
-            function ($validator): void {
+            function (Validator $validator): void {
+                if (! $validator->errors()->has('content')) {
+                    $content = (string) $this->input('content', '');
+                    $matchingKeyword = Keyword::query()
+                        ->orderBy('keyword_id')
+                        ->pluck('keyword_text')
+                        ->first(fn (string $keyword): bool => $keyword !== '' && mb_stripos($content, $keyword) !== false);
+
+                    if ($matchingKeyword !== null) {
+                        $validator->errors()->add(
+                            'content',
+                            'Your post contains the restricted keyword "'.$matchingKeyword.'" and cannot be published.',
+                        );
+                    }
+                }
+
                 foreach ($this->file('media') ?? [] as $index => $file) {
                     if (str_starts_with((string) $file->getMimeType(), 'image/') && $file->getSize() > 5 * 1024 * 1024) {
                         $validator->errors()->add("media.{$index}", 'Images must be 5 MB or smaller.');

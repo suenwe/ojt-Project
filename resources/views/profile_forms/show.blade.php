@@ -12,7 +12,7 @@
             · {{ $memberPostCount }} {{ \Illuminate\Support\Str::plural('post', $memberPostCount) }}
             @if ($member->role === 'admin') · Admin @endif
         </p>
-        @if ($member->banned_at)
+        @if ($member->isBanned())
             <p class="member-profile-banned">This account is suspended.</p>
         @endif
     </div>

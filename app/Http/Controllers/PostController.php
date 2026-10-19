@@ -8,6 +8,7 @@ use App\Models\Post;
 use App\Models\PostMedia;
 use App\Services\PostPublisher;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -91,14 +92,25 @@ class PostController extends Controller
     {
         Gate::authorize('update', $post);
 
+        $isRescheduling = $request->isReschedulingPost();
+
         try {
-            $publisher->update($post, $request->validated(), $request->file('media') ?? []);
+            $publisher->update(
+                $post,
+                $request->validated(),
+                $request->file('media') ?? [],
+                $isRescheduling ? Carbon::parse($request->validated('scheduled_at')) : null,
+            );
         } catch (Throwable $exception) {
             Log::error('Post update failed: '.$exception->getMessage());
 
             return back()->withInput()->withErrors([
                 'content' => 'Your changes could not be saved. Please try again.',
             ]);
+        }
+
+        if ($isRescheduling) {
+            return redirect()->route('posts.schedule')->with('status', 'Your scheduled post was updated.');
         }
 
         return redirect()->route('home')->with('status', 'Your post was updated.');

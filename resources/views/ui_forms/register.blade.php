@@ -177,7 +177,7 @@
 
         <!-- Brand -->
         <div class="register-brand">
-            <span class="brand-mark">V</span>
+            <span class="brand-mark">K</span>
             <h1>Knowvia</h1>
         </div>
 
@@ -186,7 +186,7 @@
         </h2>
 
         <p class="subtext">
-            Join Knowvia and connect with your community.
+            It takes a minute. We'll email you a code to confirm your address.
         </p>
 
         <p class="required-note">

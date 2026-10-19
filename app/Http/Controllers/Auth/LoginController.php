@@ -39,7 +39,9 @@ class LoginController extends Controller
                 ->onlyInput('email');
         }
 
-        if ($user->banned_at !== null) {
+        $user->clearExpiredBan();
+
+        if ($user->isBanned()) {
             return back()
                 ->withErrors([
                     'email' => 'This account has been suspended.',

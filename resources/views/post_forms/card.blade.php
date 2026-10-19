@@ -31,7 +31,7 @@
                         <button type="submit" class="post-menu-danger">Delete post</button>
                     </form>
                 @else
-                    <button type="button" class="open-post-report">Report Post</button>
+                    <button type="button" class="open-post-report" data-post-id="{{ $post->post_id }}">Report Post</button>
                 @endcan
             </div>
         </div>

@@ -41,17 +41,17 @@
                         <td class="muted-cell">{{ $user->birthday ? \Illuminate\Support\Carbon::parse($user->birthday)->format('M j, Y') : '—' }}</td>
                         <td><span class="browser-cell">{{ $user->browser ?: 'Not recorded' }}</span></td>
                         <td><code class="ip-cell">{{ $user->IP_address ?: 'Not recorded' }}</code></td>
-                        <td><span class="status-pill {{ $user->banned_at ? 'status-banned' : 'status-active' }}">{{ $user->banned_at ? 'Banned' : 'Active' }}</span></td>
+                        <td><span class="status-pill {{ $user->isBanned() ? 'status-banned' : 'status-active' }}">{{ $user->isBanned() ? 'Banned' : 'Active' }}</span></td>
                         @unless ($compact)
                             <td>
                                 <div class="button-group user-action-group">
                                     <a class="button button-outline button-small" href="{{ route('admin.dashboard', ['section' => 'access-logs', 'user_id' => $user->user_id]) }}">Check</a>
                                 @if ($user->role !== 'admin' && $user->user_id !== auth()->id())
-                                    <form method="POST" action="{{ route('admin.users.ban', $user) }}" class="user-ban-form" data-confirm="{{ $user->banned_at ? 'This member will be able to access their account again.' : 'This member will lose access to the community until an admin restores it.' }}" data-confirm-title="{{ $user->banned_at ? 'Restore member access?' : 'Ban this member?' }}" data-confirm-action="{{ $user->banned_at ? 'Restore access' : 'Ban member' }}">
+                                    <form method="POST" action="{{ route('admin.users.ban', $user) }}" class="user-ban-form" data-confirm="{{ $user->isBanned() ? 'This member will be able to access their account again.' : 'This member will lose access to the community until an admin restores it.' }}" data-confirm-title="{{ $user->isBanned() ? 'Restore member access?' : 'Ban this member?' }}" data-confirm-action="{{ $user->isBanned() ? 'Restore access' : 'Ban member' }}">
                                         @csrf @method('PATCH')
-                                        <input type="hidden" name="action" value="{{ $user->banned_at ? 'unban' : 'ban' }}">
-                                        @if (! $user->banned_at)<input class="ban-reason-input" name="ban_reason" maxlength="1000" placeholder="Reason (optional)" aria-label="Ban reason">@endif
-                                        <button class="button {{ $user->banned_at ? 'button-outline' : 'button-danger' }} button-small" type="submit">{{ $user->banned_at ? 'Unban' : 'Ban' }}</button>
+                                        <input type="hidden" name="action" value="{{ $user->isBanned() ? 'unban' : 'ban' }}">
+                                        @if (! $user->isBanned())<input class="ban-reason-input" name="ban_reason" maxlength="1000" placeholder="Reason (optional)" aria-label="Ban reason">@endif
+                                        <button class="button {{ $user->isBanned() ? 'button-outline' : 'button-danger' }} button-small" type="submit">{{ $user->isBanned() ? 'Unban' : 'Ban' }}</button>
                                     </form>
                                 @else
                                     <button class="button button-danger button-small" type="button" disabled title="Admin accounts and your own account cannot be banned">Ban</button>

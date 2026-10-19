@@ -13,7 +13,7 @@ class MemberProfileController extends Controller
      */
     public function __invoke(Request $request, User $user): View
     {
-        abort_if($user->banned_at !== null && $request->user()->role !== 'admin', 404);
+        abort_if($user->isBanned() && $request->user()->role !== 'admin', 404);
 
         $posts = $user->posts()
             ->visibleInFeed()

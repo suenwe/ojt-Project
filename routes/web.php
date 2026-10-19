@@ -11,6 +11,7 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\DeleteAccountController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduledPostController;
 use Illuminate\Support\Facades\Route;
 
@@ -47,6 +48,10 @@ Route::middleware('auth')->group(function (): void {
     })->name('profile.edit');
 
     Route::delete('/profile', DeleteAccountController::class)->name('profile.destroy');
+
+    Route::post('/report-post', [ReportController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('report.store');
 });
 
 Route::middleware('guest')->group(function (): void {
@@ -95,6 +100,7 @@ Route::middleware(['auth', 'admin'])
         Route::patch('/reports/{report}', [AdminReportController::class, 'review'])
             ->name('reports.review');
 
+        Route::post('/admins', [AdminUserController::class, 'storeAdmin'])->name('admins.store');
         Route::patch('/users/{user}/ban', [AdminUserController::class, 'updateBan'])
             ->name('users.ban');
 
