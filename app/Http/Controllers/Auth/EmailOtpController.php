@@ -110,12 +110,12 @@ class EmailOtpController extends Controller
             $request->session()->regenerate();
             $request->session()->put('verified_password_reset_user_id', $user->getKey());
 
-            return redirect()->route('password.reset');
+            return redirect()->route('otp.password.reset');
         }
 
         $emailOtp->clear();
 
-        return redirect()->route('forgot-password')->with('status', 'If an account exists for that address, a verification code has been sent.');
+        return redirect()->route('password.request')->with('status', 'If an account exists for that address, a verification code has been sent.');
     }
 
     public function resend(Request $request, EmailOtpService $emailOtp): RedirectResponse

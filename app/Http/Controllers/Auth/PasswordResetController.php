@@ -8,13 +8,14 @@ use App\Services\EmailOtpService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class PasswordResetController extends Controller
 {
     public function create(): View
     {
-        return view('auth.forgot-password');
+        return view('ui_forms.forgot-password');
     }
 
     public function sendCode(Request $request, EmailOtpService $emailOtp): RedirectResponse
@@ -39,24 +40,24 @@ class PasswordResetController extends Controller
     public function edit(Request $request): View|RedirectResponse
     {
         if (! $request->session()->has('verified_password_reset_user_id')) {
-            return redirect()->route('forgot-password')->withErrors([
+            return redirect()->route('password.request')->withErrors([
                 'email' => 'Verify your email before resetting your password.',
             ]);
         }
 
-        return view('auth.reset-password');
+        return view('ui_forms.reset-password');
     }
 
     public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'confirmed', Password::min(8)->numbers()->symbols()],
         ]);
         $userId = $request->session()->pull('verified_password_reset_user_id');
         $user = $userId ? User::query()->find($userId) : null;
 
         if (! $user) {
-            return redirect()->route('forgot-password')->withErrors([
+            return redirect()->route('password.request')->withErrors([
                 'email' => 'Verify your email before resetting your password.',
             ]);
         }

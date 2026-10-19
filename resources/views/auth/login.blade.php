@@ -19,7 +19,7 @@
         </label>
 
         <button class="btn auth-submit" type="submit">Continue</button>
-        <a class="auth-link" href="{{ route('forgot-password') }}">Forgot your password?</a>
+        <a class="auth-link" href="{{ route('password.request') }}">Forgot your password?</a>
         <a class="auth-link" href="{{ route('register') }}">Create a temporary account</a>
     </form>
 @endsection

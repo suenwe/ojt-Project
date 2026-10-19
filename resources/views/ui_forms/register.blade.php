@@ -199,10 +199,6 @@
         <form id="register-form" method="POST" action="{{ route('register.store') }}">
             @csrf
 
-            @if (session('status'))
-                <p class="preview-message" role="status">{{ session('status') }}</p>
-            @endif
-
             @if ($errors->any())
                 <div class="form-errors" role="alert">
                     @foreach ($errors->all() as $error)
@@ -389,6 +385,14 @@
                 Email me a verification code
             </button>
 
+            <!-- Preview Message -->
+            <p
+                id="preview-message"
+                class="preview-message"
+                role="status"
+                hidden
+            ></p>
+
         </form>
 
         <!-- Login Link -->
@@ -420,6 +424,10 @@
 
     const passwordError = document.getElementById(
         'password-error'
+    );
+
+    const previewMessage = document.getElementById(
+        'preview-message'
     );
 
     // Check password confirmation
@@ -494,7 +502,7 @@
         });
     });
 
-    // Prevent a request when the confirmation does not match.
+    // Validate passwords before submitting to Laravel Fortify.
     form.addEventListener('submit', function(event) {
         validatePasswords();
 
