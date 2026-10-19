@@ -148,9 +148,7 @@
         </h2>
 
         <p class="subtext">
-            Enter your email address below.
-            We'll help you request a password
-            reset link.
+            Enter your email address below. We'll send a verification code before allowing a password reset.
         </p>
 
         <p class="required-note">
@@ -194,7 +192,7 @@
                 class="btn reset-btn"
                 type="submit"
             >
-                Send Reset Link
+                Send Verification Code
             </button>
 
             <!-- Reset Link Sent Message -->

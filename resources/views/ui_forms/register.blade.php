@@ -195,7 +195,7 @@
             are required.
         </p>
 
-        <!-- Frontend Preview Form -->
+        <!-- Registration Form -->
         <form id="register-form" method="POST" action="{{ route('register.store') }}">
             @csrf
 
@@ -382,7 +382,7 @@
                 class="btn register-btn"
                 type="submit"
             >
-                Create Account
+                Email me a verification code
             </button>
 
             <!-- Preview Message -->

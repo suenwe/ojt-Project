@@ -162,8 +162,7 @@
         </h2>
 
         <p class="subtext">
-            Enter your email and a new password
-            for your account.
+            Your email has been verified. Choose a new password for your account.
         </p>
 
         <p class="required-note">
@@ -175,8 +174,6 @@
         <form id="reset-form" method="POST" action="{{ route('password.update') }}">
             @csrf
 
-            <input type="hidden" name="token" value="{{ $request->route('token') }}">
-
             @if ($errors->any())
                 <div class="form-errors" role="alert">
                     @foreach ($errors->all() as $error)
@@ -184,27 +181,6 @@
                     @endforeach
                 </div>
             @endif
-
-            <!-- Email -->
-            <div class="form-group">
-
-                <label for="email">
-                    Email Address
-                    <span class="required-star">*</span>
-                </label>
-
-                <input
-                    class="field"
-                    type="email"
-                    id="email"
-                    name="email"
-                    value="{{ old('email', $request->email) }}"
-                    placeholder="Enter your registered email"
-                    autocomplete="email"
-                    required
-                >
-
-            </div>
 
             <!-- New Password -->
             <div class="form-group">
@@ -284,7 +260,7 @@
                 class="btn reset-btn"
                 type="submit"
             >
-                Reset Password
+                Save New Password
             </button>
 
         </form>

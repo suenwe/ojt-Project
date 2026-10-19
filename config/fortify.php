@@ -161,8 +161,10 @@ return [
     */
 
     'features' => [
-        Features::registration(),
-        Features::resetPasswords(),
+        // Registration and password reset use the email-code flow in
+        // App\Http\Controllers\Auth (Implement2FA), so Fortify's versions are off.
+        // Features::registration(),
+        // Features::resetPasswords(),
         // Features::emailVerification(),
         Features::updateProfileInformation(),
         Features::updatePasswords(),

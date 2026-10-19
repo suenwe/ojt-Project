@@ -5,20 +5,27 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Auth\EmailOtpController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\PostController;
+use App\Http\Controllers\ScheduledPostController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function (): void {
-    Route::get('/', function () {
-        return view('welcome');
-    });
+    Route::get('/', [PostController::class, 'index'])->name('home');
 
-    Route::get('/create-post', function () {
-        return view('welcome', ['hidePosts' => true, 'isScheduling' => false]);
-    })->name('posts.create');
+    Route::get('/create-post', [PostController::class, 'create'])->name('posts.create');
+    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+    Route::get('/media/{media}', [PostController::class, 'media'])
+        ->whereNumber('media')
+        ->name('media.show');
 
-    Route::get('/schedule-post', function () {
-        return view('welcome', ['hidePosts' => true, 'isScheduling' => true]);
-    })->name('posts.schedule');
+    Route::get('/schedule-post', [ScheduledPostController::class, 'index'])->name('posts.schedule');
+    Route::post('/schedule-post', [ScheduledPostController::class, 'store'])->name('schedule-post.store');
+    Route::delete('/schedule-post/{post}', [ScheduledPostController::class, 'destroy'])
+        ->whereNumber('post')
+        ->name('schedule-post.destroy');
 
     Route::get('/profile', function () {
         return view('welcome', ['showProfileSettings' => true]);
@@ -57,11 +64,40 @@ Route::get('/ui-preview/{form}', function (string $form) {
 ]);
 
 Route::middleware('guest')->group(function (): void {
-    Route::get('/admin/login', [AdminAuthController::class, 'create'])->name('admin.login');
-    Route::post('/admin/login', [AdminAuthController::class, 'store'])
+    Route::get('/login', [LoginController::class, 'create'])->name('login');
+    Route::post('/login', [LoginController::class, 'store'])
         ->middleware('throttle:5,1')
-        ->name('admin.login.store');
+        ->name('login.store');
+
+    Route::get('/register', [LoginController::class, 'register'])->name('register');
+    Route::post('/register', [LoginController::class, 'storeRegistration'])
+        ->middleware('throttle:3,1')
+        ->name('register.store');
+
+    Route::get('/forgot-password', [PasswordResetController::class, 'create'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendCode'])
+        ->middleware('throttle:3,1')
+        ->name('password.email');
+
+    Route::get('/reset-password', [PasswordResetController::class, 'edit'])->name('otp.password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'update'])
+        ->middleware('throttle:3,1')
+        ->name('password.update');
+
+    Route::get('/admin/login', [AdminAuthController::class, 'create'])->name('admin.login');
 });
+
+Route::get('/verify-email-code', [EmailOtpController::class, 'create'])->name('verification-code.challenge');
+Route::post('/verify-email-code', [EmailOtpController::class, 'verify'])
+    ->middleware('throttle:6,1')
+    ->name('verification-code.verify');
+Route::post('/verify-email-code/resend', [EmailOtpController::class, 'resend'])
+    ->middleware('throttle:3,1')
+    ->name('verification-code.resend');
+
+Route::post('/logout', [LoginController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('logout');
 
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')

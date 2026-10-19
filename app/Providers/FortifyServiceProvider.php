@@ -34,8 +34,6 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::loginView(fn () => view('ui_forms.login'));
         Fortify::registerView(fn () => view('ui_forms.register'));
-        Fortify::requestPasswordResetLinkView(fn () => view('ui_forms.forgot-password'));
-        Fortify::resetPasswordView(fn (Request $request) => view('ui_forms.reset-password', ['request' => $request]));
 
         Fortify::authenticateUsing(function (Request $request): ?User {
             $user = User::query()->where('email', $request->input(Fortify::username()))->first();
