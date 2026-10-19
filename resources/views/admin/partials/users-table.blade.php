@@ -44,6 +44,8 @@
                         <td><span class="status-pill {{ $user->banned_at ? 'status-banned' : 'status-active' }}">{{ $user->banned_at ? 'Banned' : 'Active' }}</span></td>
                         @unless ($compact)
                             <td>
+                                <div class="button-group user-action-group">
+                                    <a class="button button-outline button-small" href="{{ route('admin.dashboard', ['section' => 'access-logs', 'user_id' => $user->user_id]) }}">Check</a>
                                 @if ($user->role !== 'admin' && $user->user_id !== auth()->id())
                                     <form method="POST" action="{{ route('admin.users.ban', $user) }}" class="user-ban-form" data-confirm="{{ $user->banned_at ? 'This member will be able to access their account again.' : 'This member will lose access to the community until an admin restores it.' }}" data-confirm-title="{{ $user->banned_at ? 'Restore member access?' : 'Ban this member?' }}" data-confirm-action="{{ $user->banned_at ? 'Restore access' : 'Ban member' }}">
                                         @csrf @method('PATCH')
@@ -52,8 +54,9 @@
                                         <button class="button {{ $user->banned_at ? 'button-outline' : 'button-danger' }} button-small" type="submit">{{ $user->banned_at ? 'Unban' : 'Ban' }}</button>
                                     </form>
                                 @else
-                                    <span class="muted-cell">Protected account</span>
+                                    <button class="button button-danger button-small" type="button" disabled title="Admin accounts and your own account cannot be banned">Ban</button>
                                 @endif
+                                </div>
                             </td>
                         @endunless
                     </tr>

@@ -49,7 +49,7 @@
 
             <div class="sidebar-bottom">
                 <div class="sidebar-tip">
-                    <span class="tip-icon">✦</span>
+
                     <strong>Keep your community safe</strong>
                     <p>Review reports promptly and consistently.</p>
                 </div>
@@ -92,7 +92,7 @@
 
                 @if ($section === 'overview')
                     <div class="page-heading">
-                        <div><p class="eyebrow">MONITOR YOUR COMMUNITY</p><h1>Good to see you, {{ $admin->username }} <span class="wave">✦</span></h1><p class="page-subtitle">Here’s what’s happening across your community today.</p></div>
+                        <div><p class="eyebrow">MONITOR YOUR COMMUNITY</p><h1>Good to see you, {{ $admin->username }} <span class="wave"></span></h1><p class="page-subtitle">Here’s what’s happening across your community today.</p></div>
                         <a class="button button-primary" href="{{ route('admin.dashboard', ['section' => 'reports']) }}"><span>⚑</span> Review reports</a>
                     </div>
 
