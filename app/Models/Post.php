@@ -20,6 +20,7 @@ class Post extends Model
         'state',
         'date_time',
         'user_id',
+        'post_type',
     ];
 
     protected function casts(): array
