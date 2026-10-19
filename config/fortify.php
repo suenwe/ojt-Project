@@ -165,6 +165,8 @@ return [
         // App\Http\Controllers\Auth (Implement2FA), so Fortify's versions are off.
         // Features::registration(),
         // Features::resetPasswords(),
+        Features::registration(),
+        Features::resetPasswords(),
         // Features::emailVerification(),
         Features::updateProfileInformation(),
         Features::updatePasswords(),

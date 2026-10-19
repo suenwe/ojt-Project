@@ -26,6 +26,17 @@ Route::middleware('auth')->group(function (): void {
     Route::delete('/schedule-post/{post}', [ScheduledPostController::class, 'destroy'])
         ->whereNumber('post')
         ->name('schedule-post.destroy');
+    Route::get('/post-media/{media}', [ScheduledPostController::class, 'media'])
+        ->whereNumber('media')
+        ->name('post-media.show');
+    Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+    Route::get('/report-post', function (\Illuminate\Http\Request $request) {
+        return view('ui_forms.report-post', ['postId' => $request->query('post_id')]);
+    })->name('report.post');
+    Route::post('/report-post', function () {
+        return redirect()->route('home')->with('success', 'Thank you. Your report has been submitted to the moderators.');
+    })->name('report.store');
 
     Route::get('/profile', function () {
         return view('welcome', ['showProfileSettings' => true]);
@@ -99,6 +110,11 @@ Route::post('/logout', [LoginController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
+Route::middleware('guest')->group(function (): void {
+    Route::post('/admin/login', [AdminAuthController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('admin.login.store');
+});
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')
     ->name('admin.')

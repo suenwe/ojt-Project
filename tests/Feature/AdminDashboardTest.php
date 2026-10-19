@@ -23,24 +23,19 @@ class AdminDashboardTest extends TestCase
         $this->withoutVite();
     }
 
-    public function test_guests_are_sent_to_the_shared_sign_in_page(): void
+    public function test_guests_are_sent_to_the_dedicated_admin_sign_in_page(): void
     {
         $this->get(route('admin.dashboard'))
-            ->assertRedirect(route('login'));
+            ->assertRedirect(route('admin.login'));
 
         $this->get(route('admin.login'))
-            ->assertRedirect(route('login'));
-
-        $this->get(route('login'))
             ->assertOk()
-            ->assertSee('Welcome Back!');
+            ->assertSee('Welcome back');
     }
 
     public function test_admin_returns_to_the_dashboard_after_signing_in_on_the_shared_page(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-
-        $this->get(route('admin.login'));
 
         $this->post(route('login.store'), [
             'email' => $admin->email,
@@ -109,9 +104,7 @@ class AdminDashboardTest extends TestCase
             'IP_address' => '192.0.2.12',
         ]);
 
-        $this->get(route('admin.dashboard'));
-
-        $this->post(route('login.store'), [
+        $this->post(route('admin.login.store'), [
             'email' => $admin->email,
             'password' => 'password',
         ])->assertRedirect(route('admin.dashboard'));

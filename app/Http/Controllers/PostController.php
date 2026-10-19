@@ -8,6 +8,7 @@ use App\Models\Post;
 use App\Models\PostMedia;
 use App\Services\PostPublisher;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -16,9 +17,6 @@ use Throwable;
 
 class PostController extends Controller
 {
-    /**
-     * Show the main feed with published posts and scheduled posts whose time has come.
-     */
     public function index(): View
     {
         $posts = Post::query()
@@ -29,12 +27,12 @@ class PostController extends Controller
             ->limit(50)
             ->get();
 
-        return view('welcome', ['posts' => $posts]);
+        return view('welcome', [
+            'posts' => $posts,
+            'categories' => Category::query()->orderBy('category_type')->get(),
+        ]);
     }
 
-    /**
-     * Show the create post form inside the main page.
-     */
     public function create(): View
     {
         return view('welcome', [
@@ -44,9 +42,6 @@ class PostController extends Controller
         ]);
     }
 
-    /**
-     * Publish a new post for the signed-in member.
-     */
     public function store(StorePostRequest $request, PostPublisher $publisher): RedirectResponse
     {
         try {
@@ -68,9 +63,6 @@ class PostController extends Controller
         return redirect()->route('home')->with('status', 'Your post was published.');
     }
 
-    /**
-     * Serve a post's photo or video.
-     */
     public function media(PostMedia $media): Response
     {
         if ($media->media_path && Storage::disk('public')->exists($media->media_path)) {
@@ -91,5 +83,65 @@ class PostController extends Controller
         return response($data)
             ->header('Content-Type', $media->mime_type)
             ->header('Cache-Control', 'private, max-age=86400');
+    }
+
+    public function update(Request $request, Post $post): Response
+    {
+        abort_unless($post->user_id === $request->user()->user_id, 403);
+
+        $validated = $request->validate([
+            'content' => ['required', 'string', 'max:1200'],
+            'category_id' => ['nullable', 'exists:categories,category_id'],
+            'post_type' => ['nullable', 'in:Questions,Discussion,Knowledge Sharing'],
+            'hashtag' => ['nullable', 'string', 'max:150'],
+            'media' => ['nullable', 'array', 'max:10'],
+            'media.*' => ['file', 'max:25600', 'mimetypes:image/jpeg,image/png,image/webp,video/mp4,video/webm'],
+        ]);
+
+        $post->update([
+            'descriptions' => $validated['content'],
+            'category_id' => $validated['category_id'] ?? $post->category_id,
+            'post_type' => $validated['post_type'] ?? $post->post_type,
+            'hashtag' => $validated['hashtag'] ?? $post->hashtag,
+        ]);
+
+        if ($request->hasFile('media')) {
+            foreach ($post->media as $oldMedia) {
+                if ($oldMedia->media_path) {
+                    Storage::disk('public')->delete($oldMedia->media_path);
+                }
+                $oldMedia->delete();
+            }
+
+            foreach ($request->file('media') as $file) {
+                $mime = $file->getMimeType() ?? $file->getClientMimeType();
+                $path = $file->store('post-media', 'public');
+
+                $post->media()->create([
+                    'media_type' => str_starts_with($mime, 'image/') ? 'image' : 'video',
+                    'mime_type' => $mime,
+                    'original_filename' => $file->getClientOriginalName(),
+                    'media_path' => $path,
+                    'file_size' => $file->getSize(),
+                ]);
+            }
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    public function destroy(Request $request, Post $post): Response
+    {
+        abort_unless($post->user_id === $request->user()->user_id, 403);
+
+        foreach ($post->media as $media) {
+            if ($media->media_path) {
+                Storage::disk('public')->delete($media->media_path);
+            }
+        }
+
+        $post->delete();
+
+        return response()->json(['success' => true]);
     }
 }
