@@ -20,12 +20,24 @@
                 <p class="subtext">Sign in or create an account to continue.</p>
             </div>
 
+            @if (session('status'))
+                <p class="auth-status" role="status">{{ session('status') }}</p>
+            @endif
+
+            @if ($errors->any())
+                <div class="auth-errors" role="alert">
+                    @foreach ($errors->all() as $error)
+                        <p>{{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
+
             <div class="auth-forms">
-                <form class="auth-form" method="POST" action="#">
+                <form class="auth-form" method="POST" action="{{ route('login.store') }}">
                     @csrf
                     <h3>Sign in</h3>
                     <label for="login-email">Email</label>
-                    <input class="field" id="login-email" name="email" type="email" autocomplete="email" required>
+                    <input class="field" id="login-email" name="email" type="email" value="{{ old('email') }}" autocomplete="email" required>
                     <label for="login-password">Password</label>
                     <input class="field" id="login-password" name="password" type="password" autocomplete="current-password" required>
                     <label class="auth-check">
@@ -33,7 +45,7 @@
                         <span>Remember me</span>
                     </label>
                     <button class="btn auth-submit" type="submit">Sign in</button>
-                    <a class="auth-link" href="#forgot-password">Forgot your password?</a>
+                    <a class="auth-link" href="{{ route('forgot-password') }}">Forgot your password?</a>
                 </form>
 
                 <div class="auth-register-prompt">
@@ -41,7 +53,7 @@
                     <p class="register-prompt-open">Already have an account?</p>
                     <details>
                         <summary aria-label="Switch between sign in and registration">Create an account</summary>
-                        <form class="auth-form" method="POST" action="#">
+                        <form class="auth-form" method="POST" action="{{ route('register.store') }}">
                             @csrf
                             <label for="register-username">Username</label>
                             <input class="field" id="register-username" name="username" type="text" autocomplete="username" required>
@@ -57,17 +69,7 @@
                 </div>
             </div>
 
-            <form class="two-factor-form" method="POST" action="#" aria-label="Two-factor verification">
-                @csrf
-                <div>
-                    <h3>Two-factor verification</h3>
-                    <p class="subtext">Enter the verification code sent to your registered device when required.</p>
-                </div>
-                <div class="two-factor-controls">
-                    <input class="field" name="two_factor_code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code" aria-label="Two-factor verification code">
-                    <button class="btn small" type="submit">Verify</button>
-                </div>
-            </form>
+            <p class="subtext">A six-digit code is emailed for every sign-in and must be entered within one minute.</p>
         </section>
     </main>
 @endsection
