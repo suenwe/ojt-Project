@@ -26,9 +26,9 @@ class AdminDashboardTest extends TestCase
     public function test_guests_are_sent_to_the_admin_sign_in_page(): void
     {
         $this->get(route('admin.dashboard'))
-            ->assertRedirect(route('login'));
+            ->assertRedirect(route('admin.login'));
 
-        $this->get(route('login'))
+        $this->get(route('admin.login'))
             ->assertOk()
             ->assertSee('Welcome back');
     }
@@ -60,7 +60,7 @@ class AdminDashboardTest extends TestCase
             'IP_address' => '192.0.2.12',
         ]);
 
-        $this->post(route('admin.login'), [
+        $this->post(route('admin.login.store'), [
             'email' => $admin->email,
             'password' => 'password',
         ])->assertRedirect(route('admin.dashboard'));

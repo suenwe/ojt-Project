@@ -3,25 +3,25 @@
 @section('content')
 <style>
     .post-report-menu-wrap { position: relative; align-self: flex-start; margin-top: -4px; margin-left: auto; flex-shrink: 0; }
-    .post-report-menu-button { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; color: var(--ink); background: transparent; border: 0; border-radius: 7px; font-size: 24px; line-height: 1; }
+    .post-report-menu-button { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; color: var(--ink); background: transparent; border: 0; border-radius: 7px; font-size: var(--text-2xl); line-height: 1; }
     .post-report-menu-button:hover, .post-report-menu-button[aria-expanded="true"] { background: var(--brand-soft); }
     .post-report-menu { position: absolute; top: 40px; right: 0; min-width: 160px; z-index: 12; padding: 5px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 24px rgb(0 0 0 / 12%); }
-    .post-report-menu button { display: block; width: 100%; padding: 10px 12px; color: var(--ink); background: transparent; border: 0; border-radius: 5px; text-align: left; font-size: 13px; }
+    .post-report-menu button { display: block; width: 100%; padding: 10px 12px; color: var(--ink); background: transparent; border: 0; border-radius: 5px; text-align: left; font-size: var(--text-md); }
     .post-report-menu button:hover { background: var(--brand-soft); }
     .rp-dialog { position: fixed; inset: 50% auto auto 50%; width: min(510px, calc(100% - 28px)); max-height: 90vh; margin: 0; overflow-y: auto; padding: 24px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 45px rgb(0 0 0 / 20%); transform: translate(-50%, -50%); }
     .rp-dialog::backdrop { background: rgb(10 16 40 / 60%); }
     .rp-dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
-    .rp-dialog-heading h2 { margin-bottom: 3px; font-size: 19px; }
-    .rp-close { border: 0; background: transparent; color: var(--muted); font-size: 25px; line-height: 1; padding: 2px 6px; }
+    .rp-dialog-heading h2 { margin-bottom: 3px; font-size: var(--text-xl); }
+    .rp-close { border: 0; background: transparent; color: var(--muted); font-size: var(--text-2xl); line-height: 1; padding: 2px 6px; }
     .rp-field-group { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }
-    .rp-field-group label { font-size: 13px; font-weight: 700; }
+    .rp-field-group label { font-size: var(--text-md); font-weight: 700; }
     .rp-field-group .field { display: block; width: 100%; min-height: 44px; margin: 0; }
     .rp-field-group textarea.field { min-height: 110px; resize: vertical; }
     .rp-required { color: var(--red); }
-    .rp-count { text-align: right; font-size: 11px; color: var(--muted); }
+    .rp-count { text-align: right; font-size: var(--text-xs); color: var(--muted); }
     .rp-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; margin-top: 16px; }
     .rp-actions .btn { min-width: 105px; }
-    .rp-privacy { padding: 10px 12px; color: var(--muted); background: var(--page); border-radius: 7px; font-size: 12px; }
+    .rp-privacy { padding: 10px 12px; color: var(--muted); background: var(--page); border-radius: 7px; font-size: var(--text-sm); }
     .rp-result { padding: 13px 15px; color: var(--green); background: var(--green-soft); border-radius: 7px; }
     [hidden] { display: none !important; }
     @media (max-width: 700px) {
@@ -54,17 +54,24 @@
     <div class="app-layout">
         <aside class="sidebar">
             <section class="panel account-card">
-                <span class="avatar avatar-large" aria-label="Member profile">AM</span>
+                @if ($photoDataUri = auth()->user()->photoDataUri())
+                    <img class="avatar avatar-large avatar-photo" src="{{ $photoDataUri }}" alt="{{ auth()->user()->username }} profile photo">
+                @else
+                    <span class="avatar avatar-large" aria-label="Member profile">{{ auth()->user()->initials() }}</span>
+                @endif
                 <div class="account-copy">
-                    <strong>Alex Morgan</strong>
+                    <strong>{{ auth()->user()->username }}</strong>
                 </div>
                 <div class="account-tools">
                     <span class="account-icon bell-icon" title="Notifications" aria-label="Notifications"></span>
                     <details class="account-settings">
                         <summary class="account-icon" title="Settings" aria-label="Open settings">⚙</summary>
                         <nav aria-label="Account settings">
-                            <a href="/ui-preview/edit-profile">Profile settings</a>
-                            <a href="#logout">Sign out</a>
+                            <a href="{{ route('profile.edit') }}">Profile settings</a>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button class="account-menu-button" type="submit">Sign out</button>
+                            </form>
                         </nav>
                     </details>
                 </div>
@@ -72,6 +79,7 @@
         </aside>
 
         <main class="main-column" id="home">
+            @unless ($showProfileSettings ?? false)
             <div class="feed-toolbar">
                 <form class="search-box" action="#" method="GET" role="search">
                     <span aria-hidden="true">⌕</span>
@@ -100,8 +108,11 @@
                     </select>
                 </label>
             </div>
+            @endunless
 
-            @if($hidePosts ?? false)
+            @if ($showProfileSettings ?? false)
+                @include('profile_forms.settings', ['user' => auth()->user()])
+            @elseif ($hidePosts ?? false)
                 @include('post_forms.form', ['isScheduling' => $isScheduling ?? false])
             @else
                 <section class="feed-list" aria-label="Latest posts">

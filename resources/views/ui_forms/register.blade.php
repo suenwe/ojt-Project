@@ -38,13 +38,13 @@
         .register-brand h1 {
             margin: 0;
             color: var(--brand);
-            font-size: 28px;
+            font-size: var(--text-3xl);
         }
 
         .register-title {
             text-align: center;
             margin-bottom: 5px;
-            font-size: 20px;
+            font-size: var(--text-xl);
         }
 
         .register-card .subtext {
@@ -54,7 +54,7 @@
 
         .required-note {
             color: var(--muted);
-            font-size: 12px;
+            font-size: var(--text-sm);
             margin-bottom: 18px;
         }
 
@@ -69,7 +69,7 @@
         .form-group label {
             display: block;
             margin-bottom: 7px;
-            font-size: 13px;
+            font-size: var(--text-md);
             font-weight: 650;
         }
 
@@ -87,7 +87,7 @@
             display: block;
             margin-top: 5px;
             color: var(--muted);
-            font-size: 11px;
+            font-size: var(--text-xs);
         }
 
         .password-wrapper {
@@ -106,7 +106,7 @@
             border: none;
             background: transparent;
             color: var(--brand);
-            font-size: 12px;
+            font-size: var(--text-sm);
             font-weight: 650;
             cursor: pointer;
         }
@@ -114,7 +114,7 @@
         .form-error {
             margin-top: 6px;
             color: var(--red);
-            font-size: 12px;
+            font-size: var(--text-sm);
         }
 
         .register-btn {
@@ -126,7 +126,7 @@
         .login-text {
             margin-top: 23px;
             text-align: center;
-            font-size: 13px;
+            font-size: var(--text-md);
             color: var(--muted);
         }
 
@@ -141,7 +141,7 @@
             background: var(--green-soft);
             color: var(--green);
             border-radius: 5px;
-            font-size: 12px;
+            font-size: var(--text-sm);
         }
 
         .preview-message[hidden] {
@@ -156,6 +156,15 @@
             .register-container {
                 padding: 16px;
             }
+        }
+        .form-errors {
+            margin-bottom: 16px;
+            color: var(--red);
+            font-size: var(--text-md);
+        }
+
+        .form-errors p {
+            margin: 0 0 4px;
         }
     </style>
 </head>
@@ -187,12 +196,21 @@
         </p>
 
         <!-- Frontend Preview Form -->
-        <form id="register-form">
+        <form id="register-form" method="POST" action="{{ route('register.store') }}">
+            @csrf
+
+            @if ($errors->any())
+                <div class="form-errors" role="alert">
+                    @foreach ($errors->all() as $error)
+                        <p>{{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
 
             <!-- Username -->
             <div class="form-group">
 
-                <label for="name">
+                <label for="username">
                     Username
                     <span class="required-star">*</span>
                 </label>
@@ -200,8 +218,9 @@
                 <input
                     class="field"
                     type="text"
-                    id="name"
-                    name="name"
+                    id="username"
+                    name="username"
+                    value="{{ old('username') }}"
                     placeholder="Enter your username"
                     minlength="3"
                     maxlength="30"
@@ -228,6 +247,7 @@
         type="email"
         id="email"
         name="email"
+        value="{{ old('email') }}"
         placeholder="Enter your email"
         autocomplete="email"
         required
@@ -236,15 +256,16 @@
 
 <!-- Phone Number (Optional) -->
 <div class="form-group">
-    <label for="phone">
+    <label for="phone_number">
         Phone Number (Optional)
     </label>
 
     <input
         class="field"
         type="tel"
-        id="phone"
-        name="phone"
+        id="phone_number"
+        name="phone_number"
+        value="{{ old('phone_number') }}"
         placeholder="e.g. 09xxxxxxxxx"
         autocomplete="tel"
         maxlength="20"
@@ -268,6 +289,7 @@
                     type="date"
                     id="birthday"
                     name="birthday"
+                    value="{{ old('birthday') }}"
                     max="{{ date('Y-m-d') }}"
                     required
                 >
@@ -308,7 +330,7 @@
                 </div>
 
                 <small class="form-hint">
-                    Must be at least 8 characters.
+                    At least 8 characters, including a number and a symbol.
                 </small>
 
             </div>
@@ -377,7 +399,7 @@
         <p class="login-text">
             Already have an account?
 
-            <a href="/ui-preview/login">
+            <a href="{{ route('login') }}">
                 Sign In
             </a>
         </p>
@@ -480,26 +502,13 @@
         });
     });
 
-    // Frontend preview submit
+    // Validate passwords before submitting to Laravel Fortify.
     form.addEventListener('submit', function(event) {
-
-        // Prevent sending data to a server
-        event.preventDefault();
-
-        previewMessage.hidden = true;
-
         validatePasswords();
 
         if (!form.reportValidity()) {
-            return;
+            event.preventDefault();
         }
-
-        previewMessage.textContent =
-            'Validation passed! ' +
-            'This is a frontend preview. ' +
-            'No account was created.';
-
-        previewMessage.hidden = false;
     });
 </script>
 

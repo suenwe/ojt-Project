@@ -37,13 +37,13 @@
 
         .forgot-brand h1 {
             margin: 0;
-            font-size: 28px;
+            font-size: var(--text-3xl);
             color: var(--brand);
         }
 
         .forgot-title {
             text-align: center;
-            font-size: 21px;
+            font-size: var(--text-xl);
             margin-bottom: 8px;
         }
 
@@ -55,7 +55,7 @@
 
         .required-note {
             color: var(--muted);
-            font-size: 12px;
+            font-size: var(--text-sm);
             margin-bottom: 18px;
         }
 
@@ -70,7 +70,7 @@
         .form-group label {
             display: block;
             margin-bottom: 7px;
-            font-size: 13px;
+            font-size: var(--text-md);
             font-weight: 650;
         }
 
@@ -96,7 +96,7 @@
 
         .back-link a {
             color: var(--brand);
-            font-size: 13px;
+            font-size: var(--text-md);
             font-weight: 700;
         }
 
@@ -106,11 +106,21 @@
             border-radius: 5px;
             background: var(--green-soft);
             color: var(--green);
-            font-size: 12px;
+            font-size: var(--text-sm);
         }
 
         .preview-message[hidden] {
             display: none;
+        }
+
+        .form-errors {
+            margin-bottom: 16px;
+            color: var(--red);
+            font-size: var(--text-md);
+        }
+
+        .form-errors p {
+            margin: 0 0 4px;
         }
 
         @media (max-width: 480px) {
@@ -149,8 +159,16 @@
             are required.
         </p>
 
-        <!-- Frontend Preview Only -->
-        <form id="forgot-form">
+        <form id="forgot-form" method="POST" action="{{ route('password.email') }}">
+            @csrf
+
+            @if ($errors->any())
+                <div class="form-errors" role="alert">
+                    @foreach ($errors->all() as $error)
+                        <p>{{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
 
             <div class="form-group">
 
@@ -164,6 +182,7 @@
                     type="email"
                     id="email"
                     name="email"
+                    value="{{ old('email') }}"
                     placeholder="Enter your registered email"
                     autocomplete="email"
                     required
@@ -178,18 +197,18 @@
                 Send Reset Link
             </button>
 
-            <!-- Preview Result -->
+            <!-- Reset Link Sent Message -->
             <p
                 id="preview-message"
                 class="preview-message"
                 role="status"
-                hidden
-            ></p>
+                @unless (session('status')) hidden @endunless
+            >{{ session('status') }}</p>
 
         </form>
 
         <p class="back-link">
-            <a href="/ui-preview/login">
+            <a href="{{ route('login') }}">
                 ← Back to Sign In
             </a>
         </p>
@@ -199,10 +218,6 @@
 </main>
 
 <script>
-    const forgotForm = document.getElementById(
-        'forgot-form'
-    );
-
     const emailInput = document.getElementById(
         'email'
     );
@@ -214,25 +229,6 @@
     // Hide message when email is edited
     emailInput.addEventListener('input', function() {
         previewMessage.hidden = true;
-    });
-
-    // Frontend Validation Preview
-    forgotForm.addEventListener('submit', function(event) {
-
-        event.preventDefault();
-
-        previewMessage.hidden = true;
-
-        if (!forgotForm.reportValidity()) {
-            return;
-        }
-
-        previewMessage.textContent =
-            'Email format is valid. ' +
-            'This is a frontend preview. ' +
-            'No password reset email was sent.';
-
-        previewMessage.hidden = false;
     });
 </script>
 
