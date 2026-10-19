@@ -13,36 +13,23 @@ use App\Http\Controllers\ScheduledPostController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function (): void {
-    Route::get('/', function () {
-        return view('welcome');
-    });
+    Route::get('/', [PostController::class, 'index'])->name('home');
 
-    Route::get('/create-post', function () {
-        return view('welcome', ['hidePosts' => true, 'isScheduling' => false]);
-    })->name('posts.create');
-
-    Route::get('/schedule-post', function () {
-        return view('welcome', ['hidePosts' => true, 'isScheduling' => true]);
-    })->name('posts.schedule');
-
-    Route::get('/profile', function () {
-        return view('welcome', ['showProfileSettings' => true]);
-    })->name('profile.edit');
-
-    Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
+    Route::get('/create-post', [PostController::class, 'create'])->name('posts.create');
     Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
     Route::get('/media/{media}', [PostController::class, 'media'])
         ->whereNumber('media')
         ->name('media.show');
 
-    Route::get('/scheduled-posts', [ScheduledPostController::class, 'index'])->name('schedule-post');
+    Route::get('/schedule-post', [ScheduledPostController::class, 'index'])->name('posts.schedule');
     Route::post('/schedule-post', [ScheduledPostController::class, 'store'])->name('schedule-post.store');
     Route::delete('/schedule-post/{post}', [ScheduledPostController::class, 'destroy'])
         ->whereNumber('post')
         ->name('schedule-post.destroy');
-    Route::get('/post-media/{media}', [ScheduledPostController::class, 'media'])
-        ->whereNumber('media')
-        ->name('post-media.show');
+
+    Route::get('/profile', function () {
+        return view('welcome', ['showProfileSettings' => true]);
+    })->name('profile.edit');
 });
 
 Route::middleware('guest')->group(function (): void {
@@ -67,9 +54,6 @@ Route::middleware('guest')->group(function (): void {
         ->name('password.update');
 
     Route::get('/admin/login', [AdminAuthController::class, 'create'])->name('admin.login');
-    Route::post('/admin/login', [AdminAuthController::class, 'store'])
-        ->middleware('throttle:5,1')
-        ->name('admin.login.store');
 });
 
 Route::get('/verify-email-code', [EmailOtpController::class, 'create'])->name('verification-code.challenge');

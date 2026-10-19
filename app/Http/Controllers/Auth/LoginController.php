@@ -19,7 +19,6 @@ class LoginController extends Controller
         return view('ui_forms.login');
     }
 
-
     public function store(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
@@ -50,6 +49,12 @@ class LoginController extends Controller
         Auth::login($user, $request->boolean('remember'));
 
         $request->session()->regenerate();
+
+        if ($user->role === 'admin') {
+            $intended = (string) $request->session()->pull('url.intended');
+
+            return redirect()->to(str_starts_with($intended, route('admin.dashboard')) ? $intended : route('admin.dashboard'));
+        }
 
         return redirect()->intended('/');
     }

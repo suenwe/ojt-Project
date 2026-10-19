@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,8 +14,9 @@ class CategorySeederTest extends TestCase
     public function test_post_form_displays_seeded_categories(): void
     {
         $this->seed();
+        $this->withoutVite();
 
-        $response = $this->get('/create-post');
+        $response = $this->actingAs(User::query()->firstOrFail())->get('/create-post');
         $technology = Category::query()
             ->where('category_type', 'Technology')
             ->firstOrFail();

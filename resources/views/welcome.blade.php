@@ -68,6 +68,9 @@
                         <summary class="account-icon" title="Settings" aria-label="Open settings">⚙</summary>
                         <nav aria-label="Account settings">
                             <a href="{{ route('profile.edit') }}">Profile settings</a>
+                            @if (auth()->user()->role === 'admin')
+                                <a href="{{ route('admin.dashboard') }}">Admin dashboard</a>
+                            @endif
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button class="account-menu-button" type="submit">Sign out</button>
@@ -115,46 +118,20 @@
             @elseif ($hidePosts ?? false)
                 @include('post_forms.form', ['isScheduling' => $isScheduling ?? false])
             @else
+                @if (session('status'))
+                    <p class="form-status" role="status">{{ session('status') }}</p>
+                @endif
+
                 <section class="feed-list" aria-label="Latest posts">
-                    <article class="panel post-card">
-                        <div class="post-header">
-                            <span class="avatar">JC</span>
-                            <div class="post-author">
-                                <strong>James Carter</strong>
-                                <small>Today at 10:30 AM</small>
-                            </div>
-                            <span class="post-category">Technology</span>
-                            <div class="post-report-menu-wrap" id="post-report-menu-wrap">
-                                <button
-                                    type="button"
-                                    class="post-report-menu-button"
-                                    id="post-report-menu-toggle"
-                                    aria-label="Post options"
-                                    aria-haspopup="true"
-                                    aria-expanded="false"
-                                    aria-controls="post-report-menu"
-                                >&hellip;</button>
-                                <div id="post-report-menu" class="post-report-menu" hidden>
-                                    <button type="button" id="open-post-report">Report Post</button>
-                                </div>
-                            </div>
+                    @forelse ($posts ?? [] as $post)
+                        @include('post_forms.card', ['post' => $post])
+                    @empty
+                        <div class="panel empty-feed">
+                            <h2>No posts yet</h2>
+                            <p class="subtext">Be the first to share something with the community.</p>
+                            <a class="btn" href="{{ route('posts.create') }}">Create post</a>
                         </div>
-                        <p class="post-text">Finished the first pass at the Posts migration today. The category relationship was confusing at first, but it finally started to make sense.</p>
-                        <div class="post-visual">Your community updates will appear here.</div>
-                        <div class="post-counts"><span>24 reactions</span><span>2 comments · 18 views</span></div>
-                        <div class="post-actions">
-                            <button class="post-action" type="button">♡ React</button>
-                            <button class="post-action" type="button">Comment</button>
-                        </div>
-                        <div class="comment-area">
-                            <div class="comment-row"><strong>Sarah Wilson</strong> Nice! I had the same issue with the foreign key.</div>
-                            <form class="comment-form" action="#" method="POST">
-                                @csrf
-                                <input type="text" name="content" placeholder="Write a comment..." aria-label="Write a comment">
-                                <button class="btn small" type="submit">Send</button>
-                            </form>
-                        </div>
-                    </article>
+                    @endforelse
                 </section>
             @endif
 
@@ -219,10 +196,6 @@
         (() => {
             'use strict';
 
-            const toggle = document.getElementById('post-report-menu-toggle');
-            const menu = document.getElementById('post-report-menu');
-            const menuWrap = document.getElementById('post-report-menu-wrap');
-            const openReport = document.getElementById('open-post-report');
             const dialog = document.getElementById('post-report-dialog');
             const closeReport = document.getElementById('close-post-report');
             const cancelReport = document.getElementById('cancel-post-report');
@@ -232,34 +205,45 @@
             const count = document.getElementById('post-report-count');
             const result = document.getElementById('post-report-result');
 
-            function setMenuOpen(open) {
-                menu.hidden = !open;
-                toggle.setAttribute('aria-expanded', String(open));
+            function closeAllMenus(exceptWrap) {
+                document.querySelectorAll('.post-report-menu-wrap').forEach((wrap) => {
+                    if (wrap === exceptWrap) return;
+                    wrap.querySelector('.post-report-menu').hidden = true;
+                    wrap.querySelector('.post-report-menu-button').setAttribute('aria-expanded', 'false');
+                });
             }
 
             function hideReport() {
                 if (dialog.open) dialog.close();
             }
 
-            toggle.addEventListener('click', (event) => {
-                event.stopPropagation();
-                setMenuOpen(menu.hidden);
-            });
-
             document.addEventListener('click', (event) => {
-                if (!menuWrap.contains(event.target)) setMenuOpen(false);
+                const toggle = event.target.closest('.post-report-menu-button');
+                const openReport = event.target.closest('.open-post-report');
+
+                if (toggle) {
+                    const wrap = toggle.closest('.post-report-menu-wrap');
+                    const menu = wrap.querySelector('.post-report-menu');
+                    closeAllMenus(wrap);
+                    menu.hidden = !menu.hidden;
+                    toggle.setAttribute('aria-expanded', String(!menu.hidden));
+                    return;
+                }
+
+                if (openReport) {
+                    closeAllMenus(null);
+                    form.reset();
+                    count.textContent = '0 / 500';
+                    dialog.showModal();
+                    reason.focus();
+                    return;
+                }
+
+                if (!event.target.closest('.post-report-menu-wrap')) closeAllMenus(null);
             });
 
             document.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape') setMenuOpen(false);
-            });
-
-            openReport.addEventListener('click', () => {
-                setMenuOpen(false);
-                form.reset();
-                count.textContent = '0 / 500';
-                dialog.showModal();
-                reason.focus();
+                if (event.key === 'Escape') closeAllMenus(null);
             });
 
             closeReport.addEventListener('click', hideReport);

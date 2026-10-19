@@ -23,14 +23,63 @@ class AdminDashboardTest extends TestCase
         $this->withoutVite();
     }
 
-    public function test_guests_are_sent_to_the_admin_sign_in_page(): void
+    public function test_guests_are_sent_to_the_shared_sign_in_page(): void
     {
         $this->get(route('admin.dashboard'))
-            ->assertRedirect(route('admin.login'));
+            ->assertRedirect(route('login'));
 
         $this->get(route('admin.login'))
+            ->assertRedirect(route('login'));
+
+        $this->get(route('login'))
             ->assertOk()
-            ->assertSee('Welcome back');
+            ->assertSee('Welcome Back!');
+    }
+
+    public function test_admin_returns_to_the_dashboard_after_signing_in_on_the_shared_page(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->get(route('admin.login'));
+
+        $this->post(route('login.store'), [
+            'email' => $admin->email,
+            'password' => 'password',
+        ])->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_admin_goes_to_the_dashboard_even_after_first_opening_the_main_page(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->get(route('home'))->assertRedirect(route('login'));
+
+        $this->post(route('login.store'), [
+            'email' => $admin->email,
+            'password' => 'password',
+        ])->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_admin_returns_to_the_admin_page_they_were_opening(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->get(route('admin.dashboard', ['section' => 'users']))->assertRedirect(route('login'));
+
+        $this->post(route('login.store'), [
+            'email' => $admin->email,
+            'password' => 'password',
+        ])->assertRedirect(route('admin.dashboard', ['section' => 'users']));
+    }
+
+    public function test_members_signing_in_on_the_shared_page_go_to_the_feed(): void
+    {
+        $member = User::factory()->create();
+
+        $this->post(route('login.store'), [
+            'email' => $member->email,
+            'password' => 'password',
+        ])->assertRedirect(route('home'));
     }
 
     public function test_non_admin_accounts_cannot_open_the_admin_dashboard(): void
@@ -60,7 +109,9 @@ class AdminDashboardTest extends TestCase
             'IP_address' => '192.0.2.12',
         ]);
 
-        $this->post(route('admin.login.store'), [
+        $this->get(route('admin.dashboard'));
+
+        $this->post(route('login.store'), [
             'email' => $admin->email,
             'password' => 'password',
         ])->assertRedirect(route('admin.dashboard'));

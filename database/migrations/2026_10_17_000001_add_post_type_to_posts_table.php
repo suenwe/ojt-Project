@@ -8,15 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('posts', 'post_type')) {
+            return;
+        }
+
         Schema::table('posts', function (Blueprint $table) {
-            $table->string('post_type')->nullable();
+            $table->string('post_type', 30)->default('Discussion');
         });
     }
 
     public function down(): void
     {
-        Schema::table('posts', function (Blueprint $table) {
-            $table->dropColumn('post_type');
-        });
+        if (Schema::hasColumn('posts', 'post_type')) {
+            Schema::table('posts', function (Blueprint $table) {
+                $table->dropColumn('post_type');
+            });
+        }
     }
 };

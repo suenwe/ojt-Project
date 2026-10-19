@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,7 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Post extends Model
 {
     protected $table = 'posts';
+
     protected $primaryKey = 'post_id';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -29,6 +32,19 @@ class Post extends Model
             'photos_and_videos' => 'array',
             'date_time' => 'datetime',
         ];
+    }
+
+    /**
+     * Limit to posts members can see: published ones, and scheduled ones whose time has come.
+     */
+    public function scopeVisibleInFeed(Builder $query): Builder
+    {
+        return $query->where(function (Builder $query): void {
+            $query->where('state', 'published')
+                ->orWhere(function (Builder $query): void {
+                    $query->where('state', 'scheduled')->where('date_time', '<=', now());
+                });
+        });
     }
 
     public function user(): BelongsTo

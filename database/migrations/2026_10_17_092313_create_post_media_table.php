@@ -6,8 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * The post_media table is normally created by 2026_10_16_080257; this only creates it for databases that skipped that one.
+     */
     public function up(): void
     {
+        if (Schema::hasTable('post_media')) {
+            if (! Schema::hasColumn('post_media', 'media_path')) {
+                Schema::table('post_media', function (Blueprint $table) {
+                    $table->string('media_path')->nullable();
+                });
+            }
+
+            return;
+        }
+
         Schema::create('post_media', function (Blueprint $table) {
             $table->bigIncrements('media_id');
 
@@ -20,10 +33,10 @@ return new class extends Migration
             // PostgreSQL BYTEA: stores the actual file bytes.
             $table->binary('media_data')->nullable();
 
-            // No file path is needed for byte-based storage.
             $table->string('media_path')->nullable();
 
             $table->bigInteger('file_size')->nullable();
+            $table->timestamps();
 
             $table->foreign('post_id')
                 ->references('post_id')
@@ -32,8 +45,11 @@ return new class extends Migration
         });
     }
 
+    /**
+     * The table belongs to 2026_10_16_080257, which drops it.
+     */
     public function down(): void
     {
-        Schema::dropIfExists('post_media');
+        //
     }
 };
