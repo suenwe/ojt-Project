@@ -1,8 +1,16 @@
 <article class="panel post-card">
     <div class="post-header">
-        <span class="avatar" aria-hidden="true">{{ $post->user?->initials() ?? '?' }}</span>
+        @if ($post->user)
+            <a class="avatar" href="{{ route('users.show', $post->user) }}" aria-hidden="true" tabindex="-1">{{ $post->user->initials() }}</a>
+        @else
+            <span class="avatar" aria-hidden="true">?</span>
+        @endif
         <div class="post-author">
-            <strong>{{ $post->user?->username ?? 'Deleted member' }}</strong>
+            @if ($post->user)
+                <a class="post-author-link" href="{{ route('users.show', $post->user) }}"><strong>{{ $post->user->username }}</strong></a>
+            @else
+                <strong>Deleted member</strong>
+            @endif
             <small>{{ $post->date_time->format('M j, Y \a\t g:i A') }} · {{ $post->post_type ?? 'Discussion' }}</small>
         </div>
         <span class="post-category">{{ $post->category?->category_type ?? 'Uncategorized' }}</span>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Rules\UniqueUsername;
 use App\Services\EmailOtpService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -67,7 +68,7 @@ class LoginController extends Controller
     public function storeRegistration(Request $request, EmailOtpService $emailOtp): RedirectResponse
     {
         $registration = $request->validate([
-            'username' => ['required', 'string', 'min:3', 'max:30'],
+            'username' => ['required', 'string', 'min:3', 'max:30', new UniqueUsername],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone_number' => ['nullable', 'string', 'max:30'],
             'birthday' => ['required', 'date', 'before_or_equal:today'],

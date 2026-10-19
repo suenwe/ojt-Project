@@ -3,6 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Rules\UniqueUsername;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -21,8 +22,8 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
      */
     public function update(User $user, array $input): void
     {
-        $validated = Validator::make($input, [
-            'username' => ['required', 'string', 'min:3', 'max:30'],
+        $rules = [
+            'username' => ['required', 'string', 'min:3', 'max:30', new UniqueUsername($user->user_id)],
             'email' => [
                 'required',
                 'string',
@@ -34,6 +35,16 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             'website' => ['nullable', 'url', 'max:255'],
             'birthday' => ['required', 'date', 'before_or_equal:today'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'remove_photo' => ['nullable', 'boolean'],
+        ];
+
+        if (mb_strtolower(trim((string) ($input['email'] ?? ''))) !== mb_strtolower($user->email)) {
+            $rules['current_password'] = ['required', 'string', 'current_password:web'];
+        }
+
+        $validated = Validator::make($input, $rules, [
+            'current_password.required' => 'Enter your current password to change your email address.',
+            'current_password.current_password' => 'The current password is incorrect.',
         ])->validateWithBag('updateProfileInformation');
 
         $user->forceFill([
@@ -46,6 +57,8 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
 
         if (($validated['photo'] ?? null) instanceof UploadedFile) {
             $this->savePhoto($user, $validated['photo']);
+        } elseif ($validated['remove_photo'] ?? false) {
+            $user->forceFill(['photo' => null])->save();
         }
     }
 
