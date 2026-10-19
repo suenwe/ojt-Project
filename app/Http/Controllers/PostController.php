@@ -8,6 +8,7 @@ use App\Models\Post;
 use App\Models\PostMedia;
 use App\Services\PostPublisher;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -66,6 +67,53 @@ class PostController extends Controller
         }
 
         return redirect()->route('home')->with('status', 'Your post was published.');
+    }
+
+    /**
+     * Show the edit form for one of the member's own posts.
+     */
+    public function edit(Post $post): View
+    {
+        Gate::authorize('update', $post);
+
+        return view('welcome', [
+            'hidePosts' => true,
+            'isScheduling' => false,
+            'editingPost' => $post->loadCount('media'),
+            'categories' => Category::query()->orderBy('category_type')->get(),
+        ]);
+    }
+
+    /**
+     * Save changes to one of the member's own posts.
+     */
+    public function update(StorePostRequest $request, Post $post, PostPublisher $publisher): RedirectResponse
+    {
+        Gate::authorize('update', $post);
+
+        try {
+            $publisher->update($post, $request->validated(), $request->file('media') ?? []);
+        } catch (Throwable $exception) {
+            Log::error('Post update failed: '.$exception->getMessage());
+
+            return back()->withInput()->withErrors([
+                'content' => 'Your changes could not be saved. Please try again.',
+            ]);
+        }
+
+        return redirect()->route('home')->with('status', 'Your post was updated.');
+    }
+
+    /**
+     * Delete one of the member's own posts and its files.
+     */
+    public function destroy(Post $post, PostPublisher $publisher): RedirectResponse
+    {
+        Gate::authorize('delete', $post);
+
+        $publisher->delete($post);
+
+        return back()->with('status', 'Your post was deleted.');
     }
 
     /**

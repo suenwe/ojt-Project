@@ -1,7 +1,8 @@
+@php($editingPost = $editingPost ?? null)
 <section class="panel composer">
-    <h2 class="composer-title">{{ $isScheduling ? 'Schedule a Post' : 'Create a Post' }}</h2>
+    <h2 class="composer-title">{{ $editingPost ? 'Edit Post' : ($isScheduling ? 'Schedule a Post' : 'Create a Post') }}</h2>
     <p class="subtext">
-        {{ $isScheduling ? 'Choose when your post should be published.' : "What's on your mind today?" }}
+        {{ $editingPost ? 'Change your post and save it.' : ($isScheduling ? 'Choose when your post should be published.' : "What's on your mind today?") }}
     </p>
 
     @if (session('status'))
@@ -16,8 +17,11 @@
         </div>
     @endif
 
-    <form class="post-form" action="{{ $isScheduling ? route('schedule-post.store') : route('posts.store') }}" method="POST" enctype="multipart/form-data">
+    <form class="post-form" action="{{ $editingPost ? route('posts.update', $editingPost) : ($isScheduling ? route('schedule-post.store') : route('posts.store')) }}" method="POST" enctype="multipart/form-data">
         @csrf
+        @if ($editingPost)
+            @method('PUT')
+        @endif
 
         <label for="post-content">Post description</label>
         <textarea
@@ -27,7 +31,7 @@
             maxlength="1200"
             placeholder="Share your thoughts, questions or experiences..."
             required
-        >{{ old('content') }}</textarea>
+        >{{ old('content', $editingPost?->descriptions) }}</textarea>
 
         <div class="post-form-row">
             <label for="post-category">
@@ -35,7 +39,7 @@
                 <select class="field" id="post-category" name="category_id" required>
                     <option value="">Select category</option>
                     @foreach ($categories as $category)
-                        <option value="{{ $category->category_id }}" @selected(old('category_id') == $category->category_id)>{{ $category->category_type }}</option>
+                        <option value="{{ $category->category_id }}" @selected(old('category_id', $editingPost?->category_id) == $category->category_id)>{{ $category->category_type }}</option>
                     @endforeach
                 </select>
             </label>
@@ -44,7 +48,7 @@
                 Post type
                 <select class="field" id="post-type" name="post_type" required>
                     @foreach (\App\Services\PostPublisher::POST_TYPES as $postType)
-                        <option value="{{ $postType }}" @selected(old('post_type', 'Discussion') === $postType)>{{ $postType }}</option>
+                        <option value="{{ $postType }}" @selected(old('post_type', $editingPost?->post_type ?? 'Discussion') === $postType)>{{ $postType }}</option>
                     @endforeach
                 </select>
             </label>
@@ -57,7 +61,7 @@
             name="hashtag"
             type="text"
             maxlength="150"
-            value="{{ old('hashtag') }}"
+            value="{{ old('hashtag', $editingPost?->hashtag) }}"
             placeholder="#learning #knowvia"
         >
 
@@ -74,7 +78,7 @@
             >
         @endif
 
-        <label for="post-media">Photos or videos (optional)</label>
+        <label for="post-media">{{ $editingPost ? 'Replace photos or videos (optional)' : 'Photos or videos (optional)' }}</label>
         <input
             class="field"
             id="post-media"
@@ -84,12 +88,17 @@
             accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
         >
 
-        <p class="subtext">Up to 10 files. Images up to 5 MB; videos up to 25 MB.</p>
+        <p class="subtext">
+            Up to 10 files. Images up to 5 MB; videos up to 25 MB.
+            @if ($editingPost)
+                {{ $editingPost->media_count ? 'Choosing new files replaces the '.$editingPost->media_count.' current '.\Illuminate\Support\Str::plural('file', $editingPost->media_count).'; leave empty to keep them.' : '' }}
+            @endif
+        </p>
         <div class="composer-footer">
             <div class="composer-tools account-tools">
                 <a class="btn secondary" href="{{ route('home') }}">Cancel</a>
                 <button class="btn" type="submit">
-                    {{ $isScheduling ? 'Schedule Post' : 'Publish Post' }}
+                    {{ $editingPost ? 'Save Changes' : ($isScheduling ? 'Schedule Post' : 'Publish Post') }}
                 </button>
             </div>
         </div>

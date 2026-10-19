@@ -69,6 +69,59 @@ class PostPublisher
     }
 
     /**
+     * Update a post's text and details. New files, when given, replace all of the old ones.
+     *
+     * @param  array{content: string, category_id: int|string, post_type: string, hashtag?: string|null}  $data
+     * @param  array<int, UploadedFile>  $files
+     *
+     * @throws Throwable
+     */
+    public function update(Post $post, array $data, array $files): Post
+    {
+        $oldPaths = [];
+        $storedPaths = [];
+
+        try {
+            DB::transaction(function () use ($post, $data, $files, &$oldPaths, &$storedPaths): void {
+                $post->update([
+                    'descriptions' => trim($data['content']),
+                    'category_id' => (int) $data['category_id'],
+                    'post_type' => $data['post_type'],
+                    'hashtag' => trim((string) ($data['hashtag'] ?? '')) ?: null,
+                ]);
+
+                if ($files === []) {
+                    return;
+                }
+
+                $oldPaths = $post->media()->whereNotNull('media_path')->pluck('media_path')->all();
+                $post->media()->delete();
+
+                foreach ($files as $file) {
+                    $mimeType = $file->getMimeType() ?? $file->getClientMimeType();
+                    $storedPaths[] = $path = $file->store('post-media', 'public');
+
+                    $post->media()->create([
+                        'media_type' => str_starts_with($mimeType, 'image/') ? 'photo' : 'video',
+                        'mime_type' => $mimeType,
+                        'original_filename' => $file->getClientOriginalName(),
+                        'media_path' => $path,
+                        'file_size' => $file->getSize(),
+                    ]);
+                }
+            });
+        } catch (Throwable $exception) {
+            Storage::disk('public')->delete($storedPaths);
+
+            throw $exception;
+        }
+
+        Storage::disk('public')->delete($oldPaths);
+
+        return $post;
+    }
+
+    /**
      * Delete a post and its stored files.
      */
     public function delete(Post $post): void

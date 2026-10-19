@@ -23,7 +23,16 @@
                 aria-expanded="false"
             >&hellip;</button>
             <div class="post-report-menu" hidden>
-                <button type="button" class="open-post-report">Report Post</button>
+                @can('update', $post)
+                    <a href="{{ route('posts.edit', $post) }}">Edit post</a>
+                    <form method="POST" action="{{ route('posts.destroy', $post) }}" data-confirm="Your post and its photos or videos will be permanently deleted." data-confirm-title="Delete this post?" data-confirm-action="Delete post">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="post-menu-danger">Delete post</button>
+                    </form>
+                @else
+                    <button type="button" class="open-post-report">Report Post</button>
+                @endcan
             </div>
         </div>
     </div>
