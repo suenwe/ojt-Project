@@ -13,6 +13,7 @@ use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduledPostController;
+use App\Http\Controllers\UserPhotoController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function (): void {
@@ -42,6 +43,10 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/users/{user}', MemberProfileController::class)
         ->whereNumber('user')
         ->name('users.show');
+
+    Route::get('/users/{user}/photo', UserPhotoController::class)
+        ->whereNumber('user')
+        ->name('users.photo');
 
     Route::get('/profile', function () {
         return view('welcome', ['showProfileSettings' => true]);

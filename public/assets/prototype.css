@@ -16,8 +16,8 @@
   --muted: #73798a;
   --line: #e2e4eb;
   --line-soft: #f0f1f5;
-  --surface: #fff;
-  --page: #f6f5f1;
+  --surface: #fbfbf9;
+  --page: #f4f3ef;
   --green: #35745c;
   --green-soft: #e9f3ed;
   --red: #ae4949;
@@ -36,17 +36,17 @@ body {
   color: var(--ink);
   font: var(--text-base)/1.55 var(--font-ui);
 }
-body[data-theme="dark"] {
+:root[data-theme="dark"] body {
   color-scheme: dark;
-  --brand: #8495ed;
-  --brand-dark: #a5b0f4;
-  --brand-soft: #202844;
-  --ink: #e8eaf1;
-  --muted: #a3a9b8;
-  --line: #34394b;
-  --line-soft: #2c3040;
-  --surface: #1f2330;
-  --page: #171a24;
+  --brand: #a9b8e6;
+  --brand-dark: #c3cdee;
+  --brand-soft: #2b2f3a;
+  --ink: #e6e6e6;
+  --muted: #a2a3a8;
+  --line: #37383d;
+  --line-soft: #2d2e32;
+  --surface: #222326;
+  --page: #18191b;
   --green: #7ac09c;
   --green-soft: #253a32;
   --red: #ed9090;
@@ -154,7 +154,7 @@ h3 { margin-bottom: 5px; font-size: var(--text-md); }
 .account-card small { color: var(--muted); font-size: var(--text-xs); }
 .avatar-link { display: inline-flex; }
 .profile-card { overflow: hidden; scroll-margin-top: 86px; }
-.profile-cover { height: 128px; background: linear-gradient(115deg, #091459, #34477f 60%, #c49846); }
+.profile-cover { height: 128px; background: #091459; }
 .profile-body { padding: 0 20px 19px; }
 .profile-summary { display: flex; align-items: center; gap: 12px; margin-top: -27px; }
 .profile-avatar { width: 68px; height: 68px; border: 4px solid var(--surface); font-size: var(--text-lg); }
@@ -258,7 +258,7 @@ tr:last-child td { border-bottom: 0; }
 .banner-kind-alert .banner-eyebrow { color: #a54646; }
 .photo-credit { padding: 0 18px 22px; color: var(--muted); text-align: center; font-size: var(--text-xs); }
 .photo-credit a { color: var(--brand); text-decoration: underline; }
-body[data-theme="dark"] .top-link { color: var(--brand); }
+[data-theme="dark"] .top-link { color: var(--brand); }
 @media (max-width: 1100px) {
   .app-layout { grid-template-columns: 205px minmax(0, 1fr); }
   .rightbar { display: none; }
@@ -296,3 +296,16 @@ body[data-theme="dark"] .top-link { color: var(--brand); }
   .banner-example-topbar .banner-cta { margin-left: 75px; }
   .banner-example-topbar { gap: 8px; }
 }
+
+/* "×" clear buttons inside sign in / sign up fields (see clear-fields.js) */
+.clearable-wrapper { position: relative; }
+.clearable-wrapper.has-clear-button .field { padding-right: 38px; }
+.password-wrapper.has-clear-button .field { padding-right: 96px; }
+.clear-field { position: absolute; top: 50%; right: 8px; display: grid; place-items: center; width: 24px; height: 24px; padding: 0; color: var(--muted); background: transparent; border: 0; border-radius: 50%; font-size: var(--text-xl); line-height: 1; transform: translateY(-50%); }
+.password-wrapper .clear-field { right: 58px; }
+.clear-field:hover { color: var(--ink); background: var(--line-soft); }
+.clear-field[hidden] { display: none; }
+
+/* Small "← Back" link at the top of a sign in / sign up card */
+.card-back { display: inline-flex; align-items: center; gap: 6px; margin: -12px 0 6px -10px; padding: 6px 10px 6px 8px; color: var(--muted); border-radius: 5px; font-size: var(--text-md); font-weight: 650; }
+.card-back:hover, .card-back:focus-visible { color: var(--brand); background: var(--brand-soft); }

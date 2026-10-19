@@ -173,6 +173,7 @@
             margin: 0 0 4px;
         }
     </style>
+    @include('partials.saved-theme')
 </head>
 
 <body>
@@ -228,6 +229,7 @@
                     class="field"
                     type="email"
                     id="email"
+                    data-clearable
                     name="email"
                     value="{{ old('email') }}"
                     placeholder="Enter your email"
@@ -251,6 +253,7 @@
                         class="field"
                         type="password"
                         id="password"
+                        data-clearable
                         name="password"
                         placeholder="Enter your password"
                         autocomplete="current-password"
@@ -385,6 +388,8 @@
     });
 
 </script>
+
+<script src="{{ asset('assets/clear-fields.js') }}"></script>
 
 </body>
 </html>

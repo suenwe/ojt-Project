@@ -73,9 +73,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the profile photo as a data URI, or null when the member has no usable photo.
+     * Get the profile photo bytes and their image type, or null when the member has no usable photo.
+     *
+     * @return array{bytes: string, mimeType: string}|null
      */
-    public function photoDataUri(): ?string
+    public function photoFile(): ?array
     {
         $photo = $this->photo;
 
@@ -93,7 +95,21 @@ class User extends Authenticatable
             return null;
         }
 
-        return 'data:'.$mimeType.';base64,'.base64_encode($photo);
+        return ['bytes' => $photo, 'mimeType' => $mimeType];
+    }
+
+    /**
+     * Get the profile photo as a data URI, or null when the member has no usable photo.
+     */
+    public function photoDataUri(): ?string
+    {
+        $photoFile = $this->photoFile();
+
+        if ($photoFile === null) {
+            return null;
+        }
+
+        return 'data:'.$photoFile['mimeType'].';base64,'.base64_encode($photoFile['bytes']);
     }
 
     /**

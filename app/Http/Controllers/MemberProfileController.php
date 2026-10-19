@@ -17,7 +17,7 @@ class MemberProfileController extends Controller
 
         $posts = $user->posts()
             ->visibleInFeed()
-            ->with(['user:user_id,username', 'category:category_id,category_type', 'media'])
+            ->with(['user:user_id,username,photo', 'category:category_id,category_type', 'media'])
             ->withCount(['reactions', 'comments', 'views'])
             ->latest('date_time')
             ->limit(50)
