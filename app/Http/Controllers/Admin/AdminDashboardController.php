@@ -70,9 +70,13 @@ class AdminDashboardController extends Controller
             });
         }
 
+        $accessLogUserId = filter_var($request->query('user_id'), FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 1],
+        ]) ?: null;
         $accessLogs = $section === 'access-logs'
             ? UserAccessLog::query()
                 ->with('user:user_id,username,email,role,banned_at')
+                ->when($accessLogUserId, fn ($query) => $query->where('user_id', $accessLogUserId))
                 ->latest('accessed_at')
                 ->paginate(25, ['*'], 'logs_page')
                 ->withQueryString()
