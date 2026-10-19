@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Auth\EmailOtpController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\PostController;
+use App\Http\Controllers\ScheduledPostController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function (): void {
@@ -26,6 +28,21 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/profile', function () {
         return view('welcome', ['showProfileSettings' => true]);
     })->name('profile.edit');
+
+    Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
+    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+    Route::get('/media/{media}', [PostController::class, 'media'])
+        ->whereNumber('media')
+        ->name('media.show');
+
+    Route::get('/scheduled-posts', [ScheduledPostController::class, 'index'])->name('schedule-post');
+    Route::post('/schedule-post', [ScheduledPostController::class, 'store'])->name('schedule-post.store');
+    Route::delete('/schedule-post/{post}', [ScheduledPostController::class, 'destroy'])
+        ->whereNumber('post')
+        ->name('schedule-post.destroy');
+    Route::get('/post-media/{media}', [ScheduledPostController::class, 'media'])
+        ->whereNumber('media')
+        ->name('post-media.show');
 });
 
 Route::middleware('guest')->group(function (): void {
