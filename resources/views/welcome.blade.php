@@ -92,7 +92,6 @@
                 @foreach ([
                     ['Home', route('home'), request()->routeIs('home')],
                     ['My profile', route('users.show', auth()->user()), request()->routeIs('users.show') && ($isOwnProfile ?? false)],
-                    ['Scheduled posts', route('posts.schedule'), request()->routeIs('posts.schedule')],
                 ] as [$navLabel, $navUrl, $isCurrentPage])
                     <a class="{{ $isCurrentPage ? 'is-active' : '' }}" href="{{ $navUrl }}" @if ($isCurrentPage) aria-current="page" @endif>{{ $navLabel }}</a>
                 @endforeach
@@ -105,7 +104,7 @@
             @endunless
 
             @if (request()->routeIs('home'))
-            @php($composerStartsOpen = old('content') !== null)
+            @php($composerStartsOpen = old('content') !== null && old('from_calendar') === null)
             <section class="panel composer-prompt" aria-label="Create a post" data-composer-prompt @if ($composerStartsOpen) hidden @endif>
                 @if ($photoDataUri)
                     <img class="avatar avatar-photo" src="{{ $photoDataUri }}" alt="" aria-hidden="true">
@@ -120,12 +119,6 @@
                         <path d="M4 17l5-5 4 4 2.5-2.5L20 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
                     </svg>
                 </label>
-                <a class="icon-button" href="{{ route('posts.schedule') }}" title="Schedule post" aria-label="Schedule post">
-                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
-                        <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
-                        <path d="M3.5 9.5h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    </svg>
-                </a>
             </section>
 
             <div class="composer-inline" data-composer-form @unless ($composerStartsOpen) hidden @endunless>
@@ -156,11 +149,11 @@
             @elseif ($hidePosts ?? false)
                 @include('post_forms.form', ['isScheduling' => $isScheduling ?? false])
             @else
-                @if (session('status'))
+                @if (session('status') && ! session('showScheduleCalendar'))
                     <p class="form-status" role="status">{{ session('status') }}</p>
                 @endif
 
-                <section class="feed-list" aria-label="Latest posts">
+                <section class="feed-list" aria-label="Latest posts" data-live-feed>
                     @forelse ($posts ?? [] as $post)
                         @include('post_forms.card', ['post' => $post])
                     @empty
@@ -195,6 +188,9 @@
         href="{{ route('posts.schedule') }}"
         title="Schedule a post"
         aria-label="Schedule a post"
+        aria-controls="schedule-calendar"
+        aria-expanded="{{ session('showScheduleCalendar') ? 'true' : 'false' }}"
+        data-schedule-toggle
     >
         <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
             <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
@@ -202,6 +198,8 @@
             <path d="M12 12.5v3l2 1.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
     </a>
+
+    @include('post_forms.schedule-calendar')
 
     <dialog class="rp-dialog" id="post-report-dialog" aria-labelledby="post-report-title">
         <div class="rp-dialog-heading">

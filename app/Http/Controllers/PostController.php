@@ -114,7 +114,7 @@ class PostController extends Controller
         }
 
         if ($isRescheduling) {
-            return redirect()->route('posts.schedule')->with('status', 'Your scheduled post was updated.');
+            return ScheduledPostController::redirectAfterChange($request, 'Your scheduled post was updated.');
         }
 
         return redirect()->route('home')->with('status', 'Your post was updated.');

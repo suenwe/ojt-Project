@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Keyword;
-use App\Models\Notification;
 use App\Models\Report;
 use App\Models\User;
 use App\Models\UserAccessLog;
@@ -17,7 +16,7 @@ class AdminDashboardController extends Controller
     public function __invoke(Request $request): View
     {
         $section = $request->query('section', 'overview');
-        abort_unless(in_array($section, ['overview', 'reports', 'users', 'access-logs', 'categories', 'restricted', 'notifications'], true), 404);
+        abort_unless(in_array($section, ['overview', 'reports', 'users', 'access-logs', 'categories', 'restricted'], true), 404);
         $userFilters = [
             'search' => trim((string) $request->query('search', '')),
             'role' => '',
@@ -111,7 +110,6 @@ class AdminDashboardController extends Controller
             'reports' => $reports,
             'categories' => $section === 'categories' ? Category::query()->withCount('posts')->orderBy('category_type')->get() : collect(),
             'keywords' => $section === 'restricted' ? Keyword::query()->orderBy('keyword_text')->get() : collect(),
-            'notifications' => $section === 'notifications' ? Notification::query()->withCount('recipients')->orderBy('notification_type')->get() : collect(),
             'stats' => [
                 'users' => User::query()->where('role', '!=', 'admin')->count(),
                 'pending_reports' => Report::query()->where('status', 'pending')->count(),

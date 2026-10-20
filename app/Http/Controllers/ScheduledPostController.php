@@ -26,8 +26,7 @@ class ScheduledPostController extends Controller
             'categories' => Category::query()->orderBy('category_type')->get(),
             'scheduledPosts' => Post::query()
                 ->where('user_id', $request->user()->user_id)
-                ->where('state', 'scheduled')
-                ->where('date_time', '>', now())
+                ->upcomingScheduled()
                 ->with('category:category_id,category_type')
                 ->withCount('media')
                 ->orderBy('date_time')
@@ -56,7 +55,7 @@ class ScheduledPostController extends Controller
             ]);
         }
 
-        return redirect()->route('posts.schedule')->with('status', 'Your post is scheduled.');
+        return $this->redirectAfterChange($request, 'Your post is scheduled.');
     }
 
     /**
@@ -69,6 +68,18 @@ class ScheduledPostController extends Controller
 
         $publisher->delete($post);
 
-        return redirect()->route('posts.schedule')->with('status', 'Scheduled post cancelled.');
+        return $this->redirectAfterChange($request, 'Scheduled post cancelled.');
+    }
+
+    /**
+     * Go back to the page the calendar was opened on (and reopen it), or to the schedule page.
+     */
+    public static function redirectAfterChange(Request $request, string $status): RedirectResponse
+    {
+        if ($request->boolean('from_calendar')) {
+            return back()->with('status', $status)->with('showScheduleCalendar', true);
+        }
+
+        return redirect()->route('posts.schedule')->with('status', $status);
     }
 }
