@@ -72,8 +72,7 @@ Artisan::command('admin:create', function () {
 
     if ($passwordCheck->fails()) {
         $this->error('The password must have at least 8 characters, a number and a symbol, and both entries must match.');
-
-        return self::FAILURE;
+        return Command::FAILURE;
     }
 
     User::query()->create([

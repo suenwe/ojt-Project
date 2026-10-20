@@ -68,7 +68,7 @@ class PostControllerTest extends TestCase
         $this->assertSame($member->user_id, $post->user_id);
         $this->assertSame('published', $post->state);
         $this->assertSame('Questions', $post->post_type);
-        Storage::disk('public')->assertExists($post->media->sole()->media_path);
+        $this->assertTrue(Storage::disk('public')->exists($post->media->sole()->media_path));
 
         $this->get(route('home'))
             ->assertOk()
