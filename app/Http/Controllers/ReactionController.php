@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use App\Models\Reaction;
+use App\Services\ActivityNotifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,7 +43,7 @@ class ReactionController extends Controller
      * Set, change or remove the member's reaction to a post.
      * Picking the reaction you already have removes it; picking another one replaces it.
      */
-    public function store(Request $request, Post $post): JsonResponse|RedirectResponse
+    public function store(Request $request, Post $post, ActivityNotifier $notifier): JsonResponse|RedirectResponse
     {
         abort_unless($post->isVisibleInFeed(), 404);
 
@@ -55,11 +56,13 @@ class ReactionController extends Controller
 
         if ($currentReaction?->type === $validated['type']) {
             $currentReaction->delete();
+            $notifier->reactionChanged($post, $member, null);
         } else {
             Reaction::query()->updateOrCreate(
                 ['post_id' => $post->post_id, 'user_id' => $member->user_id],
                 ['type' => $validated['type']],
             );
+            $notifier->reactionChanged($post, $member, $validated['type']);
         }
 
         if (! $request->expectsJson()) {

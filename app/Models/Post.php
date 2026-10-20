@@ -187,6 +187,11 @@ class Post extends Model
         return $this->hasMany(PostView::class, 'post_id', 'post_id');
     }
 
+    public function activityNotifications(): HasMany
+    {
+        return $this->hasMany(ActivityNotification::class, 'post_id', 'post_id');
+    }
+
     public function media(): HasMany
     {
         return $this->hasMany(PostMedia::class, 'post_id', 'post_id');

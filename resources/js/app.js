@@ -336,6 +336,18 @@ if (scheduleCalendar && scheduleToggle && scheduleDataElement) {
         scheduledAtField.value = `${selectedDate}T${timeField.value}`;
     });
 
+    document.addEventListener('schedule:edit-post', (event) => {
+        const post = posts.find((item) => item.id === event.detail.postId);
+
+        if (!post) {
+            return;
+        }
+
+        event.detail.handled = true;
+        setCalendarOpen(true);
+        openForm(post.date, post);
+    });
+
     const publishDuePosts = () => {
         const duePosts = posts.filter((post) => Date.parse(post.publishAt) <= Date.now());
 
@@ -916,4 +928,121 @@ if (peopleDialog) {
             peopleDialog.close();
         }
     });
+}
+
+/* Notification bell: open the list, mark it read, and refresh the red number every 30 seconds. */
+
+const notificationBell = document.querySelector('[data-notification-bell]');
+
+if (notificationBell) {
+    const toggle = notificationBell.querySelector('[data-notification-toggle]');
+    const panel = notificationBell.querySelector('[data-notification-panel]');
+    const list = notificationBell.querySelector('[data-notification-list]');
+    const badge = notificationBell.querySelector('[data-notification-badge]');
+
+    const setUnreadCount = (count) => {
+        badge.hidden = count === 0;
+        badge.textContent = count > 99 ? '99+' : String(count);
+        toggle.setAttribute('aria-label', count ? `Notifications, ${count} unread` : 'Notifications');
+    };
+
+    const closePanel = () => {
+        panel.hidden = true;
+        toggle.setAttribute('aria-expanded', 'false');
+    };
+
+    toggle.addEventListener('click', async () => {
+        if (!panel.hidden) {
+            closePanel();
+
+            return;
+        }
+
+        const response = await fetch(notificationBell.dataset.listUrl, { headers: { Accept: 'text/html' } });
+
+        if (!response.ok) {
+            return;
+        }
+
+        list.innerHTML = await response.text();
+        panel.hidden = false;
+        toggle.setAttribute('aria-expanded', 'true');
+
+        if (!badge.hidden) {
+            await fetch(notificationBell.dataset.readUrl, {
+                method: 'POST',
+                headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+            }).catch(() => null);
+            setUnreadCount(0);
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!panel.hidden && !notificationBell.contains(event.target)) {
+            closePanel();
+        }
+    });
+
+    panel.addEventListener('click', (event) => {
+        const editLink = event.target.closest('[data-reminder-edit]');
+
+        if (!editLink) {
+            return;
+        }
+
+        const detail = { postId: Number(editLink.dataset.reminderEdit), handled: false };
+        document.dispatchEvent(new CustomEvent('schedule:edit-post', { detail }));
+
+        if (detail.handled) {
+            event.preventDefault();
+            closePanel();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !panel.hidden) {
+            closePanel();
+            toggle.focus();
+        }
+    });
+
+    setInterval(async () => {
+        if (document.hidden) {
+            return;
+        }
+
+        const response = await fetch(notificationBell.dataset.countUrl, { headers: { Accept: 'application/json' } }).catch(() => null);
+
+        if (response?.ok) {
+            setUnreadCount((await response.json()).unreadCount);
+        }
+    }, 30000);
+}
+
+/* Arriving from a notification: jump to the post, open its comments and highlight the comment. */
+
+const notificationTarget = new URLSearchParams(window.location.search);
+
+if (notificationTarget.has('open_post')) {
+    const targetCard = document.getElementById(`post-${notificationTarget.get('open_post')}`);
+
+    const jumpToTarget = () => {
+        targetCard.classList.add('is-highlighted');
+        targetCard.scrollIntoView({ block: 'start', behavior: 'instant' });
+
+        if (notificationTarget.get('comment')) {
+            openComments(targetCard, false).then(() => {
+                const targetComment = targetCard.querySelector(`#comment-${notificationTarget.get('comment')}`);
+
+                targetComment?.classList.add('is-highlighted');
+                targetComment?.scrollIntoView({ block: 'center', behavior: 'instant' });
+            });
+        }
+    };
+
+    if (targetCard && document.readyState === 'complete') {
+        jumpToTarget();
+    } else if (targetCard) {
+        window.addEventListener('load', jumpToTarget, { once: true });
+    }
 }

@@ -2,7 +2,7 @@
     $reactionTypes = \App\Models\Reaction::TYPES;
     $viewerReaction = $post->viewer_reaction;
 @endphp
-<article class="panel post-card" data-post-card data-view-url="{{ route('posts.views.store', $post) }}" @if ($post->user_id === auth()->id()) data-own-post @endif>
+<article class="panel post-card" id="post-{{ $post->post_id }}" data-post-card data-view-url="{{ route('posts.views.store', $post) }}" @if ($post->user_id === auth()->id()) data-own-post @endif>
     <div class="post-header">
         @include('post_forms.avatar-link', ['user' => $post->user])
         <div class="post-author">
@@ -80,8 +80,8 @@
         <form class="reaction-control" method="POST" action="{{ route('posts.reactions.store', $post) }}" data-reaction-control>
             @csrf
             <button class="post-action reaction-main {{ $viewerReaction ? 'is-reacted reaction-'.$viewerReaction : '' }}" type="submit" name="type" value="{{ $viewerReaction ?? 'like' }}" data-reaction-main aria-pressed="{{ $viewerReaction ? 'true' : 'false' }}">
-                <span data-reaction-main-emoji>{{ $reactionTypes[$viewerReaction]['emoji'] ?? '👍' }}</span>
-                <span data-reaction-main-label>{{ $reactionTypes[$viewerReaction]['label'] ?? 'Like' }}</span>
+                <span data-reaction-main-emoji>{{ $viewerReaction ? $reactionTypes[$viewerReaction]['emoji'] : '👍' }}</span>
+                <span data-reaction-main-label>{{ $viewerReaction ? $reactionTypes[$viewerReaction]['label'] : 'Like' }}</span>
             </button>
             <div class="reaction-picker" role="group" aria-label="Pick a reaction" data-reaction-picker>
                 @foreach ($reactionTypes as $type => $reaction)
