@@ -77,11 +77,7 @@ class StorePostRequest extends FormRequest
         return [
             function (Validator $validator): void {
                 if (! $validator->errors()->has('content')) {
-                    $content = (string) $this->input('content', '');
-                    $matchingKeyword = Keyword::query()
-                        ->orderBy('keyword_id')
-                        ->pluck('keyword_text')
-                        ->first(fn (string $keyword): bool => $keyword !== '' && mb_stripos($content, $keyword) !== false);
+                    $matchingKeyword = Keyword::firstFoundIn((string) $this->input('content', ''));
 
                     if ($matchingKeyword !== null) {
                         $validator->errors()->add(

@@ -65,7 +65,12 @@ class PostControllerTest extends TestCase
             ->assertOk()
             ->assertSee('Hello Knowvia')
             ->assertSee('skywalker')
-            ->assertSee(route('media.show', $post->media->sole()), false);
+            ->assertSee(route('media.show', $post->media->sole()), false)
+            ->assertSee("data-media-carousel='".json_encode([[
+                'url' => route('media.show', $post->media->sole()),
+                'type' => 'image/png',
+                'alt' => 'Photo shared by skywalker',
+            ]], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)."'", false);
 
         $this->get(route('media.show', $post->media->sole()))
             ->assertOk()

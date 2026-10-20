@@ -127,8 +127,7 @@ class AdminDashboardTest extends TestCase
             ->assertSee('192.0.2.12')
             ->assertSee('data:image/png;base64,')
             ->assertDontSee('ACCOUNT ACTION')
-            ->assertDontSee('user-ban-form')
-            ->assertDontSee('admin.users.ban');
+            ->assertDontSee('Unban');
 
         $this->assertAuthenticatedAs($admin);
         $this->assertDatabaseHas('users', ['user_id' => $member->user_id]);
@@ -183,6 +182,71 @@ class AdminDashboardTest extends TestCase
             ->assertDontSee('filtertarget@example.com');
 
         $this->assertDatabaseHas('users', ['user_id' => $member->user_id]);
+    }
+
+    public function test_admin_can_unban_a_member_from_user_management(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $member = User::factory()->create([
+            'banned_at' => now(),
+            'ban_reason' => 'Manual admin ban',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard', ['section' => 'users', 'status' => 'banned']))
+            ->assertOk()
+            ->assertSee('Unban')
+            ->assertSee(route('admin.users.ban', $member), false);
+
+        $this->patch(route('admin.users.ban', $member), ['action' => 'unban'])
+            ->assertRedirect(route('admin.dashboard', ['section' => 'users']))
+            ->assertSessionHas('status', 'User unbanned.');
+
+        $this->assertDatabaseHas('users', [
+            'user_id' => $member->user_id,
+            'banned_at' => null,
+            'ban_expires_at' => null,
+            'ban_reason' => null,
+        ]);
+    }
+
+    public function test_admin_report_queue_displays_post_images_and_videos(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $author = User::factory()->create();
+        $reporter = User::factory()->create();
+        $post = Post::query()->create([
+            'user_id' => $author->user_id,
+            'descriptions' => 'Reported post with media',
+        ]);
+        $image = $post->media()->create([
+            'media_type' => 'photo',
+            'mime_type' => 'image/png',
+            'media_path' => 'post-media/reported.png',
+            'file_size' => 9,
+        ]);
+        $video = $post->media()->create([
+            'media_type' => 'video',
+            'mime_type' => 'video/mp4',
+            'media_path' => 'post-media/reported.mp4',
+            'file_size' => 9,
+        ]);
+        Report::query()->create([
+            'reporter_id' => $reporter->user_id,
+            'target_id' => $post->post_id,
+            'report_type' => 'Adult content',
+            'reason' => 'Please review the attached media.',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard', ['section' => 'reports']))
+            ->assertOk()
+            ->assertSee('Reported post with media')
+            ->assertSee(route('media.show', $image), false)
+            ->assertSee(route('media.show', $video), false)
+            ->assertSee('<img', false)
+            ->assertSee('<video', false)
+            ->assertSee('controls', false);
     }
 
     public function test_admin_can_view_persisted_user_access_logs(): void

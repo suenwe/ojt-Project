@@ -9,7 +9,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Comment extends Model
 {
     protected $table = 'comments';
+
     protected $primaryKey = 'comment_id';
+
+    /**
+     * Replies nest under the comment they answer, up to this many steps; deeper replies stay at this depth.
+     */
+    public const MAX_REPLY_DEPTH = 3;
 
     protected $fillable = [
         'post_id',
@@ -44,5 +50,15 @@ class Comment extends Model
             'parent_id',
             'comment_id'
         );
+    }
+
+    /**
+     * Whether the comment was changed after it was posted.
+     */
+    public function wasEdited(): bool
+    {
+        return $this->created_at !== null
+            && $this->updated_at !== null
+            && $this->updated_at->greaterThan($this->created_at->copy()->addSecond());
     }
 }
