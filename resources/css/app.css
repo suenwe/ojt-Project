@@ -364,8 +364,6 @@ body.admin-body .member-cell small { color: #a0a0af; font-size: var(--text-xs); 
 body.admin-body .muted-cell { color: #9192a1 !important; }
 body.admin-body .browser-cell { color: #646578; white-space: nowrap; }
 body.admin-body .ip-cell { background: #f7f7fa; border-radius: 4px; color: #747588; font-size: var(--text-xs); padding: 4px 6px; white-space: nowrap; }
-body.admin-body .user-ban-form { align-items: center; display: flex; gap: 5px; }
-body.admin-body .ban-reason-input { border: 1px solid #e9e8ef; border-radius: 5px; font-size: var(--text-xs); min-width: 100px; padding: 6px; width: 125px; }
 body.admin-body .pagination-wrap { border-top: 1px solid #f0eff5; padding: 12px 19px; }
 body.admin-body .pagination-wrap nav { align-items: center; display: flex; justify-content: space-between; }
 body.admin-body .pagination-wrap p { color: #999aaa; font-size: var(--text-sm); }
@@ -398,9 +396,6 @@ body.admin-body .queue-actions { align-items: center; border-top: 1px solid #f0e
 body.admin-body .action-hint, body.admin-body .reviewed-note { color: #a0a0ae; font-size: var(--text-xs); }
 body.admin-body .button-group { display: flex; gap: 7px; }
 body.admin-body .member-table td:nth-child(2) { max-width: 180px; overflow-wrap: anywhere; }
-body.admin-body .user-action-group { display: grid; grid-template-columns: repeat(2, max-content); gap: 6px; align-items: center; min-width: 150px; }
-body.admin-body .user-action-group .user-ban-form { display: contents; }
-body.admin-body .user-action-group .ban-reason-input { grid-column: 1 / -1; order: -1; width: 100%; min-width: 0; }
 @media (max-width: 1320px) {
     body.admin-body .member-table th, body.admin-body .member-table td { padding-left: 8px; padding-right: 8px; }
     body.admin-body .member-table th:first-child, body.admin-body .member-table td:first-child { padding-left: 16px; }
