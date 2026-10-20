@@ -8,9 +8,13 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Auth\EmailOtpController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DeleteAccountController;
 use App\Http\Controllers\MemberProfileController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\PostViewController;
+use App\Http\Controllers\ReactionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduledPostController;
 use App\Http\Controllers\UserPhotoController;
@@ -30,9 +34,41 @@ Route::middleware('auth')->group(function (): void {
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])
         ->whereNumber('post')
         ->name('posts.destroy');
+    Route::get('/posts/{post}/reactions', [ReactionController::class, 'index'])
+        ->whereNumber('post')
+        ->name('posts.reactions.index');
+    Route::post('/posts/{post}/reactions', [ReactionController::class, 'store'])
+        ->whereNumber('post')
+        ->middleware('throttle:60,1')
+        ->name('posts.reactions.store');
+    Route::get('/posts/{post}/comments', [CommentController::class, 'index'])
+        ->whereNumber('post')
+        ->name('posts.comments.index');
+    Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
+        ->whereNumber('post')
+        ->middleware('throttle:30,1')
+        ->name('posts.comments.store');
+    Route::put('/comments/{comment}', [CommentController::class, 'update'])
+        ->whereNumber('comment')
+        ->middleware('throttle:30,1')
+        ->name('comments.update');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
+        ->whereNumber('comment')
+        ->name('comments.destroy');
+    Route::get('/posts/{post}/views', [PostViewController::class, 'index'])
+        ->whereNumber('post')
+        ->name('posts.views.index');
+    Route::post('/posts/{post}/views', [PostViewController::class, 'store'])
+        ->whereNumber('post')
+        ->middleware('throttle:120,1')
+        ->name('posts.views.store');
     Route::get('/media/{media}', [PostController::class, 'media'])
         ->whereNumber('media')
         ->name('media.show');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::post('/notifications/read', [NotificationController::class, 'markAllRead'])->name('notifications.read');
 
     Route::get('/schedule-post', [ScheduledPostController::class, 'index'])->name('posts.schedule');
     Route::post('/schedule-post', [ScheduledPostController::class, 'store'])->name('schedule-post.store');

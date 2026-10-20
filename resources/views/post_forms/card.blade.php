@@ -1,16 +1,10 @@
-<article class="panel post-card">
+@php
+    $reactionTypes = \App\Models\Reaction::TYPES;
+    $viewerReaction = $post->viewer_reaction;
+@endphp
+<article class="panel post-card" id="post-{{ $post->post_id }}" data-post-card data-view-url="{{ route('posts.views.store', $post) }}" @if ($post->user_id === auth()->id()) data-own-post @endif>
     <div class="post-header">
-        @if ($post->user)
-            <a class="avatar" href="{{ route('users.show', $post->user) }}" aria-hidden="true" tabindex="-1">
-                @if ($post->user->photoFile())
-                    <img class="avatar-photo-fill" src="{{ route('users.photo', $post->user) }}" alt="" loading="lazy">
-                @else
-                    {{ $post->user->initials() }}
-                @endif
-            </a>
-        @else
-            <span class="avatar" aria-hidden="true">?</span>
-        @endif
+        @include('post_forms.avatar-link', ['user' => $post->user])
         <div class="post-author">
             @if ($post->user)
                 <a class="post-author-link" href="{{ route('users.show', $post->user) }}"><strong>{{ $post->user->username }}</strong></a>
@@ -68,11 +62,34 @@
     @endif
 
     <div class="post-counts">
-        <span>{{ $post->reactions_count }} {{ \Illuminate\Support\Str::plural('reaction', $post->reactions_count) }}</span>
-        <span>{{ $post->comments_count }} {{ \Illuminate\Support\Str::plural('comment', $post->comments_count) }} · {{ $post->views_count }} {{ \Illuminate\Support\Str::plural('view', $post->views_count) }}</span>
+        <button class="reaction-summary post-count-link" type="button" data-people-url="{{ route('posts.reactions.index', $post) }}" data-people-title="Reactions">
+            <span class="reaction-summary-emojis" data-reaction-emojis>@foreach ($post->top_reaction_types ?? [] as $type){{ $reactionTypes[$type]['emoji'] ?? '' }}@endforeach</span>
+            <span data-reaction-count data-singular="reaction" data-plural="reactions">{{ $post->reactions_count }} {{ \Illuminate\Support\Str::plural('reaction', $post->reactions_count) }}</span>
+        </button>
+        <span>
+            <button class="post-count-link" type="button" data-comments-toggle><span data-comment-count data-singular="comment" data-plural="comments">{{ $post->comments_count }} {{ \Illuminate\Support\Str::plural('comment', $post->comments_count) }}</span></button>
+            ·
+            @can('viewViewers', $post)
+                <button class="post-count-link" type="button" data-people-url="{{ route('posts.views.index', $post) }}" data-people-title="Who viewed this post"><span data-view-count data-singular="view" data-plural="views">{{ $post->views_count }} {{ \Illuminate\Support\Str::plural('view', $post->views_count) }}</span></button>
+            @else
+                <span data-view-count data-singular="view" data-plural="views">{{ $post->views_count }} {{ \Illuminate\Support\Str::plural('view', $post->views_count) }}</span>
+            @endcan
+        </span>
     </div>
     <div class="post-actions">
-        <button class="post-action" type="button">♡ React</button>
-        <button class="post-action" type="button">Comment</button>
+        <form class="reaction-control" method="POST" action="{{ route('posts.reactions.store', $post) }}" data-reaction-control>
+            @csrf
+            <button class="post-action reaction-main {{ $viewerReaction ? 'is-reacted reaction-'.$viewerReaction : '' }}" type="submit" name="type" value="{{ $viewerReaction ?? 'like' }}" data-reaction-main aria-pressed="{{ $viewerReaction ? 'true' : 'false' }}">
+                <span data-reaction-main-emoji>{{ $viewerReaction ? $reactionTypes[$viewerReaction]['emoji'] : '👍' }}</span>
+                <span data-reaction-main-label>{{ $viewerReaction ? $reactionTypes[$viewerReaction]['label'] : 'Like' }}</span>
+            </button>
+            <div class="reaction-picker" role="group" aria-label="Pick a reaction" data-reaction-picker>
+                @foreach ($reactionTypes as $type => $reaction)
+                    <button class="reaction-option" type="submit" name="type" value="{{ $type }}" title="{{ $reaction['label'] }}" aria-label="{{ $reaction['label'] }}" aria-pressed="{{ $viewerReaction === $type ? 'true' : 'false' }}">{{ $reaction['emoji'] }}</button>
+                @endforeach
+            </div>
+        </form>
+        <button class="post-action" type="button" data-comments-toggle aria-expanded="false" aria-controls="comments-{{ $post->post_id }}">💬 Comment</button>
     </div>
+    <section class="post-comments" id="comments-{{ $post->post_id }}" aria-label="Comments" data-comments data-comments-url="{{ route('posts.comments.index', $post) }}" hidden></section>
 </article>

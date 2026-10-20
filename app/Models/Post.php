@@ -82,6 +82,60 @@ class Post extends Model
     /**
      * Limit the query to scheduled posts whose publish time has not come yet.
      */
+    /**
+     * Load everything a post card in the feed needs: author, category, files, counts and the viewer's own reaction.
+     */
+    public function scopeWithFeedDetails(Builder $query, User $viewer): Builder
+    {
+        return $query
+            ->with(['user:user_id,username,photo', 'category:category_id,category_type', 'media'])
+            ->withCount(['reactions', 'comments', 'views'])
+            ->addSelect(['viewer_reaction' => Reaction::query()
+                ->select('type')
+                ->whereColumn('reactions.post_id', 'posts.post_id')
+                ->where('reactions.user_id', $viewer->user_id)
+                ->limit(1),
+            ]);
+    }
+
+    /**
+     * Give each post a `top_reaction_types` list (most used first, ties in picker order, at most three) with one query for all of them.
+     *
+     * @param  iterable<Post>  $posts
+     */
+    public static function loadTopReactionTypes(iterable $posts): void
+    {
+        $posts = collect($posts);
+
+        $countsByPost = Reaction::query()
+            ->whereIn('post_id', $posts->pluck('post_id'))
+            ->selectRaw('post_id, type, count(*) as total')
+            ->groupBy('post_id', 'type')
+            ->get()
+            ->groupBy('post_id');
+
+        $typeOrder = array_flip(array_keys(Reaction::TYPES));
+
+        $posts->each(function (Post $post) use ($countsByPost, $typeOrder): void {
+            $post->setAttribute('top_reaction_types', ($countsByPost[$post->post_id] ?? collect())
+                ->sort(fn (Reaction $first, Reaction $second): int => [(int) $second->total, $typeOrder[$first->type] ?? 99]
+                    <=> [(int) $first->total, $typeOrder[$second->type] ?? 99])
+                ->take(3)
+                ->pluck('type')
+                ->values()
+                ->all());
+        });
+    }
+
+    /**
+     * Whether members can see (and so react to, comment on and view) this post right now.
+     */
+    public function isVisibleInFeed(): bool
+    {
+        return $this->state === 'published'
+            || ($this->state === 'scheduled' && $this->date_time?->isPast() === true);
+    }
+
     public function scopeUpcomingScheduled(Builder $query): Builder
     {
         return $query->where('state', 'scheduled')->where('date_time', '>', now());
@@ -131,6 +185,11 @@ class Post extends Model
     public function views(): HasMany
     {
         return $this->hasMany(PostView::class, 'post_id', 'post_id');
+    }
+
+    public function activityNotifications(): HasMany
+    {
+        return $this->hasMany(ActivityNotification::class, 'post_id', 'post_id');
     }
 
     public function media(): HasMany
