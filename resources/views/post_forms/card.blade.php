@@ -50,14 +50,20 @@
     @endif
 
     @if ($post->media->isNotEmpty())
-        <div class="post-media-grid post-media-count-{{ min($post->media->count(), 4) }}">
-            @foreach ($post->media as $media)
-                @if (str_starts_with($media->mime_type, 'video/'))
-                    <video class="post-media-item" src="{{ route('media.show', $media) }}" controls preload="metadata"></video>
-                @else
-                    <img class="post-media-item" src="{{ route('media.show', $media) }}" alt="Photo shared by {{ $post->user?->username ?? 'a member' }}" loading="lazy">
-                @endif
-            @endforeach
+        @php
+            $mediaAlt = 'Photo shared by '.($post->user?->username ?? 'a member');
+            $mediaItems = array_map(fn (array $item): array => $item + ['alt' => $mediaAlt], $post->mediaPreviewItems());
+        @endphp
+        <div class="post-media" data-media-carousel='@json($mediaItems)'>
+            <div class="post-media-grid post-media-count-{{ min($post->media->count(), 4) }}">
+                @foreach ($post->media as $media)
+                    @if (str_starts_with($media->mime_type, 'video/'))
+                        <video class="post-media-item" src="{{ route('media.show', $media) }}" controls preload="metadata"></video>
+                    @else
+                        <img class="post-media-item" src="{{ route('media.show', $media) }}" alt="{{ $mediaAlt }}" loading="lazy">
+                    @endif
+                @endforeach
+            </div>
         </div>
     @endif
 

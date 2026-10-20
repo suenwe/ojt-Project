@@ -22,7 +22,7 @@
     @endif
 </section>
 
-<section class="feed-list" aria-label="Posts by {{ $member->username }}">
+<section class="feed-list" aria-label="Posts by {{ $member->username }}" data-live-feed>
     @forelse ($posts as $post)
         @include('post_forms.card', ['post' => $post])
     @empty

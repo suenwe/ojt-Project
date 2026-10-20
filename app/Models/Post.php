@@ -79,6 +79,30 @@ class Post extends Model
     /**
      * Whether the post is scheduled and its time has not come yet.
      */
+    /**
+     * Limit the query to scheduled posts whose publish time has not come yet.
+     */
+    public function scopeUpcomingScheduled(Builder $query): Builder
+    {
+        return $query->where('state', 'scheduled')->where('date_time', '>', now());
+    }
+
+    /**
+     * Describe the post's photos and videos for the preview slider on edit forms.
+     *
+     * @return list<array{url: string, type: string}>
+     */
+    public function mediaPreviewItems(): array
+    {
+        return $this->media
+            ->map(fn (PostMedia $media): array => [
+                'url' => route('media.show', $media),
+                'type' => (string) $media->mime_type,
+            ])
+            ->values()
+            ->all();
+    }
+
     public function isUpcomingScheduled(): bool
     {
         return $this->state === 'scheduled' && $this->date_time?->isFuture() === true;

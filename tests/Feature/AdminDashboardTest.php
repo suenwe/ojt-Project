@@ -125,7 +125,10 @@ class AdminDashboardTest extends TestCase
             ->assertSee('1998')
             ->assertSee('Firefox 135.0')
             ->assertSee('192.0.2.12')
-            ->assertSee('data:image/png;base64,');
+            ->assertSee('data:image/png;base64,')
+            ->assertDontSee('ACCOUNT ACTION')
+            ->assertDontSee('user-ban-form')
+            ->assertDontSee('admin.users.ban');
 
         $this->assertAuthenticatedAs($admin);
         $this->assertDatabaseHas('users', ['user_id' => $member->user_id]);
@@ -214,13 +217,25 @@ class AdminDashboardTest extends TestCase
             'access-logs' => 'User access log',
             'categories' => 'Delete category?',
             'restricted' => 'Keywords',
-            'notifications' => 'Notification templates',
         ] as $section => $heading) {
             $this->actingAs($admin)
                 ->get(route('admin.dashboard', $section === 'overview' ? [] : ['section' => $section]))
                 ->assertOk()
                 ->assertSee($heading);
         }
+    }
+
+    public function test_notifications_are_no_longer_an_admin_dashboard_section(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertDontSee('Notifications');
+
+        $this->get(route('admin.dashboard', ['section' => 'notifications']))
+            ->assertNotFound();
     }
 
     public function test_original_post_categories_are_seeded_and_visible_to_admins(): void

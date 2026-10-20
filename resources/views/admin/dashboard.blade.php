@@ -42,9 +42,6 @@
                 <a class="{{ $section === 'restricted' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['section' => 'restricted']) }}">
                     <span class="nav-icon">⊘</span> Keywords
                 </a>
-                <a class="{{ $section === 'notifications' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['section' => 'notifications']) }}">
-                    <span class="nav-icon">♧</span> Notifications
-                </a>
             </nav>
 
             <div class="sidebar-bottom">
@@ -69,7 +66,6 @@
                     'access-logs' => 'User access log',
                     'categories' => 'Categories',
                     'restricted' => 'Keywords',
-                    'notifications' => 'Notifications',
                 ][$section] }}</strong></div>
                 <div class="topbar-right">
                     
@@ -323,39 +319,6 @@
                                 @endforelse
                             </div>
                         </div>
-                    </section>
-                @elseif ($section === 'notifications')
-                    <div class="page-heading">
-                        <div><h1>Notification templates</h1><p class="page-subtitle">Manage notification types and the text shown to members.</p></div>
-                    </div>
-                    <section class="panel notification-create-panel">
-                        <div class="panel-heading"><div><div class="heading-with-icon"><span class="heading-icon icon-blue">♧</span><h2>Create notification</h2></div><p>Add a reusable notification type and message.</p></div></div>
-                        <form method="POST" action="{{ route('admin.notifications.store') }}" class="notification-form">
-                            @csrf
-                            <div class="field-group"><label for="notification_type">Notification type</label><input id="notification_type" name="notification_type" maxlength="255" placeholder="e.g. Community update" value="{{ old('notification_type') }}" required>@error('notification_type')<span class="field-error">{{ $message }}</span>@enderror</div>
-                            <div class="field-group"><label for="notification_text">Notification text</label><textarea id="notification_text" name="notification_text" maxlength="5000" rows="3" placeholder="Write the message members will see..." required>{{ old('notification_text') }}</textarea>@error('notification_text')<span class="field-error">{{ $message }}</span>@enderror</div>
-                            <button class="button button-primary" type="submit">Create template <span>＋</span></button>
-                        </form>
-                    </section>
-                    <section class="notification-cards">
-                        @forelse ($notifications as $notification)
-                            <article class="panel notification-card">
-                                <div class="notification-card-head"><span class="notification-type-icon">♧</span><span class="recipient-count">{{ $notification->recipients_count }} sent</span></div>
-                                <form id="notification-edit-{{ $notification->notification_id }}" method="POST" action="{{ route('admin.notifications.update', $notification) }}" class="stacked-form notification-edit-form">
-                                    @csrf @method('PUT')
-                                    <label for="notification_type_{{ $notification->notification_id }}">Type</label>
-                                    <input id="notification_type_{{ $notification->notification_id }}" name="notification_type" maxlength="255" value="{{ $notification->notification_type }}" required>
-                                    <label for="notification_text_{{ $notification->notification_id }}">Text</label>
-                                    <textarea id="notification_text_{{ $notification->notification_id }}" name="notification_text" maxlength="5000" rows="3" required>{{ $notification->notification_text }}</textarea>
-                                </form>
-                                <div class="notification-card-actions">
-                                    <button class="button button-outline button-small" type="submit" form="notification-edit-{{ $notification->notification_id }}">Save changes</button>
-                                    <form method="POST" action="{{ route('admin.notifications.destroy', $notification) }}" data-confirm="This template and its delivered notification records will be permanently deleted." data-confirm-title="Delete notification template?" data-confirm-action="Delete template">@csrf @method('DELETE')<button class="button button-quiet button-small" type="submit">Delete</button></form>
-                                </div>
-                            </article>
-                        @empty
-                            <div class="panel empty-state"><span class="empty-symbol">♧</span><strong>No notification templates</strong><p>Create a reusable notification above.</p></div>
-                        @endforelse
                     </section>
                 @endif
 

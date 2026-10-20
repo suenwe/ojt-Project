@@ -60,6 +60,23 @@ class PostEditingTest extends TestCase
         Storage::disk('public')->assertExists($post->media()->sole()->media_path);
     }
 
+    public function test_edit_form_previews_the_posts_current_photos_in_the_slider(): void
+    {
+        $author = User::factory()->create();
+        $post = $this->createPost($author, 'With two photos');
+        $firstPhoto = $post->media()->create(['media_type' => 'photo', 'mime_type' => 'image/png', 'media_path' => 'post-media/one.png', 'file_size' => 9]);
+        $secondPhoto = $post->media()->create(['media_type' => 'photo', 'mime_type' => 'image/jpeg', 'media_path' => 'post-media/two.jpg', 'file_size' => 9]);
+
+        $response = $this->actingAs($author)->get(route('posts.edit', $post));
+
+        $response->assertOk();
+        $response->assertSee('data-media-preview="post-media-preview"', false);
+        $response->assertSee("data-current-media='".json_encode([
+            ['url' => route('media.show', $firstPhoto), 'type' => 'image/png'],
+            ['url' => route('media.show', $secondPhoto), 'type' => 'image/jpeg'],
+        ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)."'", false);
+    }
+
     public function test_editing_without_new_files_keeps_the_current_ones(): void
     {
         $author = User::factory()->create();

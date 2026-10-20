@@ -83,6 +83,7 @@
         <input
             class="field"
             id="post-media"
+            data-media-preview="post-media-preview"
             name="media[]"
             type="file"
             multiple
@@ -95,6 +96,8 @@
                 {{ $editingPost->media_count ? 'Choosing new files replaces the '.$editingPost->media_count.' current '.\Illuminate\Support\Str::plural('file', $editingPost->media_count).'; leave empty to keep them.' : '' }}
             @endif
         </p>
+        <div class="media-preview" id="post-media-preview" data-current-media='@json($editingPost?->mediaPreviewItems() ?? [])' hidden></div>
+
         <div class="composer-footer">
             <div class="composer-tools account-tools">
                 <a class="btn secondary" href="{{ route('home') }}" data-composer-cancel>Cancel</a>
