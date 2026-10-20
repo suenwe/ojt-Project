@@ -329,7 +329,10 @@ a.people-name:hover { color: var(--brand); text-decoration: underline; }
 .post-form > label, .post-form-row label { color: var(--ink); font-size: var(--text-md); font-weight: 650; }
 .post-form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .post-form-row label { display: grid; gap: 6px; }
-.post-hashtags { margin: -6px 0 12px; color: var(--brand); font-size: var(--text-md); font-weight: 600; overflow-wrap: anywhere; }
+.post-hashtags { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: -6px 0 12px; color: var(--brand); font-size: var(--text-md); font-weight: 600; overflow-wrap: anywhere; }
+.hashtag-link:hover { text-decoration: underline; }
+.post-card[hidden] { display: none; }
+.feed-search-empty { padding: 24px 16px; color: var(--muted); text-align: center; }
 .post-media-grid { display: grid; gap: 6px; margin-bottom: 4px; overflow: hidden; border-radius: 6px; }
 .post-media-count-2, .post-media-count-3, .post-media-count-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .post-media-item { display: block; width: 100%; max-height: 420px; object-fit: cover; background: var(--page); }

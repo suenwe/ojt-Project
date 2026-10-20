@@ -559,6 +559,7 @@ async function refreshLiveFeed(statusText) {
         feed.replaceChildren(...freshFeed.childNodes);
         initMediaCarousels(feed);
         watchPostViews(feed);
+        filterFeed();
 
         let status = document.querySelector('[data-live-feed-status]');
 
@@ -573,6 +574,117 @@ async function refreshLiveFeed(statusText) {
         status.textContent = statusText;
     } catch (error) {
         // A failed refresh is harmless; the post still shows after the next page load.
+    }
+}
+
+/**
+ * Search box, topic filter and hashtag links: hide the post cards on this page that do not match.
+ * Typing searches post text, hashtags, usernames and topics; clicking a hashtag shows only posts that use exactly that hashtag.
+ * Pages without a post list send the search to the home page (?search= or ?hashtag=).
+ */
+const feedSearchForm = document.querySelector('[data-feed-search-form]');
+const feedSearchInput = document.querySelector('[data-feed-search]');
+const feedCategoryFilter = document.querySelector('[data-feed-category]');
+let activeSearchHashtag = '';
+
+function normalizeHashtag(tag) {
+    return `#${String(tag ?? '').trim().replace(/^#+/, '')}`.toLowerCase();
+}
+
+function filterFeed() {
+    const feed = document.querySelector('[data-live-feed]');
+
+    if (!feed || !feedSearchInput) {
+        return;
+    }
+
+    const query = feedSearchInput.value.trim().toLowerCase().replace(/^#+/, '');
+    const category = feedCategoryFilter?.value ?? '';
+    const cards = [...feed.querySelectorAll('[data-post-card]')];
+
+    cards.forEach((card) => {
+        const matchesSearch = activeSearchHashtag
+            ? card.dataset.searchHashtags.split(' ').includes(activeSearchHashtag)
+            : card.dataset.searchText.includes(query);
+        const matchesCategory = category === '' || card.dataset.searchCategory === category;
+
+        card.hidden = !(matchesSearch && matchesCategory);
+    });
+
+    let emptyMessage = feed.querySelector('[data-feed-search-empty]');
+
+    if (cards.length > 0 && cards.every((card) => card.hidden)) {
+        if (!emptyMessage) {
+            emptyMessage = document.createElement('p');
+            emptyMessage.className = 'panel feed-search-empty';
+            emptyMessage.dataset.feedSearchEmpty = '';
+            emptyMessage.textContent = 'No posts match your search.';
+            feed.append(emptyMessage);
+        }
+    } else {
+        emptyMessage?.remove();
+    }
+}
+
+function searchHashtag(tag) {
+    activeSearchHashtag = normalizeHashtag(tag);
+    feedSearchInput.value = activeSearchHashtag;
+
+    if (feedCategoryFilter) {
+        feedCategoryFilter.value = '';
+    }
+
+    filterFeed();
+    document.querySelector('[data-live-feed]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+if (feedSearchForm && feedSearchInput) {
+    const hasFeed = () => document.querySelector('[data-live-feed]') !== null;
+
+    feedSearchForm.addEventListener('submit', (event) => {
+        if (hasFeed()) {
+            event.preventDefault();
+        }
+    });
+
+    feedSearchInput.addEventListener('input', () => {
+        activeSearchHashtag = '';
+        filterFeed();
+    });
+
+    feedCategoryFilter?.addEventListener('change', filterFeed);
+
+    // The topic filter is only visible while "By topic" is picked, so leaving that option clears it.
+    document.getElementById('post-sort')?.addEventListener('change', (event) => {
+        if (feedCategoryFilter && event.target.value !== 'category') {
+            feedCategoryFilter.value = '';
+            filterFeed();
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        const hashtagLink = event.target.closest('[data-search-hashtag]');
+
+        if (!hashtagLink) {
+            return;
+        }
+
+        event.preventDefault();
+
+        if (hasFeed()) {
+            searchHashtag(hashtagLink.dataset.searchHashtag);
+        } else {
+            window.location.href = `${feedSearchForm.action}?hashtag=${encodeURIComponent(hashtagLink.dataset.searchHashtag)}`;
+        }
+    });
+
+    const searchFromUrl = new URLSearchParams(window.location.search);
+
+    if (searchFromUrl.get('hashtag')) {
+        searchHashtag(searchFromUrl.get('hashtag'));
+    } else if (searchFromUrl.get('search')) {
+        feedSearchInput.value = searchFromUrl.get('search');
+        filterFeed();
     }
 }
 

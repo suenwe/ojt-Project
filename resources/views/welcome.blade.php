@@ -38,9 +38,9 @@
                 <span>Knowvia</span>
             </a>
 
-            <form class="search-box top-search" action="#" method="GET" role="search">
+            <form class="search-box top-search" action="{{ route('home') }}" method="GET" role="search" data-feed-search-form>
                 <span aria-hidden="true">⌕</span>
-                <input type="search" name="search" placeholder="Search Knowvia" aria-label="Search posts, people and hashtags">
+                <input type="search" name="search" placeholder="Search posts, people and hashtags" aria-label="Search posts, people and hashtags" data-feed-search>
             </form>
 
             <div class="top-actions">
@@ -139,11 +139,11 @@
                         <option value="reacted">Most reacted</option>
                         <option value="category">By topic</option>
                     </select>
-                    <select class="sort-select category-filter" name="category" aria-label="Filter by topic">
-                        <option>All topics</option>
-                        <option>Technology</option>
-                        <option>Community</option>
-                        <option>Education</option>
+                    <select class="sort-select category-filter" name="category" aria-label="Filter by topic" data-feed-category>
+                        <option value="">All topics</option>
+                        @foreach ($categories ?? [] as $category)
+                            <option value="{{ $category->category_type }}">{{ $category->category_type }}</option>
+                        @endforeach
                     </select>
                 </label>
             </div>
@@ -181,7 +181,7 @@
                 <p class="subtext">From posts in the last 30 days.</p>
                 <div class="category-list">
                     @forelse ($popularHashtags as $hashtag => $postCount)
-                        <div class="category-link"><span>{{ $hashtag }}</span><strong>{{ $postCount }}</strong></div>
+                        <a class="category-link" href="#" data-search-hashtag="{{ $hashtag }}"><span>{{ $hashtag }}</span><strong>{{ $postCount }}</strong></a>
                     @empty
                         <p class="subtext">Hashtags from new posts will show up here.</p>
                     @endforelse

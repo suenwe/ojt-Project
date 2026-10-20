@@ -1,8 +1,15 @@
 @php
     $reactionTypes = \App\Models\Reaction::TYPES;
     $viewerReaction = $post->viewer_reaction;
+    $hashtags = array_map(
+        fn (string $tag): string => '#'.ltrim($tag, '#'),
+        preg_split('/[\s,]+/', trim((string) $post->hashtag), -1, PREG_SPLIT_NO_EMPTY),
+    );
 @endphp
-<article class="panel post-card" id="post-{{ $post->post_id }}" data-post-card data-view-url="{{ route('posts.views.store', $post) }}" @if ($post->user_id === auth()->id()) data-own-post @endif>
+<article class="panel post-card" id="post-{{ $post->post_id }}" data-post-card data-view-url="{{ route('posts.views.store', $post) }}" @if ($post->user_id === auth()->id()) data-own-post @endif
+    data-search-text="{{ mb_strtolower($post->descriptions.' '.implode(' ', $hashtags).' '.($post->user?->username ?? '').' '.($post->category?->category_type ?? '')) }}"
+    data-search-category="{{ $post->category?->category_type ?? '' }}"
+    data-search-hashtags="{{ mb_strtolower(implode(' ', $hashtags)) }}">
     <div class="post-header">
         @include('post_forms.avatar-link', ['user' => $post->user])
         <div class="post-author">
@@ -39,8 +46,12 @@
 
     <p class="post-text">{{ $post->descriptions }}</p>
 
-    @if ($post->hashtag)
-        <p class="post-hashtags">{{ $post->hashtag }}</p>
+    @if ($hashtags !== [])
+        <div class="post-hashtags">
+            @foreach ($hashtags as $tag)
+                <a class="hashtag-link" href="#" data-search-hashtag="{{ $tag }}">{{ $tag }}</a>
+            @endforeach
+        </div>
     @endif
 
     @if ($post->media->isNotEmpty())
