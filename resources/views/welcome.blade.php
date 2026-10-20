@@ -201,6 +201,14 @@
 
     @include('post_forms.schedule-calendar')
 
+    <dialog class="rp-dialog people-dialog" id="people-dialog" aria-labelledby="people-dialog-title">
+        <div class="rp-dialog-heading">
+            <h2 id="people-dialog-title" data-people-title></h2>
+            <button type="button" class="rp-close" data-people-close aria-label="Close">&times;</button>
+        </div>
+        <div data-people-body></div>
+    </dialog>
+
     <dialog class="rp-dialog" id="post-report-dialog" aria-labelledby="post-report-title">
         <div class="rp-dialog-heading">
             <div>

@@ -16,6 +16,14 @@ class PostPolicy
     }
 
     /**
+     * Only the author can see the list of who viewed their post.
+     */
+    public function viewViewers(User $user, Post $post): bool
+    {
+        return $post->user_id === $user->user_id;
+    }
+
+    /**
      * Only the author can delete their post.
      */
     public function delete(User $user, Post $post): bool
