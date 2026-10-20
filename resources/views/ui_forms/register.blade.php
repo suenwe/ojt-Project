@@ -1,17 +1,12 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Knowvia | Create Account</title>
 
-    <!-- Shared Knowvia CSS -->
-    <link rel="stylesheet"
-          href="{{ asset('assets/prototype.css') }}">
-
+    <link rel="stylesheet" href="{{ asset('assets/prototype.css') }}">
     <style>
         .register-container {
             min-height: 100vh;
@@ -120,13 +115,11 @@
         .register-btn {
             width: 100%;
             padding: 12px;
-            margin-top: 8px;
         }
 
         .login-text {
-            margin-top: 23px;
+            margin-top: 24px;
             text-align: center;
-            font-size: var(--text-md);
             color: var(--muted);
         }
 
@@ -148,15 +141,6 @@
             display: none;
         }
 
-        @media (max-width: 480px) {
-            .register-card {
-                padding: 22px;
-            }
-
-            .register-container {
-                padding: 16px;
-            }
-        }
         .form-errors {
             margin-bottom: 16px;
             color: var(--red);
@@ -167,27 +151,23 @@
             margin: 0 0 4px;
         }
     </style>
+    @include('partials.saved-theme')
 </head>
-
 <body>
 
 <main class="register-container">
-
     <section class="panel register-card">
+        <a class="card-back" href="{{ route('login') }}">
+            <span aria-hidden="true">?</span> Back
+        </a>
 
-        <!-- Brand -->
         <div class="register-brand">
-            <span class="brand-mark">V</span>
+            <span class="brand-mark">K</span>
             <h1>Knowvia</h1>
         </div>
 
-        <h2 class="register-title">
-            Create Your Account
-        </h2>
-
-        <p class="subtext">
-            Join Knowvia and connect with your community.
-        </p>
+        <h2 class="register-title">Create Your Account</h2>
+        <p class="subtext">It takes a minute. We'll email you a code to confirm your address.</p>
 
         <p class="required-note">
             Fields marked
@@ -195,7 +175,6 @@
             are required.
         </p>
 
-        <!-- Frontend Preview Form -->
         <form id="register-form" method="POST" action="{{ route('register.store') }}">
             @csrf
 
@@ -207,18 +186,16 @@
                 </div>
             @endif
 
-            <!-- Username -->
             <div class="form-group">
-
                 <label for="username">
                     Username
                     <span class="required-star">*</span>
                 </label>
-
                 <input
                     class="field"
                     type="text"
                     id="username"
+                    data-clearable
                     name="username"
                     value="{{ old('username') }}"
                     placeholder="Enter your username"
@@ -227,226 +204,131 @@
                     autocomplete="username"
                     required
                 >
-
-                <small class="form-hint">
-                    3 to 30 characters.
-                </small>
-
+                <small class="form-hint">3 to 30 characters.</small>
             </div>
 
-           
-<!-- Email -->
-<div class="form-group">
-    <label for="email">
-        Email Address
-        <span class="required-star">*</span>
-    </label>
-
-    <input
-        class="field"
-        type="email"
-        id="email"
-        name="email"
-        value="{{ old('email') }}"
-        placeholder="Enter your email"
-        autocomplete="email"
-        required
-    >
-</div>
-
-<!-- Phone Number (Optional) -->
-<div class="form-group">
-    <label for="phone_number">
-        Phone Number (Optional)
-    </label>
-
-    <input
-        class="field"
-        type="tel"
-        id="phone_number"
-        name="phone_number"
-        value="{{ old('phone_number') }}"
-        placeholder="e.g. 09xxxxxxxxx"
-        autocomplete="tel"
-        maxlength="20"
-    >
-
-    <small class="form-hint">
-        You can add your phone number later.
-    </small>
-</div>
-
-            <!-- Birthday -->
             <div class="form-group">
+                <label for="email">
+                    Email Address
+                    <span class="required-star">*</span>
+                </label>
+                <input
+                    class="field"
+                    type="email"
+                    id="email"
+                    data-clearable
+                    name="email"
+                    value="{{ old('email') }}"
+                    placeholder="Enter your email"
+                    autocomplete="email"
+                    required
+                >
+            </div>
 
+            <div class="form-group">
+                <label for="phone_number">
+                    Phone Number (Optional)
+                </label>
+                <input
+                    class="field"
+                    type="tel"
+                    id="phone_number"
+                    data-clearable
+                    name="phone_number"
+                    value="{{ old('phone_number') }}"
+                    placeholder="e.g. 09xxxxxxxxx"
+                    autocomplete="tel"
+                    maxlength="20"
+                >
+                <small class="form-hint">You can add your phone number later.</small>
+            </div>
+
+            <div class="form-group">
                 <label for="birthday">
                     Birthday
                     <span class="required-star">*</span>
                 </label>
-
                 <input
                     class="field"
                     type="date"
                     id="birthday"
+                    data-clearable
                     name="birthday"
                     value="{{ old('birthday') }}"
                     max="{{ date('Y-m-d') }}"
                     required
                 >
-
             </div>
 
-            <!-- Password -->
             <div class="form-group">
-
                 <label for="password">
                     Password
                     <span class="required-star">*</span>
                 </label>
-
                 <div class="password-wrapper">
-
                     <input
                         class="field"
                         type="password"
                         id="password"
+                        data-clearable
                         name="password"
                         placeholder="Create your password"
                         minlength="8"
                         autocomplete="new-password"
                         required
                     >
-
-                    <button
-                        class="show-password"
-                        type="button"
-                        data-target="password"
-                        aria-label="Show password"
-                        aria-pressed="false"
-                    >
-                        Show
-                    </button>
-
+                    <button class="show-password" type="button" data-target="password" aria-label="Show password" aria-pressed="false">Show</button>
                 </div>
-
-                <small class="form-hint">
-                    At least 8 characters, including a number and a symbol.
-                </small>
-
+                <small class="form-hint">At least 8 characters, including a number and a symbol.</small>
             </div>
 
-            <!-- Confirm Password -->
             <div class="form-group">
-
                 <label for="password_confirmation">
                     Confirm Password
                     <span class="required-star">*</span>
                 </label>
-
                 <div class="password-wrapper">
-
                     <input
                         class="field"
                         type="password"
                         id="password_confirmation"
+                        data-clearable
                         name="password_confirmation"
                         placeholder="Confirm your password"
                         minlength="8"
                         autocomplete="new-password"
                         required
                     >
-
-                    <button
-                        class="show-password"
-                        type="button"
-                        data-target="password_confirmation"
-                        aria-label="Show confirm password"
-                        aria-pressed="false"
-                    >
-                        Show
-                    </button>
-
+                    <button class="show-password" type="button" data-target="password_confirmation" aria-label="Show confirm password" aria-pressed="false">Show</button>
                 </div>
-
-                <p
-                    id="password-error"
-                    class="form-error"
-                    role="alert"
-                    hidden
-                ></p>
-
+                <p id="password-error" class="form-error" role="alert" hidden></p>
             </div>
 
-            <!-- Create Account Button -->
-            <button
-                class="btn register-btn"
-                type="submit"
-            >
-                Create Account
-            </button>
+            <button class="btn register-btn" type="submit">Email me a verification code</button>
 
-            <!-- Preview Message -->
-            <p
-                id="preview-message"
-                class="preview-message"
-                role="status"
-                hidden
-            ></p>
-
+            <p id="preview-message" class="preview-message" role="status" hidden></p>
         </form>
 
-        <!-- Login Link -->
         <p class="login-text">
             Already have an account?
-
-            <a href="{{ route('login') }}">
-                Sign In
-            </a>
+            <a href="{{ route('login') }}">Sign In</a>
         </p>
-
     </section>
-
 </main>
 
 <script>
-    // Form elements
-    const form = document.getElementById(
-        'register-form'
-    );
+    const form = document.getElementById('register-form');
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('password_confirmation');
+    const passwordError = document.getElementById('password-error');
 
-    const password = document.getElementById(
-        'password'
-    );
-
-    const confirmPassword = document.getElementById(
-        'password_confirmation'
-    );
-
-    const passwordError = document.getElementById(
-        'password-error'
-    );
-
-    const previewMessage = document.getElementById(
-        'preview-message'
-    );
-
-    // Check password confirmation
     function validatePasswords() {
-
-        const mismatch =
-            confirmPassword.value !== '' &&
-            password.value !== confirmPassword.value;
+        const mismatch = confirmPassword.value !== '' && password.value !== confirmPassword.value;
 
         if (mismatch) {
-            confirmPassword.setCustomValidity(
-                'Passwords do not match.'
-            );
-
-            passwordError.textContent =
-                'Passwords do not match.';
-
+            confirmPassword.setCustomValidity('Passwords do not match.');
+            passwordError.textContent = 'Passwords do not match.';
             passwordError.hidden = false;
-
         } else {
             confirmPassword.setCustomValidity('');
             passwordError.textContent = '';
@@ -454,55 +336,20 @@
         }
     }
 
-    // Check while typing
-    password.addEventListener(
-        'input',
-        validatePasswords
-    );
+    password.addEventListener('input', validatePasswords);
+    confirmPassword.addEventListener('input', validatePasswords);
 
-    confirmPassword.addEventListener(
-        'input',
-        validatePasswords
-    );
-
-    // Show or hide passwords
-    document.querySelectorAll(
-        '.show-password'
-    ).forEach(function(button) {
-
+    document.querySelectorAll('.show-password').forEach(function(button) {
         button.addEventListener('click', function() {
-
-            const input = document.getElementById(
-                button.dataset.target
-            );
-
-            const isHidden =
-                input.type === 'password';
-
-            input.type = isHidden
-                ? 'text'
-                : 'password';
-
-            button.textContent = isHidden
-                ? 'Hide'
-                : 'Show';
-
-            button.setAttribute(
-                'aria-pressed',
-                String(isHidden)
-            );
-
-            button.setAttribute(
-                'aria-label',
-                (isHidden ? 'Hide ' : 'Show ') +
-                (input.id === 'password'
-                    ? 'password'
-                    : 'confirm password')
-            );
+            const input = document.getElementById(button.dataset.target);
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            button.textContent = isHidden ? 'Hide' : 'Show';
+            button.setAttribute('aria-pressed', String(isHidden));
+            button.setAttribute('aria-label', (isHidden ? 'Hide ' : 'Show ') + (input.id === 'password' ? 'password' : 'confirm password'));
         });
     });
 
-    // Validate passwords before submitting to Laravel Fortify.
     form.addEventListener('submit', function(event) {
         validatePasswords();
 
@@ -511,6 +358,6 @@
         }
     });
 </script>
-
+<script src="{{ asset('assets/clear-fields.js') }}"></script>
 </body>
 </html>

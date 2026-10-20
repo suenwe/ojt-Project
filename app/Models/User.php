@@ -24,6 +24,7 @@ use Illuminate\Support\Str;
     'ip_address',
     'browser',
     'banned_at',
+    'ban_expires_at',
     'ban_reason',
     'birthday',
 ])]
@@ -49,14 +50,34 @@ class User extends Authenticatable
             'password' => 'hashed',
             'two_factor_expires_at' => 'datetime',
             'banned_at' => 'datetime',
+            'ban_expires_at' => 'datetime',
             'birthday' => 'date',
         ];
     }
 
+    public function isBanned(): bool
+    {
+        return $this->banned_at !== null
+            && ($this->ban_expires_at === null || $this->ban_expires_at->isFuture());
+    }
+
+    public function clearExpiredBan(): void
+    {
+        if ($this->banned_at !== null && ! $this->isBanned()) {
+            $this->forceFill([
+                'banned_at' => null,
+                'ban_expires_at' => null,
+                'ban_reason' => null,
+            ])->save();
+        }
+    }
+
     /**
-     * Get the profile photo as a data URI, or null when the member has no usable photo.
+     * Get the profile photo bytes and their image type, or null when the member has no usable photo.
+     *
+     * @return array{bytes: string, mimeType: string}|null
      */
-    public function photoDataUri(): ?string
+    public function photoFile(): ?array
     {
         $photo = $this->photo;
 
@@ -74,7 +95,21 @@ class User extends Authenticatable
             return null;
         }
 
-        return 'data:'.$mimeType.';base64,'.base64_encode($photo);
+        return ['bytes' => $photo, 'mimeType' => $mimeType];
+    }
+
+    /**
+     * Get the profile photo as a data URI, or null when the member has no usable photo.
+     */
+    public function photoDataUri(): ?string
+    {
+        $photoFile = $this->photoFile();
+
+        if ($photoFile === null) {
+            return null;
+        }
+
+        return 'data:'.$photoFile['mimeType'].';base64,'.base64_encode($photoFile['bytes']);
     }
 
     /**

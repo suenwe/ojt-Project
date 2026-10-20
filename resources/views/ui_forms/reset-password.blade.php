@@ -1,17 +1,12 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Knowvia | Reset Password</title>
 
-    <!-- Shared Knowvia CSS -->
-    <link rel="stylesheet"
-          href="{{ asset('assets/prototype.css') }}">
-
+    <link rel="stylesheet" href="{{ asset('assets/prototype.css') }}">
     <style>
         .reset-container {
             min-height: 100vh;
@@ -143,28 +138,19 @@
             }
         }
     </style>
+    @include('partials.saved-theme')
 </head>
-
 <body>
 
 <main class="reset-container">
-
     <section class="panel reset-card">
-
-        <!-- Knowvia Branding -->
         <div class="reset-brand">
-            <span class="brand-mark">V</span>
+            <span class="brand-mark">K</span>
             <h1>Knowvia</h1>
         </div>
 
-        <h2 class="reset-title">
-            Choose a New Password
-        </h2>
-
-        <p class="subtext">
-            Enter your email and a new password
-            for your account.
-        </p>
+        <h2 class="reset-title">Choose a New Password</h2>
+        <p class="subtext">Your email has been verified. Choose a new password for your account.</p>
 
         <p class="required-note">
             Fields marked
@@ -174,7 +160,6 @@
 
         <form id="reset-form" method="POST" action="{{ route('password.update') }}">
             @csrf
-
             <input type="hidden" name="token" value="{{ $request->route('token') }}">
 
             @if ($errors->any())
@@ -185,155 +170,89 @@
                 </div>
             @endif
 
-            <!-- Email -->
             <div class="form-group">
-
                 <label for="email">
                     Email Address
                     <span class="required-star">*</span>
                 </label>
-
                 <input
                     class="field"
                     type="email"
                     id="email"
+                    data-clearable
                     name="email"
                     value="{{ old('email', $request->email) }}"
                     placeholder="Enter your registered email"
                     autocomplete="email"
                     required
                 >
-
             </div>
 
-            <!-- New Password -->
             <div class="form-group">
-
                 <label for="password">
                     New Password
                     <span class="required-star">*</span>
                 </label>
-
                 <div class="password-wrapper">
-
                     <input
                         class="field"
                         type="password"
                         id="password"
+                        data-clearable
                         name="password"
                         placeholder="Enter a new password"
                         autocomplete="new-password"
                         minlength="8"
                         required
                     >
-
-                    <button
-                        class="show-password"
-                        type="button"
-                        data-toggle-for="password"
-                        aria-label="Show password"
-                        aria-pressed="false"
-                    >
-                        Show
-                    </button>
-
+                    <button class="show-password" type="button" data-toggle-for="password" aria-label="Show password" aria-pressed="false">Show</button>
                 </div>
-
-                <p class="password-hint">
-                    At least 8 characters, including a number and a symbol.
-                </p>
-
+                <p class="password-hint">At least 8 characters, including a number and a symbol.</p>
             </div>
 
-            <!-- Confirm Password -->
             <div class="form-group">
-
                 <label for="password_confirmation">
                     Confirm New Password
                     <span class="required-star">*</span>
                 </label>
-
                 <div class="password-wrapper">
-
                     <input
                         class="field"
                         type="password"
                         id="password_confirmation"
+                        data-clearable
                         name="password_confirmation"
                         placeholder="Re-enter the new password"
                         autocomplete="new-password"
                         minlength="8"
                         required
                     >
-
-                    <button
-                        class="show-password"
-                        type="button"
-                        data-toggle-for="password_confirmation"
-                        aria-label="Show password"
-                        aria-pressed="false"
-                    >
-                        Show
-                    </button>
-
+                    <button class="show-password" type="button" data-toggle-for="password_confirmation" aria-label="Show password" aria-pressed="false">Show</button>
                 </div>
-
             </div>
 
-            <button
-                class="btn reset-btn"
-                type="submit"
-            >
-                Reset Password
-            </button>
-
+            <button class="btn reset-btn" type="submit">Save New Password</button>
         </form>
 
         <p class="back-link">
-            <a href="{{ route('login') }}">
-                ← Back to Sign In
-            </a>
+            <a href="{{ route('login') }}">? Back to Sign In</a>
         </p>
-
     </section>
-
 </main>
 
 <script>
-    // Show / Hide Password
     document.querySelectorAll('[data-toggle-for]').forEach(function(toggle) {
-
-        const input = document.getElementById(
-            toggle.dataset.toggleFor
-        );
+        const input = document.getElementById(toggle.dataset.toggleFor);
 
         toggle.addEventListener('click', function() {
-
-            const isHidden =
-                input.type === 'password';
-
-            input.type = isHidden
-                ? 'text'
-                : 'password';
-
-            toggle.textContent =
-                isHidden ? 'Hide' : 'Show';
-
-            toggle.setAttribute(
-                'aria-pressed',
-                String(isHidden)
-            );
-
-            toggle.setAttribute(
-                'aria-label',
-                isHidden
-                    ? 'Hide password'
-                    : 'Show password'
-            );
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            toggle.textContent = isHidden ? 'Hide' : 'Show';
+            toggle.setAttribute('aria-pressed', String(isHidden));
+            toggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
         });
-
     });
 </script>
-
+<script src="{{ asset('assets/clear-fields.js') }}"></script>
 </body>
 </html>

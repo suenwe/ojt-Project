@@ -7,6 +7,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Report extends Model
 {
+    public const REPORT_TYPES = [
+        'Problem involving someone under 18',
+        'Bullying, harassment or abuse',
+        'Suicide or self-harm',
+        'Violent, hateful or disturbing content',
+        'Selling or promoting restricted items',
+        'Adult content',
+        'Scam, fraud or false information',
+        'Intellectual property',
+        "I don't want to see this",
+    ];
+
     protected $table = 'reports';
 
     protected $primaryKey = 'report_id';

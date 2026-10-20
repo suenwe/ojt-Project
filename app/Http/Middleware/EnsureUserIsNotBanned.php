@@ -10,7 +10,10 @@ class EnsureUserIsNotBanned
 {
     public function handle(Request $request, Closure $next): Response
     {
-        abort_if($request->user()?->banned_at !== null, 403, 'This account has been suspended.');
+        $user = $request->user();
+        $user?->clearExpiredBan();
+
+        abort_if($user?->isBanned(), 403, 'This account has been suspended.');
 
         return $next($request);
     }

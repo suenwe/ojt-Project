@@ -10,9 +10,16 @@ use Illuminate\View\View;
 
 class AdminAuthController extends Controller
 {
-    public function create(): View
+    /**
+     * Admins sign in on the shared login page; send them to the dashboard afterwards.
+     */
+    public function create(Request $request): RedirectResponse
     {
-        return view('admin.login');
+        if (! $request->session()->has('url.intended')) {
+            $request->session()->put('url.intended', route('admin.dashboard'));
+        }
+
+        return to_route('login');
     }
 
     public function store(Request $request): RedirectResponse
@@ -39,6 +46,6 @@ class AdminAuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return to_route('admin.login');
+        return to_route('login')->with('status', 'You have been signed out.');
     }
 }

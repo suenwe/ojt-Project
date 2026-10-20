@@ -11,8 +11,8 @@
     <div class="admin-shell">
         <aside class="sidebar">
             <a class="brand" href="{{ route('admin.dashboard') }}">
-                <span class="brand-mark">V</span>
-                <span><strong>Knowvia</strong><small>ADMIN CONSOLE</small></span>
+                <span class="brand-mark">K</span>
+                <span><strong>Knowvia</strong><small>Admin</small></span>
             </a>
 
             <div class="nav-label">WORKSPACE</div>
@@ -42,17 +42,9 @@
                 <a class="{{ $section === 'restricted' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['section' => 'restricted']) }}">
                     <span class="nav-icon">⊘</span> Keywords
                 </a>
-                <a class="{{ $section === 'notifications' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['section' => 'notifications']) }}">
-                    <span class="nav-icon">♧</span> Notifications
-                </a>
             </nav>
 
             <div class="sidebar-bottom">
-                <div class="sidebar-tip">
-
-                    <strong>Keep your community safe</strong>
-                    <p>Review reports promptly and consistently.</p>
-                </div>
                 <div class="admin-identity">
                     <span class="identity-avatar">{{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($admin->username, 0, 1)) }}</span>
                     <span class="identity-copy"><strong>{{ $admin->username }}</strong><small>Administrator</small></span>
@@ -63,17 +55,20 @@
 
         <main class="main-panel">
             <header class="topbar">
-                <div class="breadcrumbs"><span>Workspace</span><span class="crumb-divider">/</span><strong>{{ [
+                <div class="breadcrumbs">
+                    @if ($section !== 'overview')
+                        @include('partials.page-back', ['fallback' => route('admin.dashboard')])
+                    @endif
+                    <span>Workspace</span><span class="crumb-divider">/</span><strong>{{ [
                     'overview' => 'Overview',
                     'reports' => 'Report queue',
                     'users' => 'User management',
                     'access-logs' => 'User access log',
                     'categories' => 'Categories',
                     'restricted' => 'Keywords',
-                    'notifications' => 'Notifications',
                 ][$section] }}</strong></div>
                 <div class="topbar-right">
-                    <span class="system-status"><i></i> System operational</span>
+                    
                     <span class="topbar-avatar">{{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($admin->username, 0, 1)) }}</span>
                     <form method="POST" action="{{ route('admin.logout') }}">@csrf<button class="button button-quiet button-small" type="submit">Sign out</button></form>
                 </div>
@@ -92,28 +87,28 @@
 
                 @if ($section === 'overview')
                     <div class="page-heading">
-                        <div><p class="eyebrow">MONITOR YOUR COMMUNITY</p><h1>Good to see you, {{ $admin->username }} <span class="wave"></span></h1><p class="page-subtitle">Here’s what’s happening across your community today.</p></div>
+                        <div><h1>Overview</h1><p class="page-subtitle">Members, reports and categories at a glance.</p></div>
                         <a class="button button-primary" href="{{ route('admin.dashboard', ['section' => 'reports']) }}"><span>⚑</span> Review reports</a>
                     </div>
 
                     <section class="stats-grid" aria-label="Community summary">
                         <article class="stat-card">
-                            <div class="stat-top"><span class="stat-icon icon-violet">♙</span><span class="stat-trend">Community</span></div>
+                            <div class="stat-top"><span class="stat-icon icon-violet">♙</span></div>
                             <p class="stat-label">MEMBERS</p><strong class="stat-value">{{ number_format($stats['users']) }}</strong>
                             <p class="stat-note">Registered non-admin accounts</p>
                         </article>
                         <article class="stat-card">
-                            <div class="stat-top"><span class="stat-icon icon-amber">⚑</span><span class="stat-trend {{ $stats['pending_reports'] ? 'trend-warn' : '' }}">{{ $stats['pending_reports'] ? 'Needs attention' : 'All clear' }}</span></div>
+                            <div class="stat-top"><span class="stat-icon icon-amber">⚑</span>@if ($stats['pending_reports'])<span class="stat-trend trend-warn">Needs review</span>@endif</div>
                             <p class="stat-label">PENDING REPORTS</p><strong class="stat-value">{{ number_format($stats['pending_reports']) }}</strong>
                             <p class="stat-note">Awaiting admin review</p>
                         </article>
                         <article class="stat-card">
-                            <div class="stat-top"><span class="stat-icon icon-blue">▤</span><span class="stat-trend">Organized</span></div>
+                            <div class="stat-top"><span class="stat-icon icon-blue">▤</span></div>
                             <p class="stat-label">CATEGORIES</p><strong class="stat-value">{{ number_format($stats['categories']) }}</strong>
                             <p class="stat-note">Available post categories</p>
                         </article>
                         <article class="stat-card">
-                            <div class="stat-top"><span class="stat-icon icon-rose">⊘</span><span class="stat-trend">Moderation</span></div>
+                            <div class="stat-top"><span class="stat-icon icon-rose">⊘</span></div>
                             <p class="stat-label">BANNED ACCOUNTS</p><strong class="stat-value">{{ number_format($stats['banned_users']) }}</strong>
                             <p class="stat-note">Accounts currently restricted</p>
                         </article>
@@ -153,11 +148,11 @@
                     </section>
                 @elseif ($section === 'reports')
                     <div class="page-heading">
-                        <div><p class="eyebrow">TRUST &amp; SAFETY</p><h1>Report queue</h1><p class="page-subtitle">Review reported posts, assess the reason, and take the appropriate action.</p></div>
+                        <div><h1>Report queue</h1><p class="page-subtitle">Review reported posts, assess the reason, and take the appropriate action.</p></div>
                         <span class="queue-summary"><strong>{{ $stats['pending_reports'] }}</strong> pending review</span>
                     </div>
                     <section class="panel">
-                        <div class="panel-heading table-heading"><div><div class="heading-with-icon"><span class="heading-icon icon-amber">⚑</span><h2>Reported posts</h2></div><p>Confirm a report to ban the post author, or dismiss it if it is not valid.</p></div></div>
+                        <div class="panel-heading table-heading"><div><div class="heading-with-icon"><span class="heading-icon icon-amber">⚑</span><h2>Reported posts</h2></div><p>Confirm a report to suspend the post author for three days, or dismiss it if it is not valid.</p></div></div>
                         @if ($reports->isEmpty())
                             <div class="empty-state"><span class="empty-symbol">✓</span><strong>No reports yet</strong><p>When members report a post, it will appear here.</p></div>
                         @else
@@ -184,15 +179,15 @@
                                         </div>
                                         @if ($report->status === 'pending')
                                             <div class="queue-actions">
-                                                <span class="action-hint">Confirming this report permanently bans the post author.</span>
+                                                <span class="action-hint">Confirming this report suspends the post author for three days.</span>
                                                 <div class="button-group">
                                                     <form method="POST" action="{{ route('admin.reports.review', $report) }}" data-confirm="This report will be marked invalid. The post author will not be banned." data-confirm-title="Dismiss this report?" data-confirm-action="Dismiss report">
                                                         @csrf @method('PATCH')<input type="hidden" name="decision" value="invalid">
                                                         <button class="button button-outline button-small" type="submit">Dismiss report</button>
                                                     </form>
-                                                    <form method="POST" action="{{ route('admin.reports.review', $report) }}" data-confirm="The report will be marked valid and the post author will be banned." data-confirm-title="Confirm report and ban author?" data-confirm-action="Confirm and ban">
+                                                    <form method="POST" action="{{ route('admin.reports.review', $report) }}" data-confirm="The report will be marked valid and the post author will be suspended for three days." data-confirm-title="Confirm report and suspend author?" data-confirm-action="Confirm and suspend">
                                                         @csrf @method('PATCH')<input type="hidden" name="decision" value="valid">
-                                                        <button class="button button-danger button-small" type="submit">Confirm &amp; ban author</button>
+                                                        <button class="button button-danger button-small" type="submit">Confirm &amp; suspend for 3 days</button>
                                                     </form>
                                                 </div>
                                             </div>
@@ -207,16 +202,32 @@
                     </section>
                 @elseif ($section === 'users')
                     <div class="page-heading">
-                        <div><p class="eyebrow">ACCOUNT ADMINISTRATION</p><h1>User management</h1><p class="page-subtitle">Search accounts, review profile and activity details, and manage account access.</p></div>
+                        <div><h1>User management</h1><p class="page-subtitle">Search accounts, review profile and activity details, and manage account access.</p></div>
                         <span class="queue-summary"><strong>{{ number_format($stats['users']) }}</strong> registered members</span>
                     </div>
                     <section class="panel">
                         <div class="panel-heading"><div><div class="heading-with-icon"><span class="heading-icon icon-violet">♙</span><h2>Manage user accounts</h2></div><p>Filter by username, email, role, or account status. Admin accounts are protected from bans.</p></div></div>
                         @include('admin.partials.users-table', ['compact' => false])
                     </section>
+                    @can('create', \App\Models\User::class)
+                        <section class="panel" id="create-admin">
+                            <div class="panel-heading"><div><h2>Create admin account</h2><p>The new admin can sign in straight away and change this password later in Profile settings.</p></div></div>
+                            @if ($errors->createAdmin->any())
+                                <div class="alert alert-error" role="alert"><span>!</span><div><strong>Please check the form.</strong><ul>@foreach ($errors->createAdmin->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div></div>
+                            @endif
+                            <form method="POST" action="{{ route('admin.admins.store') }}" class="create-admin-form">
+                                @csrf
+                                <div class="field-group"><label for="new_admin_username">Username</label><input id="new_admin_username" name="username" minlength="3" maxlength="30" value="{{ old('username') }}" autocomplete="off" required></div>
+                                <div class="field-group"><label for="new_admin_email">Email</label><input id="new_admin_email" name="email" type="email" maxlength="255" value="{{ old('email') }}" autocomplete="off" required></div>
+                                <div class="field-group"><label for="new_admin_password">Password</label><input id="new_admin_password" name="password" type="password" minlength="8" autocomplete="new-password" required><span class="field-hint">At least 8 characters, with a number and a symbol.</span></div>
+                                <div class="field-group"><label for="new_admin_password_confirmation">Confirm password</label><input id="new_admin_password_confirmation" name="password_confirmation" type="password" minlength="8" autocomplete="new-password" required></div>
+                                <div class="create-admin-actions"><button class="button button-primary" type="submit">Create admin</button></div>
+                            </form>
+                        </section>
+                    @endcan
                 @elseif ($section === 'access-logs')
                     <div class="page-heading">
-                        <div><p class="eyebrow">SECURITY &amp; ACCOUNT ACTIVITY</p><h1>User access log</h1><p class="page-subtitle">Review authenticated web requests with recorded user, timestamp, browser, IP, and page details.</p></div>
+                        <div><h1>User access log</h1><p class="page-subtitle">Review authenticated web requests with recorded user, timestamp, browser, IP, and page details.</p></div>
                         <span class="queue-summary"><strong>{{ number_format($accessLogs->total()) }}</strong> recorded accesses</span>
                     </div>
                     <section class="panel">
@@ -235,7 +246,7 @@
                                                 <td><span class="browser-cell">{{ $log->browser ?: 'Unknown' }}</span></td>
                                                 <td><code class="ip-cell">{{ $log->ip_address ?: 'Unknown' }}</code></td>
                                                 <td><span class="request-cell"><strong>{{ $log->method }}</strong> {{ $log->path ?: '/' }}</span><small class="route-cell">{{ $log->route_name ?: 'Unmatched route' }}</small></td>
-                                                <td><span class="status-pill {{ $log->user?->banned_at ? 'status-banned' : 'status-active' }}">{{ $log->user?->banned_at ? 'Banned' : ($log->user ? 'Active' : 'Deleted') }}</span></td>
+                                                <td><span class="status-pill {{ $log->user?->isBanned() ? 'status-banned' : 'status-active' }}">{{ $log->user?->isBanned() ? 'Banned' : ($log->user ? 'Active' : 'Deleted') }}</span></td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -246,7 +257,7 @@
                     </section>
                 @elseif ($section === 'categories')
                     <div class="page-heading">
-                        <div><p class="eyebrow">CONTENT ORGANIZATION</p><h1>Post categories</h1><p class="page-subtitle">Create and maintain the categories members can choose for posts.</p></div>
+                        <div><h1>Post categories</h1><p class="page-subtitle">Create and maintain the categories members can choose for posts.</p></div>
                         <div class="category-total-card"><span class="heading-icon icon-blue">▤</span><span><strong>{{ $categories->count() }}</strong><small>ACTIVE CATEGORIES</small></span></div>
                     </div>
                     <section class="settings-layout">
@@ -283,7 +294,7 @@
                     </section>
                 @elseif ($section === 'restricted')
                     <div class="page-heading">
-                        <div><p class="eyebrow">POST MODERATION</p><h1>Keywords</h1><p class="page-subtitle">Manage restricted words and phrases for post moderation.</p></div>
+                        <div><h1>Keywords</h1><p class="page-subtitle">Manage restricted words and phrases for post moderation.</p></div>
                         <span class="queue-summary"><strong>{{ $keywords->count() }}</strong> keywords</span>
                     </div>
                     <section class="settings-layout">
@@ -309,49 +320,15 @@
                             </div>
                         </div>
                     </section>
-                @elseif ($section === 'notifications')
-                    <div class="page-heading">
-                        <div><p class="eyebrow">COMMUNITY MESSAGING</p><h1>Notification templates</h1><p class="page-subtitle">Manage notification types and the text shown to members.</p></div>
-                    </div>
-                    <section class="panel notification-create-panel">
-                        <div class="panel-heading"><div><div class="heading-with-icon"><span class="heading-icon icon-blue">♧</span><h2>Create notification</h2></div><p>Add a reusable notification type and message.</p></div></div>
-                        <form method="POST" action="{{ route('admin.notifications.store') }}" class="notification-form">
-                            @csrf
-                            <div class="field-group"><label for="notification_type">Notification type</label><input id="notification_type" name="notification_type" maxlength="255" placeholder="e.g. Community update" value="{{ old('notification_type') }}" required>@error('notification_type')<span class="field-error">{{ $message }}</span>@enderror</div>
-                            <div class="field-group"><label for="notification_text">Notification text</label><textarea id="notification_text" name="notification_text" maxlength="5000" rows="3" placeholder="Write the message members will see..." required>{{ old('notification_text') }}</textarea>@error('notification_text')<span class="field-error">{{ $message }}</span>@enderror</div>
-                            <button class="button button-primary" type="submit">Create template <span>＋</span></button>
-                        </form>
-                    </section>
-                    <section class="notification-cards">
-                        @forelse ($notifications as $notification)
-                            <article class="panel notification-card">
-                                <div class="notification-card-head"><span class="notification-type-icon">♧</span><span class="recipient-count">{{ $notification->recipients_count }} sent</span></div>
-                                <form id="notification-edit-{{ $notification->notification_id }}" method="POST" action="{{ route('admin.notifications.update', $notification) }}" class="stacked-form notification-edit-form">
-                                    @csrf @method('PUT')
-                                    <label for="notification_type_{{ $notification->notification_id }}">Type</label>
-                                    <input id="notification_type_{{ $notification->notification_id }}" name="notification_type" maxlength="255" value="{{ $notification->notification_type }}" required>
-                                    <label for="notification_text_{{ $notification->notification_id }}">Text</label>
-                                    <textarea id="notification_text_{{ $notification->notification_id }}" name="notification_text" maxlength="5000" rows="3" required>{{ $notification->notification_text }}</textarea>
-                                </form>
-                                <div class="notification-card-actions">
-                                    <button class="button button-outline button-small" type="submit" form="notification-edit-{{ $notification->notification_id }}">Save changes</button>
-                                    <form method="POST" action="{{ route('admin.notifications.destroy', $notification) }}" data-confirm="This template and its delivered notification records will be permanently deleted." data-confirm-title="Delete notification template?" data-confirm-action="Delete template">@csrf @method('DELETE')<button class="button button-quiet button-small" type="submit">Delete</button></form>
-                                </div>
-                            </article>
-                        @empty
-                            <div class="panel empty-state"><span class="empty-symbol">♧</span><strong>No notification templates</strong><p>Create a reusable notification above.</p></div>
-                        @endforelse
-                    </section>
                 @endif
 
-                <footer class="page-footer"><span>Knowvia Admin Console</span><span>Manage your community with care</span></footer>
+                <footer class="page-footer"><span>Knowvia admin</span></footer>
             </div>
         </main>
     </div>
     <dialog class="confirmation-dialog" aria-labelledby="confirmation-title" aria-describedby="confirmation-description">
         <div class="confirmation-content">
             <span class="confirmation-icon" aria-hidden="true">!</span>
-            <p class="confirmation-eyebrow">PLEASE CONFIRM</p>
             <h2 id="confirmation-title">Are you sure?</h2>
             <p id="confirmation-description"></p>
             <div class="confirmation-actions">

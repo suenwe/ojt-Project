@@ -2,515 +2,409 @@
 
 @section('content')
 <style>
-    /* Original UI Base */
-    .post-card { padding: 20px; margin-bottom: 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
-    .post-header { display: flex; align-items: flex-start; gap: 10px; }
-    .post-author { min-width: 0; flex: 1; }
-    .post-author strong { display: block; font-size: 14px; }
-    .post-author small { color: var(--muted); font-size: 12px; }
-    .post-category { display: inline-block; padding: 4px 10px; border-radius: 20px; background: var(--brand-soft); color: var(--brand); font-size: 11px; font-weight: 600; margin-right: 10px; }
-    .post-text { margin: 14px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .post-visual { margin-top: 12px; border-radius: 8px; overflow: hidden; background: #10141b; }
-    .post-counts { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line-soft); font-size: 12px; color: var(--muted); }
-    .post-actions { display: flex; justify-content: space-around; padding-top: 10px; }
-    .post-action { background: transparent; border: 0; color: var(--ink); font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-    .post-action:hover { color: var(--brand); }
-    .avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line); }
-    .hashtag-link { color: var(--brand); font-weight: bold; text-decoration: none; cursor: pointer; display: inline-block; margin-right: 5px; }
-    .hashtag-link:hover { text-decoration: underline; }
-
-    /* 3-Dot Menu */
     .post-report-menu-wrap { position: relative; align-self: flex-start; margin-top: -4px; margin-left: auto; flex-shrink: 0; }
     .post-report-menu-button { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; color: var(--ink); background: transparent; border: 0; border-radius: 7px; font-size: var(--text-2xl); line-height: 1; cursor: pointer; }
     .post-report-menu-button:hover, .post-report-menu-button[aria-expanded="true"] { background: var(--brand-soft); }
     .post-report-menu { position: absolute; top: 40px; right: 0; min-width: 160px; z-index: 12; padding: 5px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 24px rgb(0 0 0 / 12%); }
-    .post-report-menu button { display: block; width: 100%; padding: 10px 12px; color: var(--ink); background: transparent; border: 0; border-radius: 5px; text-align: left; font-size: var(--text-md); cursor: pointer; }
-    .post-report-menu button:hover { background: var(--brand-soft); }
-    .post-report-menu .delete-btn { color: var(--red); }
+    .post-report-menu button, .post-report-menu a { display: block; width: 100%; padding: 10px 12px; color: var(--ink); background: transparent; border: 0; border-radius: 5px; text-align: left; font-size: var(--text-md); cursor: pointer; }
+    .post-report-menu button:hover, .post-report-menu a:hover { background: var(--brand-soft); }
+    .post-report-menu .post-menu-danger { color: var(--red); }
+    
+    /* Clickable hashtags inside posts */
+    .post-hashtags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; margin-bottom: 12px; }
+    .hashtag-link { color: var(--brand); font-weight: 600; text-decoration: none; cursor: pointer; font-size: 13px; display: inline-block; }
+    .hashtag-link:hover { text-decoration: underline; }
 
-    /* Modal / Dialog Styling */
-    .rp-dialog { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(530px, calc(100% - 28px)); max-height: 90vh; margin: 0; overflow-y: auto; padding: 24px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 45px rgb(0 0 0 / 20%); z-index: 100; }
+    .rp-dialog { position: fixed; inset: 50% auto auto 50%; width: min(510px, calc(100% - 28px)); max-height: 90vh; margin: 0; overflow-y: auto; padding: 24px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 45px rgb(0 0 0 / 20%); transform: translate(-50%, -50%); }
     .rp-dialog::backdrop { background: rgb(10 16 40 / 60%); }
     .rp-dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
     .rp-dialog-heading h2 { margin-bottom: 3px; font-size: var(--text-xl); }
-    .rp-close { border: 0; background: transparent; color: var(--muted); font-size: var(--text-2xl); line-height: 1; padding: 2px 6px; cursor: pointer; }
+    .rp-close { border: 0; background: transparent; color: var(--muted); font-size: var(--text-2xl); line-height: 1; padding: 2px 6px; }
     .rp-field-group { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }
     .rp-field-group label { font-size: var(--text-md); font-weight: 700; }
     .rp-field-group .field { display: block; width: 100%; min-height: 44px; margin: 0; }
     .rp-field-group textarea.field { min-height: 110px; resize: vertical; }
+    .rp-required { color: var(--red); }
+    .rp-count { text-align: right; font-size: var(--text-xs); color: var(--muted); }
     .rp-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; margin-top: 16px; }
-
-    /* Carousel */
-    .vp-carousel { position: relative; width: 100%; height: 300px; overflow: hidden; background: #10141b; border-radius: 8px; }
-    .vp-carousel-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; height: 100%; }
-    .vp-carousel-track::-webkit-scrollbar { display: none; }
-    .vp-carousel-slide { display: flex; flex: 0 0 100%; justify-content: center; align-items: center; width: 100%; height: 100%; scroll-snap-align: center; }
-    .vp-carousel-slide img, .vp-carousel-slide video { display: block; width: 100%; height: 100%; object-fit: contain; }
-    .vp-carousel-count { position: absolute; top: 10px; right: 10px; padding: 3px 8px; color: white; background: rgb(0 0 0 / 62%); border-radius: 20px; font-size: 11px; }
-    .vp-carousel-nav { position: absolute; top: 50%; display: grid; place-items: center; width: 34px; height: 34px; color: #20232a; background: rgb(255 255 255 / 90%); border: 0; border-radius: 50%; font-size: 22px; line-height: 1; transform: translateY(-50%); cursor: pointer; }
-    .vp-carousel-prev { left: 10px; }
-    .vp-carousel-next { right: 10px; }
-    .vp-carousel-dots { position: absolute; right: 0; bottom: 9px; left: 0; display: flex; justify-content: center; gap: 5px; }
-    .vp-carousel-dot { width: 6px; height: 6px; padding: 0; background: rgb(255 255 255 / 55%); border: 0; border-radius: 50%; }
-    .vp-carousel-dot[aria-current="true"] { background: white; }
-    
-    .category-link { display: flex; justify-content: space-between; padding: 8px 0; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line-soft); cursor: pointer; }
-    .category-link:hover { color: var(--brand); }
-    .category-link strong { background: var(--line-soft); padding: 2px 8px; border-radius: 10px; font-size: 11px; }
-    
-    /* Ensure custom dropdowns are visible */
-    .feed-actions .filter-group { display: flex !important; align-items: center !important; gap: 10px !important; visibility: visible !important; opacity: 1 !important; }
-    .feed-actions select.field { display: block !important; min-height: 38px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 13px; }
-    
+    .rp-actions .btn { min-width: 105px; }
+    .rp-privacy { padding: 10px 12px; color: var(--muted); background: var(--page); border-radius: 7px; font-size: var(--text-sm); }
+    .rp-result { padding: 13px 15px; color: var(--green); background: var(--green-soft); border-radius: 7px; }
     [hidden] { display: none !important; }
+    @media (max-width: 700px) {
+        .rp-dialog { padding: 18px; }
+        .rp-actions .btn { flex: 1; }
+    }
 </style>
 
     <header class="topbar">
-        <a class="brand" href="{{ url('/') }}" aria-label="Knowvia home">
-            <span class="brand-mark">V</span>
-            <span>Knowvia</span>
-        </a>
+        <div class="topbar-inner">
+            <a class="brand" href="{{ url('/') }}" aria-label="Knowvia home">
+                <span class="brand-mark">K</span>
+                <span>Knowvia</span>
+            </a>
 
-        <div class="top-actions">
-            <input class="theme-toggle" id="top-theme-toggle" type="checkbox">
-            <label class="icon-button theme-toggle-label" for="top-theme-toggle" title="Toggle theme" aria-label="Toggle light and dark theme">◐</label>
-            <details class="top-menu">
-                <summary class="icon-button" aria-label="Open main menu">☰</summary>
-                <nav aria-label="Main menu">
-                    <a href="#posts">Posts</a>
-                    <a href="#schedules">Schedules</a>
-                    <a href="#bookmarks">Saved posts</a>
-                    <a href="#help">Help and support</a>
-                </nav>
-            </details>
+            <form class="search-box top-search" id="search-form" onsubmit="event.preventDefault();" role="search">
+                <span aria-hidden="true">⌕</span>
+                <input type="search" id="search-input" name="search" placeholder="Search posts, people and hashtags" aria-label="Search posts, people and hashtags">
+            </form>
+
+            <div class="top-actions">
+                <span class="icon-button" title="Notifications (coming soon)" aria-label="Notifications (coming soon)" role="img">
+                    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+                        <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                        <path d="M10 20.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <input class="theme-toggle" id="top-theme-toggle" type="checkbox">
+                <label class="icon-button theme-toggle-label" for="top-theme-toggle" title="Toggle theme" aria-label="Toggle light and dark theme">◐</label>
+                <details class="account-settings">
+                    <summary class="icon-button" title="Account" aria-label="Open account menu">
+                        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+                            <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                        </svg>
+                    </summary>
+                    <nav aria-label="Account menu">
+                        <a href="{{ route('profile.edit') }}">Profile settings</a>
+                        @if (auth()->user()->role === 'admin')
+                            <a href="{{ route('admin.dashboard') }}">Admin dashboard</a>
+                        @endif
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button class="account-menu-button" type="submit">Sign out</button>
+                        </form>
+                    </nav>
+                </details>
+            </div>
         </div>
     </header>
 
     <div class="app-layout">
         <aside class="sidebar">
-            <section class="panel account-card">
+            <a class="panel account-card" href="{{ route('users.show', auth()->user()) }}">
                 @if ($photoDataUri = auth()->user()->photoDataUri())
-                    <img class="avatar avatar-large avatar-photo" src="{{ $photoDataUri }}" alt="{{ auth()->user()->username }} profile photo">
+                    <img class="avatar avatar-large avatar-photo" src="{{ $photoDataUri }}" alt="" aria-hidden="true">
                 @else
-                    <span class="avatar avatar-large" aria-label="Member profile">{{ auth()->user()->initials() }}</span>
+                    <span class="avatar avatar-large" aria-hidden="true">{{ auth()->user()->initials() }}</span>
                 @endif
                 <div class="account-copy">
                     <strong>{{ auth()->user()->username }}</strong>
+                    <span class="subtext">View your profile</span>
                 </div>
-                <div class="account-tools">
-                    <span class="account-icon bell-icon" title="Notifications" aria-label="Notifications"></span>
-                    <details class="account-settings">
-                        <summary class="account-icon" title="Settings" aria-label="Open settings">⚙</summary>
-                        <nav aria-label="Account settings">
-                            <a href="{{ route('profile.edit') }}">Profile settings</a>
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button class="account-menu-button" type="submit">Sign out</button>
-                            </form>
-                        </nav>
-                    </details>
-                </div>
-            </section>
+            </a>
+
+            <nav class="panel main-nav" aria-label="Main menu">
+                @foreach ([
+                    ['Home', route('home'), request()->routeIs('home')],
+                    ['My profile', route('users.show', auth()->user()), request()->routeIs('users.show') && ($isOwnProfile ?? false)],
+                ] as [$navLabel, $navUrl, $isCurrentPage])
+                    <a class="{{ $isCurrentPage ? 'is-active' : '' }}" href="{{ $navUrl }}" @if ($isCurrentPage) aria-current="page" @endif>{{ $navLabel }}</a>
+                @endforeach
+            </nav>
         </aside>
 
         <main class="main-column" id="home">
-            @unless ($showProfileSettings ?? false)
-            <div class="feed-toolbar">
-                <form class="search-box" id="search-form" onsubmit="event.preventDefault();">
-                    <span aria-hidden="true">⌕</span>
-                    <input type="search" id="search-input" placeholder="Search posts and hashtags" aria-label="Search posts and hashtags">
-                    <button class="search-submit" type="submit" aria-label="Submit search">↵</button>
-                </form>
+            @unless (request()->routeIs('home'))
+                @include('partials.page-back', ['fallback' => route('home')])
+            @endunless
+
+            @if (request()->routeIs('home'))
+            @php
+                $composerStartsOpen = old('content') !== null && old('from_calendar') === null;
+            @endphp
+            <section class="panel composer-prompt" aria-label="Create a post" data-composer-prompt @if ($composerStartsOpen) hidden @endif>
+                @if ($photoDataUri)
+                    <img class="avatar avatar-photo" src="{{ $photoDataUri }}" alt="" aria-hidden="true">
+                @else
+                    <span class="avatar" aria-hidden="true">{{ auth()->user()->initials() }}</span>
+                @endif
+                <button class="composer-prompt-input" type="button" data-composer-open>What's on your mind?</button>
+                <label class="icon-button" for="post-media" title="Add photos or videos" aria-label="Add photos or videos">
+                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                        <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                        <circle cx="9" cy="9.5" r="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                        <path d="M4 17l5-5 4 4 2.5-2.5L20 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                    </svg>
+                </label>
+            </section>
+
+            <div class="composer-inline" data-composer-form @unless ($composerStartsOpen) hidden @endunless>
+                @include('post_forms.form', ['isScheduling' => false])
             </div>
 
-            <div class="feed-actions" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
-                <div class="feed-action-buttons">
-                    <a class="btn" href="{{ route('posts.create') }}">Create post</a>
-                    <a class="btn secondary" href="{{ route('schedule-post') }}">Schedule post</a>
-                </div>
-                
-                <!-- Category Filter Dropdown -->
-                <div class="filter-group">
-                    <label for="post-category-filter" style="font-size: 12px; color: var(--muted); margin: 0;">Filter Category:</label>
-                    <select class="field" id="post-category-filter" style="margin: 0;">
-                        <option value="all">All Categories</option>
-                        @foreach($categories as $category)
+            <div class="feed-sort">
+                <label class="sort-control" for="post-sort">
+                    <select class="sort-select" id="post-sort" name="sort" aria-label="Sort posts">
+                        <option value="newest">Newest</option>
+                        <option value="reacted">Most reacted</option>
+                        <option value="category">By topic</option>
+                    </select>
+                    <select class="sort-select category-filter" id="post-category-filter" name="category" aria-label="Filter by topic">
+                        <option value="all">All topics</option>
+                        @foreach($categories ?? [] as $category)
                             <option value="{{ $category->category_type }}">{{ $category->category_type }}</option>
                         @endforeach
                     </select>
-                </div>
+                </label>
             </div>
-            @endunless
+            @endif
 
             @if ($showProfileSettings ?? false)
                 @include('profile_forms.settings', ['user' => auth()->user()])
+            @elseif (isset($member))
+                @include('profile_forms.show')
             @elseif ($hidePosts ?? false)
                 @include('post_forms.form', ['isScheduling' => $isScheduling ?? false])
             @else
-                <section class="feed-list" id="feed-container" aria-label="Latest posts"></section>
+                @if (session('status') && ! session('showScheduleCalendar'))
+                    <p class="form-status" role="status">{{ session('status') }}</p>
+                @endif
+
+                <section class="feed-list" id="feed-container" aria-label="Latest posts" data-live-feed>
+                    @forelse ($posts ?? [] as $post)
+                        <div class="post-wrapper"
+                             data-post-content="{{ strtolower($post->descriptions . ' ' . $post->hashtag . ' ' . ($post->user->username ?? '') . ' ' . ($post->category->category_type ?? '')) }}"
+                             data-post-category="{{ $post->category->category_type ?? '' }}"
+                             data-post-hashtags="{{ $post->hashtag }}">
+
+                            @include('post_forms.card', ['post' => $post])
+
+                        </div>
+                    @empty
+                        <div class="panel empty-feed">
+                            <h2>No posts yet</h2>
+                            <p class="subtext">Be the first to share something with the community.</p>
+                            <a class="btn" href="{{ route('posts.create') }}">Create post</a>
+                        </div>
+                    @endforelse
+                </section>
             @endif
 
         </main>
 
         <aside class="rightbar">
             <section class="panel right-panel">
-                <h3>Explore</h3>
-                <p class="subtext">Browse posts by hashtag.</p>
-                <div class="category-list" id="explore-tags">
-                    <a class="category-link" data-tag="#laravel"><span>#laravel</span><strong>12</strong></a>
-                    <a class="category-link" data-tag="#postgresql"><span>#postgresql</span><strong>8</strong></a>
-                    <a class="category-link" data-tag="#webdevelopment"><span>#webdevelopment</span><strong>5</strong></a>
+                <h3>Popular hashtags</h3>
+                <p class="subtext">From posts in the last 30 days.</p>
+                <div class="category-list">
+                    @forelse ($popularHashtags ?? [] as $hashtag => $postCount)
+                        <div class="category-link" style="cursor:pointer;" onclick="window.searchTag('{{ $hashtag }}')">
+                            <span>{{ $hashtag }}</span><strong>{{ $postCount }}</strong>
+                        </div>
+                    @empty
+                        <p class="subtext">Hashtags from new posts will show up here.</p>
+                    @endforelse
                 </div>
             </section>
         </aside>
     </div>
 
-    <!-- EDIT POST DIALOG -->
-    <dialog class="rp-dialog" id="edit-dialog">
-        <div class="rp-dialog-heading">
-            <div><h2>Edit Post</h2></div>
-            <button type="button" class="rp-close" onclick="document.getElementById('edit-dialog').close()">&times;</button>
-        </div>
-        <form id="edit-form" enctype="multipart/form-data">
-            <input type="hidden" id="edit-id">
-            <div class="rp-field-group">
-                <label>Post Description</label>
-                <textarea class="field" id="edit-content" maxlength="1200" required></textarea>
-            </div>
-            <div class="rp-field-group">
-                <label>Replace Photos or Videos (Optional)</label>
-                <input class="field" type="file" id="edit-media" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" multiple>
-                <span style="font-size: 11px; color: var(--muted);">Selecting new files will replace the current media.</span>
-            </div>
-            <div class="rp-actions">
-                <button type="button" class="btn secondary" onclick="document.getElementById('edit-dialog').close()">Cancel</button>
-                <button type="submit" class="btn">Save Changes</button>
-            </div>
-        </form>
-    </dialog>
+    <a
+        class="schedule-fab {{ request()->routeIs('posts.schedule') ? 'is-active' : '' }}"
+        href="{{ route('posts.schedule') }}"
+        title="Schedule a post"
+        aria-label="Schedule a post"
+        aria-controls="schedule-calendar"
+        aria-expanded="{{ session('showScheduleCalendar') ? 'true' : 'false' }}"
+        data-schedule-toggle
+    >
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+            <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M3.5 9.5h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M12 12.5v3l2 1.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </a>
 
-    <!-- REPORT POST DIALOG -->
-    <dialog class="rp-dialog" id="report-dialog">
+    @include('post_forms.schedule-calendar')
+
+    <dialog class="rp-dialog" id="post-report-dialog" aria-labelledby="post-report-title">
         <div class="rp-dialog-heading">
             <div>
-                <h2>Report Post</h2>
+                <h2 id="post-report-title">Report Post</h2>
                 <p class="subtext">Tell us why you're reporting this post.</p>
             </div>
-            <button type="button" class="rp-close" onclick="document.getElementById('report-dialog').close()">&times;</button>
+            <button type="button" class="rp-close" id="close-post-report" aria-label="Close report form">&times;</button>
         </div>
-        <form action="{{ route('report.store') }}" method="POST">
+
+        <form id="post-report-form" method="POST" action="{{ route('report.store') }}">
             @csrf
-            <input type="hidden" name="post_id" id="report-post-id" value="">
+            <input type="hidden" id="post-report-id" name="post_id" value="{{ old('post_id') }}">
             <div class="rp-field-group">
-                <label for="post-report-reason">Report Reason <span class="rp-required" style="color:var(--red)">*</span></label>
-                <select class="field" name="reason" required>
+                <label for="post-report-reason">Report Reason <span class="rp-required">*</span></label>
+                <select class="field" id="post-report-reason" name="report_type" required>
                     <option value="">Select a reason</option>
-                    <option value="Problem involving someone under 18">Problem involving someone under 18</option>
-                    <option value="Bullying, harassment or abuse">Bullying, harassment or abuse</option>
-                    <option value="Suicide or self-harm">Suicide or self-harm</option>
-                    <option value="Violent, hateful or disturbing content">Violent, hateful or disturbing content</option>
-                    <option value="Adult content">Adult content</option>
-                    <option value="Scam, fraud or false information">Scam, fraud or false information</option>
-                    <option value="I don't want to see this">I don't want to see this</option>
+                    <option value="Problem involving someone under 18" @selected(old('report_type') === 'Problem involving someone under 18')>Problem involving someone under 18</option>
+                    <option value="Bullying, harassment or abuse" @selected(old('report_type') === 'Bullying, harassment or abuse')>Bullying, harassment or abuse</option>
+                    <option value="Suicide or self-harm" @selected(old('report_type') === 'Suicide or self-harm')>Suicide or self-harm</option>
+                    <option value="Violent, hateful or disturbing content" @selected(old('report_type') === 'Violent, hateful or disturbing content')>Violent, hateful or disturbing content</option>
+                    <option value="Selling or promoting restricted items" @selected(old('report_type') === 'Selling or promoting restricted items')>Selling or promoting restricted items</option>
+                    <option value="Adult content" @selected(old('report_type') === 'Adult content')>Adult content</option>
+                    <option value="Scam, fraud or false information" @selected(old('report_type') === 'Scam, fraud or false information')>Scam, fraud or false information</option>
+                    <option value="Intellectual property" @selected(old('report_type') === 'Intellectual property')>Intellectual property</option>
+                    <option value="I don&#x27;t want to see this" @selected(old('report_type') === "I don't want to see this")>I don't want to see this</option>
                 </select>
             </div>
+
+            @error('report_type')<p class="form-error" role="alert">{{ $message }}</p>@enderror
+            @error('post_id')<p class="form-error" role="alert">{{ $message }}</p>@enderror
             <div class="rp-field-group">
                 <label for="post-report-details">Additional Details (Optional)</label>
-                <textarea class="field" name="details" maxlength="500" placeholder="Describe your concern..."></textarea>
+                <textarea class="field" id="post-report-details" name="reason" maxlength="500" placeholder="Describe your concern (optional)...">{{ old('reason') }}</textarea>
+                <span class="rp-count" id="post-report-count">0 / 500</span>
             </div>
+            @error('reason')<p class="form-error" role="alert">{{ $message }}</p>@enderror
+
+            <p class="rp-privacy">Reports are sent to the admin team for review.</p>
+
             <div class="rp-actions">
-                <button type="button" class="btn secondary" onclick="document.getElementById('report-dialog').close()">Cancel</button>
+                <button type="button" class="btn secondary" id="cancel-post-report">Cancel</button>
                 <button type="submit" class="btn">Submit Report</button>
             </div>
         </form>
     </dialog>
+    <p class="rp-result" id="post-report-result" role="status" hidden></p>
 
     <script>
-        const allPosts = @json($serverPosts ?? []);
-        const currentUserName = @json(auth()->user()->username);
-        const currentUserInitials = @json(auth()->user()->initials());
-        const feedContainer = document.getElementById('feed-container');
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+        (() => {
+            'use strict';
 
-        let currentSearch = '';
-        let currentCategory = 'all';
+            const dialog = document.getElementById('post-report-dialog');
+            const closeReport = document.getElementById('close-post-report');
+            const cancelReport = document.getElementById('cancel-post-report');
+            const form = document.getElementById('post-report-form');
+            const reason = document.getElementById('post-report-reason');
+            const details = document.getElementById('post-report-details');
+            const count = document.getElementById('post-report-count');
+            const result = document.getElementById('post-report-result');
+            const reportPostId = document.getElementById('post-report-id');
 
-        document.getElementById('search-input').addEventListener('input', (e) => {
-            currentSearch = e.target.value.toLowerCase();
-            renderFilteredPosts();
-        });
+            @if ($errors->has('report_type') || $errors->has('post_id') || $errors->has('reason'))
+                dialog.showModal();
+            @endif
 
-        document.getElementById('post-category-filter').addEventListener('change', (e) => {
-            currentCategory = e.target.value;
-            renderFilteredPosts();
-        });
-
-        document.querySelectorAll('.category-link').forEach(link => {
-            link.addEventListener('click', () => {
-                const tag = link.getAttribute('data-tag');
-                document.getElementById('search-input').value = tag;
-                currentSearch = tag.toLowerCase();
-                document.getElementById('post-category-filter').value = 'all'; 
-                currentCategory = 'all';
-                renderFilteredPosts();
-            });
-        });
-
-        function clickTag(tag) {
-            document.getElementById('search-input').value = tag;
-            currentSearch = tag.toLowerCase();
-            document.getElementById('post-category-filter').value = 'all';
-            currentCategory = 'all';
-            renderFilteredPosts();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function timeAgo(dateString) {
-            const date = new Date(dateString);
-            const now = new Date();
-            const seconds = Math.floor((now - date) / 1000);
-            if (seconds < 60) return 'Just now';
-            const minutes = Math.floor(seconds / 60);
-            if (minutes < 60) return minutes + 'm ago';
-            const hours = Math.floor(minutes / 60);
-            if (hours < 24) return hours + 'h ago';
-            const days = Math.floor(hours / 24);
-            return days + 'd ago';
-        }
-
-        function renderFilteredPosts() {
-            let filtered = [...allPosts];
-
-            if (currentSearch) {
-                filtered = filtered.filter(post => {
-                    const text = post.content.toLowerCase();
-                    const tags = (post.hashtags || '').toLowerCase();
-                    const cat = (post.category || '').toLowerCase();
-                    return text.includes(currentSearch) || tags.includes(currentSearch) || cat.includes(currentSearch);
+            function closeAllMenus(exceptWrap) {
+                document.querySelectorAll('.post-report-menu-wrap').forEach((wrap) => {
+                    if (wrap === exceptWrap) return;
+                    wrap.querySelector('.post-report-menu').hidden = true;
+                    wrap.querySelector('.post-report-menu-button').setAttribute('aria-expanded', 'false');
                 });
             }
 
-            if (currentCategory !== 'all') {
-                filtered = filtered.filter(post => post.category === currentCategory);
+            function hideReport() {
+                if (dialog.open) dialog.close();
             }
 
-            filtered.sort((a, b) => new Date(b.time) - new Date(a.time));
+            document.addEventListener('click', (event) => {
+                const toggle = event.target.closest('.post-report-menu-button');
+                const openReport = event.target.closest('.open-post-report');
 
-            feedContainer.innerHTML = '';
-            if (filtered.length === 0) {
-                feedContainer.innerHTML = '<p class="subtext" style="padding:20px;">No posts found matching your criteria.</p>';
-                return;
-            }
-            filtered.forEach(post => feedContainer.appendChild(buildPostCard(post)));
-        }
-
-        function drawMedia(container, mediaItems) {
-            container.replaceChildren();
-            if (!mediaItems || !mediaItems.length) { container.hidden = true; return; }
-            const carousel = document.createElement('div');
-            carousel.className = 'vp-carousel';
-            const track = document.createElement('div');
-            track.className = 'vp-carousel-track';
-            
-            mediaItems.forEach((item) => {
-                const slide = document.createElement('div');
-                slide.className = 'vp-carousel-slide';
-                const isVideo = item.type.startsWith('video/');
-                const element = document.createElement(isVideo ? 'video' : 'img');
-                element.src = item.url;
-                if (isVideo) { element.controls = true; element.playsInline = true; }
-                slide.appendChild(element);
-                track.appendChild(slide);
-            });
-            carousel.appendChild(track);
-
-            if (mediaItems.length > 1) {
-                const count = document.createElement('span'); count.className = 'vp-carousel-count'; count.textContent = '1 / ' + mediaItems.length;
-                carousel.appendChild(count);
-                const prev = document.createElement('button'); prev.type = 'button'; prev.className = 'vp-carousel-nav vp-carousel-prev'; prev.innerHTML = '‹';
-                const next = document.createElement('button'); next.type = 'button'; next.className = 'vp-carousel-nav vp-carousel-next'; next.innerHTML = '›';
-                const dots = document.createElement('div'); dots.className = 'vp-carousel-dots';
-                let currentIndex = 0;
-                function updatePosition(index) {
-                    currentIndex = Math.max(0, Math.min(mediaItems.length - 1, index));
-                    count.textContent = (currentIndex + 1) + ' / ' + mediaItems.length;
-                    dotButtons.forEach((dot, i) => dot.setAttribute('aria-current', String(i === currentIndex)));
+                if (toggle) {
+                    const wrap = toggle.closest('.post-report-menu-wrap');
+                    const menu = wrap.querySelector('.post-report-menu');
+                    closeAllMenus(wrap);
+                    menu.hidden = !menu.hidden;
+                    toggle.setAttribute('aria-expanded', String(!menu.hidden));
+                    return;
                 }
-                function goToSlide(index) {
-                    updatePosition(index);
-                    track.scrollTo({ left: currentIndex * track.clientWidth, behavior: 'smooth' });
+
+                if (openReport) {
+                    closeAllMenus(null);
+                    form.reset();
+                    reportPostId.value = openReport.dataset.postId;
+                    count.textContent = '0 / 500';
+                    dialog.showModal();
+                    reason.focus();
+                    return;
                 }
-                const dotButtons = mediaItems.map((_, index) => {
-                    const dot = document.createElement('button'); dot.type = 'button'; dot.className = 'vp-carousel-dot';
-                    dot.setAttribute('aria-current', String(index === 0));
-                    dot.addEventListener('click', () => goToSlide(index));
-                    dots.appendChild(dot); return dot;
-                });
-                prev.addEventListener('click', () => goToSlide(currentIndex - 1));
-                next.addEventListener('click', () => goToSlide(currentIndex + 1));
-                track.addEventListener('scroll', () => updatePosition(Math.round(track.scrollLeft / track.clientWidth)), { passive: true });
-                carousel.append(prev, next, dots);
-            }
-            container.appendChild(carousel);
-            container.hidden = false;
-        }
 
-        function buildPostCard(post) {
-            const card = document.createElement('article');
-            card.className = 'panel post-card';
-            
-            const header = document.createElement('div');
-            header.className = 'post-header';
-            
-            const avatarHtml = post.authorAvatar 
-                ? `<img src="${post.authorAvatar}" class="avatar-img" alt="Avatar">` 
-                : `<span class="avatar">${post.authorInitials || currentUserInitials}</span>`;
-
-            let menuButtons = post.is_owner 
-                ? `<button type="button" class="edit-btn">Edit</button><button type="button" class="delete-btn">Delete</button>`
-                : `<button type="button" class="report-btn">Report Post</button>`;
-
-            header.innerHTML = `
-                ${avatarHtml}
-                <div class="post-author">
-                    <strong>${post.author || currentUserName}</strong>
-                    <small>${timeAgo(post.time)} · ${post.post_type}</small>
-                </div>
-                <span class="post-category">${post.category}</span>
-                <div class="post-report-menu-wrap">
-                    <button type="button" class="post-report-menu-button">⋯</button>
-                    <div class="post-report-menu" hidden>${menuButtons}</div>
-                </div>
-            `;
-
-            const menuBtn = header.querySelector('.post-report-menu-button');
-            const menu = header.querySelector('.post-report-menu');
-            menuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const isHidden = menu.hidden;
-                document.querySelectorAll('.post-report-menu').forEach(m => m.hidden = true);
-                menu.hidden = !isHidden;
+                if (!event.target.closest('.post-report-menu-wrap')) closeAllMenus(null);
             });
 
-            const deleteBtn = header.querySelector('.delete-btn');
-            if (deleteBtn) {
-                deleteBtn.addEventListener('click', () => {
-                    if(!confirm('Are you sure you want to delete this post?')) return;
-                    fetch(`/posts/${post.id}`, {
-                        method: 'DELETE',
-                        headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
-                    }).then(res => {
-                        if(res.ok) {
-                            const index = allPosts.findIndex(p => p.id === post.id);
-                            if (index > -1) allPosts.splice(index, 1);
-                            renderFilteredPosts();
-                        } else {
-                            alert('Failed to delete post.');
-                        }
-                    });
-                });
-            }
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') closeAllMenus(null);
+            });
 
-            const editBtn = header.querySelector('.edit-btn');
-            if (editBtn) {
-                editBtn.addEventListener('click', () => {
-                    document.getElementById('edit-id').value = post.id;
-                    document.getElementById('edit-content').value = post.content;
-                    document.getElementById('edit-media').value = '';
-                    document.getElementById('edit-dialog').showModal();
-                });
-            }
+            closeReport.addEventListener('click', hideReport);
+            cancelReport.addEventListener('click', hideReport);
 
-            const reportBtn = header.querySelector('.report-btn');
-            if (reportBtn) {
-                reportBtn.addEventListener('click', () => {
-                    document.getElementById('report-post-id').value = post.id;
-                    document.getElementById('report-dialog').showModal();
-                });
-            }
+            dialog.addEventListener('click', (event) => {
+                if (event.target === dialog) hideReport();
+            });
 
-            const text = document.createElement('p');
-            text.className = 'post-text';
-            text.textContent = post.content;
+            details.addEventListener('input', () => {
+                count.textContent = details.value.length + ' / 500';
+            });
+        })();
 
-            let hashtags = null;
-            if(post.hashtags) {
-                hashtags = document.createElement('p');
-                const tagsArray = post.hashtags.split(' ');
-                tagsArray.forEach(tag => {
-                    if(!tag) return;
-                    const a = document.createElement('a');
-                    a.className = 'hashtag-link';
-                    a.textContent = tag + ' ';
-                    a.onclick = () => clickTag(tag);
-                    hashtags.appendChild(a);
-                });
-            }
+        // --- SEARCH & FILTER LOGIC ---
+        const searchInput = document.getElementById('search-input');
+        const categoryFilter = document.getElementById('post-category-filter');
+        let activeHashtag = '';
 
-            let mediaContainer = null;
-            if (post.mediaItems && post.mediaItems.length > 0) {
-                mediaContainer = document.createElement('div');
-                mediaContainer.className = 'post-visual';
-                drawMedia(mediaContainer, post.mediaItems);
-            }
-
-            const counts = document.createElement('div');
-            counts.className = 'post-counts';
-            counts.innerHTML = `<span>0 reactions</span><span>0 comments · 0 views</span>`;
-
-            const actions = document.createElement('div');
-            actions.className = 'post-actions';
-            actions.innerHTML = `<button class="post-action">♡ React</button><button class="post-action">Comment</button>`;
-
-            card.appendChild(header);
-            card.appendChild(text);
-            if (hashtags) card.appendChild(hashtags);
-            if (mediaContainer) card.appendChild(mediaContainer);
-            card.appendChild(counts);
-            card.appendChild(actions);
-            
-            return card;
+        function normalizeHashtag(tag) {
+            return String(tag || '').trim().replace(/^#+/, '').toLowerCase();
         }
 
-        document.getElementById('edit-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const id = document.getElementById('edit-id').value;
-            const content = document.getElementById('edit-content').value;
-            const mediaInput = document.getElementById('edit-media');
+        function filterPosts() {
+            const query = searchInput
+                ? searchInput.value.trim().toLowerCase().replace(/^#+/, '')
+                : '';
+            const category = categoryFilter ? categoryFilter.value : 'all';
 
-            const formData = new FormData();
-            formData.append('_method', 'PUT'); 
-            formData.append('content', content);
-            
-            if (mediaInput.files.length > 0) {
-                Array.from(mediaInput.files).forEach(file => {
-                    formData.append('media[]', file);
-                });
-            }
+            document.querySelectorAll('.post-wrapper').forEach(wrapper => {
+                const searchableText = (
+                    wrapper.getAttribute('data-post-content') || ''
+                ).toLowerCase();
+                const postCategory = wrapper.getAttribute('data-post-category') || '';
+                const matchesSearch = activeHashtag
+                    ? (wrapper.getAttribute('data-post-hashtags') || '')
+                        .split(/[\s,]+/)
+                        .some(tag => normalizeHashtag(tag) === activeHashtag)
+                    : searchableText.includes(query);
+                const matchesCategory = category === 'all' || postCategory === category;
 
-            fetch(`/posts/${id}`, {
-                method: 'POST', 
-                headers: { 
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json'
-                },
-                body: formData 
-            }).then(res => {
-                if(res.ok) {
-                    document.getElementById('edit-dialog').close();
-                    setTimeout(() => window.location.reload(), 200);
-                } else {
-                    alert('Failed to edit post.');
-                }
+                wrapper.style.display = matchesSearch && matchesCategory ? '' : 'none';
             });
-        });
+        }
 
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.post-report-menu-wrap')) {
-                document.querySelectorAll('.post-report-menu').forEach(m => m.hidden = true);
+        // Typing a new search switches back to normal text search.
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                activeHashtag = '';
+                filterPosts();
+            });
+        }
+        if (categoryFilter) categoryFilter.addEventListener('change', filterPosts);
+
+        // Search only posts that actually use the clicked hashtag.
+        window.searchTag = function(tag) {
+            if (!searchInput) return;
+
+            const normalizedTag = normalizeHashtag(tag);
+            if (!normalizedTag) return;
+
+            activeHashtag = normalizedTag;
+            searchInput.value = '#' + normalizedTag;
+
+            // Reset topic filtering so it cannot hide matching posts.
+            if (categoryFilter) categoryFilter.value = 'all';
+
+            filterPosts();
+
+            const feed = document.getElementById('feed-container');
+            if (feed) {
+                feed.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
-        });
+        };
 
-        renderFilteredPosts();
+        // Event delegation supports hashtags on every post.
+        document.addEventListener('click', function(event) {
+            const hashtag = event.target.closest('.hashtag-link');
+            if (!hashtag) return;
+
+            event.preventDefault();
+            window.searchTag(hashtag.dataset.hashtag || hashtag.textContent);
+        });
     </script>
 @endsection

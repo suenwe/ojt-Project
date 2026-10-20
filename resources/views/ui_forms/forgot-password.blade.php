@@ -1,17 +1,12 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Knowvia | Forgot Password</title>
 
-    <!-- Shared Knowvia CSS -->
-    <link rel="stylesheet"
-          href="{{ asset('assets/prototype.css') }}">
-
+    <link rel="stylesheet" href="{{ asset('assets/prototype.css') }}">
     <style>
         .forgot-container {
             min-height: 100vh;
@@ -129,29 +124,19 @@
             }
         }
     </style>
+    @include('partials.saved-theme')
 </head>
-
 <body>
 
 <main class="forgot-container">
-
     <section class="panel forgot-card">
-
-        <!-- Knowvia Branding -->
         <div class="forgot-brand">
-            <span class="brand-mark">V</span>
+            <span class="brand-mark">K</span>
             <h1>Knowvia</h1>
         </div>
 
-        <h2 class="forgot-title">
-            Forgot Password?
-        </h2>
-
-        <p class="subtext">
-            Enter your email address below.
-            We'll help you request a password
-            reset link.
-        </p>
+        <h2 class="forgot-title">Forgot Password?</h2>
+        <p class="subtext">Enter your email address below. We'll send a verification code before allowing a password reset.</p>
 
         <p class="required-note">
             Fields marked
@@ -171,66 +156,42 @@
             @endif
 
             <div class="form-group">
-
                 <label for="email">
                     Email Address
                     <span class="required-star">*</span>
                 </label>
-
                 <input
                     class="field"
                     type="email"
                     id="email"
+                    data-clearable
                     name="email"
                     value="{{ old('email') }}"
                     placeholder="Enter your registered email"
                     autocomplete="email"
                     required
                 >
-
             </div>
 
-            <button
-                class="btn reset-btn"
-                type="submit"
-            >
-                Send Reset Link
-            </button>
+            <button class="btn reset-btn" type="submit">Send Verification Code</button>
 
-            <!-- Reset Link Sent Message -->
-            <p
-                id="preview-message"
-                class="preview-message"
-                role="status"
-                @unless (session('status')) hidden @endunless
-            >{{ session('status') }}</p>
-
+            <p id="preview-message" class="preview-message" role="status" @unless (session('status')) hidden @endunless>{{ session('status') }}</p>
         </form>
 
         <p class="back-link">
-            <a href="{{ route('login') }}">
-                ← Back to Sign In
-            </a>
+            <a href="{{ route('login') }}">? Back to Sign In</a>
         </p>
-
     </section>
-
 </main>
 
 <script>
-    const emailInput = document.getElementById(
-        'email'
-    );
+    const emailInput = document.getElementById('email');
+    const previewMessage = document.getElementById('preview-message');
 
-    const previewMessage = document.getElementById(
-        'preview-message'
-    );
-
-    // Hide message when email is edited
     emailInput.addEventListener('input', function() {
         previewMessage.hidden = true;
     });
 </script>
-
+<script src="{{ asset('assets/clear-fields.js') }}"></script>
 </body>
 </html>

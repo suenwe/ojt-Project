@@ -58,6 +58,20 @@
             >
         </label>
 
+        <label class="settings-form-wide" for="profile-current-password">
+            Current password (only needed if you change your email)
+            <span class="password-field">
+                <input
+                    class="field"
+                    id="profile-current-password"
+                    name="current_password"
+                    type="password"
+                    autocomplete="current-password"
+                >
+                <button class="password-toggle" type="button" data-toggle-for="profile-current-password" aria-label="Show password" aria-pressed="false">Show</button>
+            </span>
+        </label>
+
         <label for="profile-birthday">
             Birthday
             <input
@@ -108,7 +122,15 @@
                 accept="image/jpeg,image/png"
             >
             <small class="subtext">JPG or PNG, up to 2 MB. Leave empty to keep your current picture.</small>
+            <img class="avatar avatar-large avatar-photo profile-photo-preview" id="profile-photo-preview" alt="Preview of your new profile picture" hidden>
         </label>
+
+        @if ($user->photoDataUri())
+            <label class="settings-form-wide settings-checkbox" for="profile-remove-photo">
+                <input id="profile-remove-photo" name="remove_photo" type="checkbox" value="1" @checked(old('remove_photo'))>
+                Remove my current profile picture
+            </label>
+        @endif
 
         <div class="settings-form-wide settings-form-actions">
             <a class="btn secondary" href="{{ url('/') }}">Cancel</a>
@@ -139,40 +161,49 @@
 
         <label class="settings-form-wide" for="current-password">
             Current password
-            <input
-                class="field"
-                id="current-password"
-                name="current_password"
-                type="password"
-                autocomplete="current-password"
-                required
-            >
+            <span class="password-field">
+                <input
+                    class="field"
+                    id="current-password"
+                    name="current_password"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                >
+                <button class="password-toggle" type="button" data-toggle-for="current-password" aria-label="Show password" aria-pressed="false">Show</button>
+            </span>
         </label>
 
         <label for="new-password">
             New password
-            <input
-                class="field"
-                id="new-password"
-                name="password"
-                type="password"
-                minlength="8"
-                autocomplete="new-password"
-                required
-            >
+            <span class="password-field">
+                <input
+                    class="field"
+                    id="new-password"
+                    name="password"
+                    type="password"
+                    minlength="8"
+                    autocomplete="new-password"
+                    required
+                >
+                <button class="password-toggle" type="button" data-toggle-for="new-password" aria-label="Show password" aria-pressed="false">Show</button>
+            </span>
         </label>
 
         <label for="new-password-confirmation">
             Confirm new password
-            <input
-                class="field"
-                id="new-password-confirmation"
-                name="password_confirmation"
-                type="password"
-                minlength="8"
-                autocomplete="new-password"
-                required
-            >
+            <span class="password-field">
+                <input
+                    class="field"
+                    id="new-password-confirmation"
+                    name="password_confirmation"
+                    type="password"
+                    minlength="8"
+                    autocomplete="new-password"
+                    required
+                >
+                <button class="password-toggle" type="button" data-toggle-for="new-password-confirmation" aria-label="Show password" aria-pressed="false">Show</button>
+            </span>
         </label>
 
         <div class="settings-form-wide settings-form-actions">
@@ -180,3 +211,86 @@
         </div>
     </form>
 </section>
+
+@can('deleteOwnAccount', $user)
+    <section class="panel composer danger-zone" id="delete-account">
+        <h2 class="composer-title">Delete Account</h2>
+        <p class="subtext">This permanently deletes your account, your posts, comments and reactions. It cannot be undone.</p>
+
+        @if ($errors->deleteAccount->any())
+            <div class="form-errors" role="alert">
+                @foreach ($errors->deleteAccount->all() as $error)
+                    <p>{{ $error }}</p>
+                @endforeach
+            </div>
+        @endif
+
+        <form
+            class="settings-form"
+            action="{{ route('profile.destroy') }}"
+            method="POST"
+            data-confirm="Your account and everything you posted will be permanently deleted."
+            data-confirm-title="Delete your account?"
+            data-confirm-action="Delete account"
+        >
+            @csrf
+            @method('DELETE')
+
+            <label class="settings-form-wide" for="delete-account-password">
+                Enter your password to confirm
+                <span class="password-field">
+                    <input
+                        class="field"
+                        id="delete-account-password"
+                        name="password"
+                        type="password"
+                        autocomplete="current-password"
+                        required
+                    >
+                    <button class="password-toggle" type="button" data-toggle-for="delete-account-password" aria-label="Show password" aria-pressed="false">Show</button>
+                </span>
+            </label>
+
+            <div class="settings-form-wide settings-form-actions">
+                <button class="btn danger" type="submit">Delete my account</button>
+            </div>
+        </form>
+    </section>
+@endcan
+
+<script>
+    (() => {
+        'use strict';
+
+        document.querySelectorAll('[data-toggle-for]').forEach((toggle) => {
+            const input = document.getElementById(toggle.dataset.toggleFor);
+
+            toggle.addEventListener('click', () => {
+                const isHidden = input.type === 'password';
+                input.type = isHidden ? 'text' : 'password';
+                toggle.textContent = isHidden ? 'Hide' : 'Show';
+                toggle.setAttribute('aria-pressed', String(isHidden));
+                toggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+            });
+        });
+
+        const photoInput = document.getElementById('profile-photo');
+        const photoPreview = document.getElementById('profile-photo-preview');
+        const removePhoto = document.getElementById('profile-remove-photo');
+
+        photoInput.addEventListener('change', () => {
+            const file = photoInput.files[0];
+
+            if (!file || !file.type.startsWith('image/')) {
+                photoPreview.hidden = true;
+                photoPreview.removeAttribute('src');
+                return;
+            }
+
+            photoPreview.src = URL.createObjectURL(file);
+            photoPreview.hidden = false;
+
+            if (removePhoto) removePhoto.checked = false;
+        });
+    })();
+</script>

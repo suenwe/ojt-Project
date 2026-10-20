@@ -3,8 +3,10 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\UpdatesUserPasswords;
 
@@ -30,6 +32,20 @@ class UpdateUserPassword implements UpdatesUserPasswords
 
         $user->forceFill([
             'password' => Hash::make($input['password']),
+            'remember_token' => Str::random(60),
         ])->save();
+
+        $this->signOutOtherDevices($user);
+    }
+
+    /**
+     * Remove the member's other logins so a stolen password stops working everywhere else.
+     */
+    protected function signOutOtherDevices(User $user): void
+    {
+        DB::table('sessions')
+            ->where('user_id', $user->getKey())
+            ->where('id', '!=', session()->getId())
+            ->delete();
     }
 }
