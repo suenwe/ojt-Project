@@ -579,13 +579,13 @@ async function refreshLiveFeed(statusText) {
 
 /**
  * Search box, topic filter and hashtag links: hide the post cards on this page that do not match.
- * Typing searches post text, hashtags, usernames and topics; clicking a hashtag shows only posts that use exactly that hashtag.
+ * Words starting with # only match posts tagged with exactly that hashtag (#test does not match "test" in the text or #testing);
+ * other words search post text, hashtags, usernames and topics. Clicking a hashtag searches for it.
  * Pages without a post list send the search to the home page (?search= or ?hashtag=).
  */
 const feedSearchForm = document.querySelector('[data-feed-search-form]');
 const feedSearchInput = document.querySelector('[data-feed-search]');
 const feedCategoryFilter = document.querySelector('[data-feed-category]');
-let activeSearchHashtag = '';
 
 function normalizeHashtag(tag) {
     return `#${String(tag ?? '').trim().replace(/^#+/, '')}`.toLowerCase();
@@ -598,14 +598,16 @@ function filterFeed() {
         return;
     }
 
-    const query = feedSearchInput.value.trim().toLowerCase().replace(/^#+/, '');
+    const words = feedSearchInput.value.trim().toLowerCase().split(/[\s,]+/).filter((word) => word !== '' && word !== '#');
+    const hashtags = words.filter((word) => word.startsWith('#')).map(normalizeHashtag);
+    const textWords = words.filter((word) => !word.startsWith('#'));
     const category = feedCategoryFilter?.value ?? '';
     const cards = [...feed.querySelectorAll('[data-post-card]')];
 
     cards.forEach((card) => {
-        const matchesSearch = activeSearchHashtag
-            ? card.dataset.searchHashtags.split(' ').includes(activeSearchHashtag)
-            : card.dataset.searchText.includes(query);
+        const postHashtags = card.dataset.searchHashtags.split(' ');
+        const matchesSearch = hashtags.every((tag) => postHashtags.includes(tag))
+            && textWords.every((word) => card.dataset.searchText.includes(word));
         const matchesCategory = category === '' || card.dataset.searchCategory === category;
 
         card.hidden = !(matchesSearch && matchesCategory);
@@ -627,8 +629,7 @@ function filterFeed() {
 }
 
 function searchHashtag(tag) {
-    activeSearchHashtag = normalizeHashtag(tag);
-    feedSearchInput.value = activeSearchHashtag;
+    feedSearchInput.value = normalizeHashtag(tag);
 
     if (feedCategoryFilter) {
         feedCategoryFilter.value = '';
@@ -647,10 +648,7 @@ if (feedSearchForm && feedSearchInput) {
         }
     });
 
-    feedSearchInput.addEventListener('input', () => {
-        activeSearchHashtag = '';
-        filterFeed();
-    });
+    feedSearchInput.addEventListener('input', filterFeed);
 
     feedCategoryFilter?.addEventListener('change', filterFeed);
 
