@@ -516,7 +516,9 @@ body.admin-body .queue-reason h3 { color: #38394e; font-size: var(--text-md); fo
 body.admin-body .small-label { color: #9c9cab; display: block; font-size: var(--text-xs); font-weight: 700; letter-spacing: .8px; }
 body.admin-body .queue-body { display: grid; gap: 15px; grid-template-columns: 1.2fr 1fr; margin-top: 14px; }
 body.admin-body .post-preview { background: #f4f4f7; border-radius: 6px; padding: 12px; }
-body.admin-body .post-preview p { color: #626376; font-size: var(--text-sm); line-height: 1.6; margin: 7px 0 9px; white-space: pre-wrap; }
+body.admin-body .report-media { margin: 0 0 9px; }
+body.admin-body .report-media .media-carousel { height: 300px; }
+body.admin-body .post-preview p {color: #626376; font-size: var(--text-sm); line-height: 1.6; margin: 7px 0 9px; white-space: pre-wrap; }
 body.admin-body .category-tag { background: #f1f3fc; border-radius: 10px; color: #374da4; display: inline-block; font-size: var(--text-xs); padding: 4px 7px; }
 body.admin-body .report-details { display: grid; gap: 11px; grid-template-columns: 1fr 1fr; }
 body.admin-body .report-details > div:last-child { grid-column: 1 / -1; }
