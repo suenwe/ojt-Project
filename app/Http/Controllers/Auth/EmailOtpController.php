@@ -25,7 +25,6 @@ class EmailOtpController extends Controller
 
         return view('auth.verify-email-code', [
             'email' => $challenge['email'],
-            'purpose' => $challenge['purpose'],
         ]);
     }
 
@@ -57,31 +56,6 @@ class EmailOtpController extends Controller
         $user = $challenge['user_id'] === null
             ? null
             : User::query()->find($challenge['user_id']);
-
-        if (in_array($challenge['purpose'], ['login', 'admin_login'], true)) {
-            $isAdminLogin = $challenge['purpose'] === 'admin_login';
-
-            $user?->clearExpiredBan();
-
-            if (! $user
-                || $user->isBanned()
-                || ($isAdminLogin && $user->role !== 'admin')) {
-                $emailOtp->clear();
-
-                return redirect()
-                    ->route($isAdminLogin ? 'admin.login' : 'login')
-                    ->withErrors(['email' => 'This account is no longer available. Sign in again.']);
-            }
-
-            $remember = (bool) ($challenge['data']['remember'] ?? false);
-            $emailOtp->clear();
-            Auth::login($user, $remember);
-            $request->session()->regenerate();
-
-            return $isAdminLogin
-                ? redirect()->intended(route('admin.dashboard'))
-                : redirect()->intended('/');
-        }
 
         if ($challenge['purpose'] === 'registration') {
             if (User::query()->where('email', $challenge['email'])->exists()) {
@@ -157,12 +131,11 @@ class EmailOtpController extends Controller
 
             $user?->clearExpiredBan();
 
-            if (! $user || $user->isBanned()
-                || ($challenge['purpose'] === 'admin_login' && $user->role !== 'admin')) {
+            if (! $user || $user->isBanned()) {
                 $emailOtp->clear();
 
                 return redirect()
-                    ->route($challenge['purpose'] === 'admin_login' ? 'admin.login' : 'login')
+                    ->route('login')
                     ->withErrors(['email' => 'This account is no longer available. Start again.']);
             }
         }
