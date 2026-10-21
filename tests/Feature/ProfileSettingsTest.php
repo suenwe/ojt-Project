@@ -25,6 +25,15 @@ class ProfileSettingsTest extends TestCase
         $this->get(route('profile.edit'))->assertRedirect(route('login'));
     }
 
+    public function test_member_pages_use_the_styled_confirmation_dialog_instead_of_the_browser_box(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee('<dialog class="confirmation-dialog member-confirm"', false)
+            ->assertSee('data-confirm-title="Delete your account?"', false);
+    }
+
     public function test_profile_settings_page_prefills_the_member_details(): void
     {
         $user = User::factory()->create([

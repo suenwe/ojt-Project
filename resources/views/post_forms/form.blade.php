@@ -125,7 +125,7 @@
                 </div>
                 <div class="scheduled-post-actions">
                     <a class="btn secondary small" href="{{ route('posts.edit', $scheduledPost) }}">Edit</a>
-                    <form method="POST" action="{{ route('schedule-post.destroy', $scheduledPost) }}" onsubmit="return confirm('Cancel this scheduled post?');">
+                    <form method="POST" action="{{ route('schedule-post.destroy', $scheduledPost) }}" data-confirm="This scheduled post and its photos or videos will be deleted." data-confirm-title="Cancel this scheduled post?" data-confirm-action="Cancel post">
                         @csrf
                         @method('DELETE')
                         <button class="btn secondary small" type="submit">Cancel</button>

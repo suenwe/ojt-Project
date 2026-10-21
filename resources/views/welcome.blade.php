@@ -267,6 +267,8 @@
     </dialog>
     <p class="rp-result" id="post-report-result" role="status" hidden></p>
 
+    @include('partials.confirmation-dialog')
+
     <script>
         (() => {
             'use strict';
