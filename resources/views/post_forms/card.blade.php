@@ -101,8 +101,8 @@
         <form class="reaction-control" method="POST" action="{{ route('posts.reactions.store', $post) }}" data-reaction-control>
             @csrf
             <button class="post-action reaction-main {{ $viewerReaction ? 'is-reacted reaction-'.$viewerReaction : '' }}" type="submit" name="type" value="{{ $viewerReaction ?? 'like' }}" data-reaction-main aria-pressed="{{ $viewerReaction ? 'true' : 'false' }}">
-                <span data-reaction-main-emoji>{{ $viewerReaction ? $reactionTypes[$viewerReaction]['emoji'] : '👍' }}</span>
-                <span data-reaction-main-label>{{ $viewerReaction ? $reactionTypes[$viewerReaction]['label'] : 'Like' }}</span>
+                <span data-reaction-main-emoji>{{ $reactionTypes[$viewerReaction]['emoji'] ?? '👍' }}</span>
+                <span data-reaction-main-label>{{ $reactionTypes[$viewerReaction]['label'] ?? 'Like' }}</span>
             </button>
             <div class="reaction-picker" role="group" aria-label="Pick a reaction" data-reaction-picker>
                 @foreach ($reactionTypes as $type => $reaction)

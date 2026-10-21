@@ -1039,7 +1039,6 @@ if (peopleDialog) {
         }
     });
 }
-
 /* Notification bell: open the list, mark it read, and refresh the red number every 30 seconds. */
 
 const notificationBell = document.querySelector('[data-notification-bell]');

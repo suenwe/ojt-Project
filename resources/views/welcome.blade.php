@@ -395,6 +395,7 @@
             if (!searchInput) return;
 
             const normalizedTag = normalizeHashtag(tag);
+            3
             if (!normalizedTag) return;
 
             activeHashtag = normalizedTag;
