@@ -6,6 +6,7 @@ use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\UpdateCommentRequest;
 use App\Models\Comment;
 use App\Models\Post;
+use App\Services\ActivityNotifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,18 +28,19 @@ class CommentController extends Controller
     /**
      * Add a comment, or a reply to any comment or reply on the same post.
      */
-    public function store(StoreCommentRequest $request, Post $post): JsonResponse|RedirectResponse
+    public function store(StoreCommentRequest $request, Post $post, ActivityNotifier $notifier): JsonResponse|RedirectResponse
     {
         abort_unless($post->isVisibleInFeed(), 404);
 
         $repliedTo = $request->parentComment();
 
-        Comment::query()->create([
+        $comment = Comment::query()->create([
             'post_id' => $post->post_id,
             'user_id' => $request->user()->user_id,
             'parent_id' => $repliedTo?->comment_id,
             'content' => $request->validated('content'),
         ]);
+        $notifier->commentAdded($comment, $request->user());
 
         return $this->respond($request, $post);
     }

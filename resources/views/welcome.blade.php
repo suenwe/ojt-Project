@@ -38,18 +38,25 @@
                 <span>Knowvia</span>
             </a>
 
-            <form class="search-box top-search" action="#" method="GET" role="search">
+            <form class="search-box top-search" action="{{ route('home') }}" method="GET" role="search" data-feed-search-form>
                 <span aria-hidden="true">⌕</span>
-                <input type="search" name="search" placeholder="Search Knowvia" aria-label="Search posts, people and hashtags">
+                <input type="search" name="search" placeholder="Search posts, people and hashtags" aria-label="Search posts, people and hashtags" data-feed-search>
             </form>
 
             <div class="top-actions">
-                <span class="icon-button" title="Notifications (coming soon)" aria-label="Notifications (coming soon)" role="img">
-                    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
-                        <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-                        <path d="M10 20.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    </svg>
-                </span>
+                <div class="notification-bell" data-notification-bell data-list-url="{{ route('notifications.index') }}" data-count-url="{{ route('notifications.unread-count') }}" data-read-url="{{ route('notifications.read') }}">
+                    <button class="icon-button notification-toggle" type="button" title="Notifications" aria-label="Notifications" aria-expanded="false" aria-controls="notification-panel" data-notification-toggle>
+                        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+                            <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                            <path d="M10 20.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                        <span class="notification-badge" data-notification-badge @unless ($unreadNotificationCount ?? 0) hidden @endunless>{{ ($unreadNotificationCount ?? 0) > 99 ? '99+' : ($unreadNotificationCount ?? 0) }}</span>
+                    </button>
+                    <section class="panel notification-panel" id="notification-panel" aria-label="Notifications" data-notification-panel hidden>
+                        <h2 class="notification-panel-title">Notifications</h2>
+                        <div data-notification-list></div>
+                    </section>
+                </div>
                 <input class="theme-toggle" id="top-theme-toggle" type="checkbox">
                 <label class="icon-button theme-toggle-label" for="top-theme-toggle" title="Toggle theme" aria-label="Toggle light and dark theme">◐</label>
                 <details class="account-settings">
@@ -132,11 +139,11 @@
                         <option value="reacted">Most reacted</option>
                         <option value="category">By topic</option>
                     </select>
-                    <select class="sort-select category-filter" name="category" aria-label="Filter by topic">
-                        <option>All topics</option>
-                        <option>Technology</option>
-                        <option>Community</option>
-                        <option>Education</option>
+                    <select class="sort-select category-filter" name="category" aria-label="Filter by topic" data-feed-category>
+                        <option value="">All topics</option>
+                        @foreach ($categories ?? [] as $category)
+                            <option value="{{ $category->category_type }}">{{ $category->category_type }}</option>
+                        @endforeach
                     </select>
                 </label>
             </div>
@@ -174,7 +181,7 @@
                 <p class="subtext">From posts in the last 30 days.</p>
                 <div class="category-list">
                     @forelse ($popularHashtags as $hashtag => $postCount)
-                        <div class="category-link"><span>{{ $hashtag }}</span><strong>{{ $postCount }}</strong></div>
+                        <a class="category-link" href="#" data-search-hashtag="{{ $hashtag }}"><span>{{ $hashtag }}</span><strong>{{ $postCount }}</strong></a>
                     @empty
                         <p class="subtext">Hashtags from new posts will show up here.</p>
                     @endforelse

@@ -336,6 +336,18 @@ if (scheduleCalendar && scheduleToggle && scheduleDataElement) {
         scheduledAtField.value = `${selectedDate}T${timeField.value}`;
     });
 
+    document.addEventListener('schedule:edit-post', (event) => {
+        const post = posts.find((item) => item.id === event.detail.postId);
+
+        if (!post) {
+            return;
+        }
+
+        event.detail.handled = true;
+        setCalendarOpen(true);
+        openForm(post.date, post);
+    });
+
     const publishDuePosts = () => {
         const duePosts = posts.filter((post) => Date.parse(post.publishAt) <= Date.now());
 
@@ -547,6 +559,7 @@ async function refreshLiveFeed(statusText) {
         feed.replaceChildren(...freshFeed.childNodes);
         initMediaCarousels(feed);
         watchPostViews(feed);
+        filterFeed();
 
         let status = document.querySelector('[data-live-feed-status]');
 
@@ -561,6 +574,115 @@ async function refreshLiveFeed(statusText) {
         status.textContent = statusText;
     } catch (error) {
         // A failed refresh is harmless; the post still shows after the next page load.
+    }
+}
+
+/**
+ * Search box, topic filter and hashtag links: hide the post cards on this page that do not match.
+ * Words starting with # only match posts tagged with exactly that hashtag (#test does not match "test" in the text or #testing);
+ * other words search post text, hashtags, usernames and topics. Clicking a hashtag searches for it.
+ * Pages without a post list send the search to the home page (?search= or ?hashtag=).
+ */
+const feedSearchForm = document.querySelector('[data-feed-search-form]');
+const feedSearchInput = document.querySelector('[data-feed-search]');
+const feedCategoryFilter = document.querySelector('[data-feed-category]');
+
+function normalizeHashtag(tag) {
+    return `#${String(tag ?? '').trim().replace(/^#+/, '')}`.toLowerCase();
+}
+
+function filterFeed() {
+    const feed = document.querySelector('[data-live-feed]');
+
+    if (!feed || !feedSearchInput) {
+        return;
+    }
+
+    const words = feedSearchInput.value.trim().toLowerCase().split(/[\s,]+/).filter((word) => word !== '' && word !== '#');
+    const hashtags = words.filter((word) => word.startsWith('#')).map(normalizeHashtag);
+    const textWords = words.filter((word) => !word.startsWith('#'));
+    const category = feedCategoryFilter?.value ?? '';
+    const cards = [...feed.querySelectorAll('[data-post-card]')];
+
+    cards.forEach((card) => {
+        const postHashtags = card.dataset.searchHashtags.split(' ');
+        const matchesSearch = hashtags.every((tag) => postHashtags.includes(tag))
+            && textWords.every((word) => card.dataset.searchText.includes(word));
+        const matchesCategory = category === '' || card.dataset.searchCategory === category;
+
+        card.hidden = !(matchesSearch && matchesCategory);
+    });
+
+    let emptyMessage = feed.querySelector('[data-feed-search-empty]');
+
+    if (cards.length > 0 && cards.every((card) => card.hidden)) {
+        if (!emptyMessage) {
+            emptyMessage = document.createElement('p');
+            emptyMessage.className = 'panel feed-search-empty';
+            emptyMessage.dataset.feedSearchEmpty = '';
+            emptyMessage.textContent = 'No posts match your search.';
+            feed.append(emptyMessage);
+        }
+    } else {
+        emptyMessage?.remove();
+    }
+}
+
+function searchHashtag(tag) {
+    feedSearchInput.value = normalizeHashtag(tag);
+
+    if (feedCategoryFilter) {
+        feedCategoryFilter.value = '';
+    }
+
+    filterFeed();
+    document.querySelector('[data-live-feed]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+if (feedSearchForm && feedSearchInput) {
+    const hasFeed = () => document.querySelector('[data-live-feed]') !== null;
+
+    feedSearchForm.addEventListener('submit', (event) => {
+        if (hasFeed()) {
+            event.preventDefault();
+        }
+    });
+
+    feedSearchInput.addEventListener('input', filterFeed);
+
+    feedCategoryFilter?.addEventListener('change', filterFeed);
+
+    // The topic filter is only visible while "By topic" is picked, so leaving that option clears it.
+    document.getElementById('post-sort')?.addEventListener('change', (event) => {
+        if (feedCategoryFilter && event.target.value !== 'category') {
+            feedCategoryFilter.value = '';
+            filterFeed();
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        const hashtagLink = event.target.closest('[data-search-hashtag]');
+
+        if (!hashtagLink) {
+            return;
+        }
+
+        event.preventDefault();
+
+        if (hasFeed()) {
+            searchHashtag(hashtagLink.dataset.searchHashtag);
+        } else {
+            window.location.href = `${feedSearchForm.action}?hashtag=${encodeURIComponent(hashtagLink.dataset.searchHashtag)}`;
+        }
+    });
+
+    const searchFromUrl = new URLSearchParams(window.location.search);
+
+    if (searchFromUrl.get('hashtag')) {
+        searchHashtag(searchFromUrl.get('hashtag'));
+    } else if (searchFromUrl.get('search')) {
+        feedSearchInput.value = searchFromUrl.get('search');
+        filterFeed();
     }
 }
 
@@ -916,4 +1038,120 @@ if (peopleDialog) {
             peopleDialog.close();
         }
     });
+}
+/* Notification bell: open the list, mark it read, and refresh the red number every 30 seconds. */
+
+const notificationBell = document.querySelector('[data-notification-bell]');
+
+if (notificationBell) {
+    const toggle = notificationBell.querySelector('[data-notification-toggle]');
+    const panel = notificationBell.querySelector('[data-notification-panel]');
+    const list = notificationBell.querySelector('[data-notification-list]');
+    const badge = notificationBell.querySelector('[data-notification-badge]');
+
+    const setUnreadCount = (count) => {
+        badge.hidden = count === 0;
+        badge.textContent = count > 99 ? '99+' : String(count);
+        toggle.setAttribute('aria-label', count ? `Notifications, ${count} unread` : 'Notifications');
+    };
+
+    const closePanel = () => {
+        panel.hidden = true;
+        toggle.setAttribute('aria-expanded', 'false');
+    };
+
+    toggle.addEventListener('click', async () => {
+        if (!panel.hidden) {
+            closePanel();
+
+            return;
+        }
+
+        const response = await fetch(notificationBell.dataset.listUrl, { headers: { Accept: 'text/html' } });
+
+        if (!response.ok) {
+            return;
+        }
+
+        list.innerHTML = await response.text();
+        panel.hidden = false;
+        toggle.setAttribute('aria-expanded', 'true');
+
+        if (!badge.hidden) {
+            await fetch(notificationBell.dataset.readUrl, {
+                method: 'POST',
+                headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+            }).catch(() => null);
+            setUnreadCount(0);
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!panel.hidden && !notificationBell.contains(event.target)) {
+            closePanel();
+        }
+    });
+
+    panel.addEventListener('click', (event) => {
+        const editLink = event.target.closest('[data-reminder-edit]');
+
+        if (!editLink) {
+            return;
+        }
+
+        const detail = { postId: Number(editLink.dataset.reminderEdit), handled: false };
+        document.dispatchEvent(new CustomEvent('schedule:edit-post', { detail }));
+
+        if (detail.handled) {
+            event.preventDefault();
+            closePanel();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !panel.hidden) {
+            closePanel();
+            toggle.focus();
+        }
+    });
+
+    setInterval(async () => {
+        if (document.hidden) {
+            return;
+        }
+
+        const response = await fetch(notificationBell.dataset.countUrl, { headers: { Accept: 'application/json' } }).catch(() => null);
+
+        if (response?.ok) {
+            setUnreadCount((await response.json()).unreadCount);
+        }
+    }, 30000);
+}
+
+/* Arriving from a notification: jump to the post, open its comments and highlight the comment. */
+
+const notificationTarget = new URLSearchParams(window.location.search);
+
+if (notificationTarget.has('open_post')) {
+    const targetCard = document.getElementById(`post-${notificationTarget.get('open_post')}`);
+
+    const jumpToTarget = () => {
+        targetCard.classList.add('is-highlighted');
+        targetCard.scrollIntoView({ block: 'start', behavior: 'instant' });
+
+        if (notificationTarget.get('comment')) {
+            openComments(targetCard, false).then(() => {
+                const targetComment = targetCard.querySelector(`#comment-${notificationTarget.get('comment')}`);
+
+                targetComment?.classList.add('is-highlighted');
+                targetComment?.scrollIntoView({ block: 'center', behavior: 'instant' });
+            });
+        }
+    };
+
+    if (targetCard && document.readyState === 'complete') {
+        jumpToTarget();
+    } else if (targetCard) {
+        window.addEventListener('load', jumpToTarget, { once: true });
+    }
 }

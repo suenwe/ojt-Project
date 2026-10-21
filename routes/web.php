@@ -11,6 +11,7 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DeleteAccountController;
 use App\Http\Controllers\MemberProfileController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PostViewController;
 use App\Http\Controllers\ReactionController;
@@ -64,6 +65,10 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/media/{media}', [PostController::class, 'media'])
         ->whereNumber('media')
         ->name('media.show');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::post('/notifications/read', [NotificationController::class, 'markAllRead'])->name('notifications.read');
 
     Route::get('/schedule-post', [ScheduledPostController::class, 'index'])->name('posts.schedule');
     Route::post('/schedule-post', [ScheduledPostController::class, 'store'])->name('schedule-post.store');

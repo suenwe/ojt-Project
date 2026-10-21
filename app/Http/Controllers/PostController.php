@@ -6,6 +6,7 @@ use App\Http\Requests\StorePostRequest;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\PostMedia;
+use App\Services\ActivityNotifier;
 use App\Services\PostPublisher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -93,11 +94,12 @@ class PostController extends Controller
     /**
      * Save changes to one of the member's own posts.
      */
-    public function update(StorePostRequest $request, Post $post, PostPublisher $publisher): RedirectResponse
+    public function update(StorePostRequest $request, Post $post, PostPublisher $publisher, ActivityNotifier $notifier): RedirectResponse
     {
         Gate::authorize('update', $post);
 
         $isRescheduling = $request->isReschedulingPost();
+        $previousPublishAt = $post->date_time?->copy();
 
         try {
             $publisher->update(
@@ -115,6 +117,10 @@ class PostController extends Controller
         }
 
         if ($isRescheduling) {
+            if (! $post->fresh()->date_time?->equalTo($previousPublishAt)) {
+                $notifier->forgetScheduleReminder($post);
+            }
+
             return ScheduledPostController::redirectAfterChange($request, 'Your scheduled post was updated.');
         }
 

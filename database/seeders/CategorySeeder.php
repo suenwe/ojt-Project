@@ -25,6 +25,7 @@ class CategorySeeder extends Seeder
             'Events & Activities',
             'Books and Literature',
             'News & Updates',
+            'Music',
         ];
 
         foreach ($categories as $category) {
