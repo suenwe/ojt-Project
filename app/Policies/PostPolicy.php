@@ -24,6 +24,17 @@ class PostPolicy
     }
 
     /**
+     * Everyone can open the photos and videos of live posts; those of scheduled, hidden
+     * or suspended members' posts only open for the author and for admins (report queue).
+     */
+    public function viewMedia(User $user, Post $post): bool
+    {
+        return $post->isVisibleInFeed()
+            || $post->user_id === $user->user_id
+            || $user->role === 'admin';
+    }
+
+    /**
      * Only the author can delete their post.
      */
     public function delete(User $user, Post $post): bool

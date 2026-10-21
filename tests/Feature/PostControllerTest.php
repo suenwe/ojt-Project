@@ -154,6 +154,33 @@ class PostControllerTest extends TestCase
         $this->get(route('home'))->assertSee('Post by a suspended member');
     }
 
+    public function test_media_of_a_scheduled_post_only_opens_for_its_author_and_admins(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('post-media/later.png', 'png-bytes');
+        $author = User::factory()->create();
+        $post = Post::query()->create([
+            'descriptions' => 'Goes live tomorrow',
+            'state' => 'scheduled',
+            'date_time' => now()->addDay(),
+            'user_id' => $author->user_id,
+        ]);
+        $media = $post->media()->create([
+            'media_type' => 'photo',
+            'mime_type' => 'image/png',
+            'media_path' => 'post-media/later.png',
+            'file_size' => 9,
+        ]);
+
+        $this->actingAs(User::factory()->create())->get(route('media.show', $media))->assertNotFound();
+        $this->actingAs($author)->get(route('media.show', $media))->assertOk();
+        $this->actingAs(User::factory()->create(['role' => 'admin']))->get(route('media.show', $media))->assertOk();
+
+        $this->travel(2)->days();
+
+        $this->actingAs(User::factory()->create())->get(route('media.show', $media))->assertOk();
+    }
+
     public function test_popular_hashtags_keep_whole_burmese_words(): void
     {
         $author = User::factory()->create();

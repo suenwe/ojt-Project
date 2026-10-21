@@ -144,6 +144,8 @@ class PostController extends Controller
      */
     public function media(PostMedia $media): Response
     {
+        abort_unless($media->post !== null && Gate::allows('viewMedia', $media->post), 404);
+
         if ($media->media_path && Storage::disk('public')->exists($media->media_path)) {
             return Storage::disk('public')->response($media->media_path, $media->original_filename, [
                 'Content-Type' => $media->mime_type,
