@@ -246,7 +246,11 @@ class AdminDashboardTest extends TestCase
             ->assertSee(route('media.show', $video), false)
             ->assertSee('<img', false)
             ->assertSee('<video', false)
-            ->assertSee('controls', false);
+            ->assertSee('controls', false)
+            ->assertSee("data-media-carousel='".json_encode([
+                ['url' => route('media.show', $image), 'type' => 'image/png', 'alt' => 'Image attached to reported post'],
+                ['url' => route('media.show', $video), 'type' => 'video/mp4', 'alt' => 'Image attached to reported post'],
+            ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)."'", false);
     }
 
     public function test_admin_can_view_persisted_user_access_logs(): void
