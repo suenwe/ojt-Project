@@ -24,7 +24,7 @@ class EmailTwoFactorAuthenticationTest extends TestCase
             ->assertSee(route('register.store'));
     }
 
-    public function test_login_sends_an_email_code_and_does_not_authenticate_before_verification(): void
+    public function test_login_signs_in_with_email_and_password_without_sending_a_code(): void
     {
         Notification::fake();
         $user = User::factory()->create();
@@ -32,18 +32,10 @@ class EmailTwoFactorAuthenticationTest extends TestCase
         $this->post(route('login.store'), [
             'email' => $user->email,
             'password' => 'password',
-        ])->assertRedirect(route('verification-code.challenge'));
+        ])->assertRedirect('/');
 
-        $this->assertGuest();
-        Notification::assertSentOnDemand(SendTwoFactorCode::class, function (
-            SendTwoFactorCode $notification,
-            array $channels,
-            object $notifiable,
-        ) use ($user): bool {
-            return $notifiable->routeNotificationFor('mail') === $user->email
-                && $notification->purpose === 'login'
-                && strlen($notification->code) === 6;
-        });
+        $this->assertAuthenticatedAs($user);
+        Notification::assertNothingSent();
     }
 
     public function test_invalid_password_does_not_send_a_code(): void
@@ -63,33 +55,25 @@ class EmailTwoFactorAuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_correct_code_authenticates_once(): void
+    public function test_correct_code_works_only_once(): void
     {
         Notification::fake();
-        $user = User::factory()->create();
-        $this->post(route('login.store'), [
-            'email' => $user->email,
-            'password' => 'password',
-        ]);
-        $code = $this->sentCodeFor($user->email);
+        $this->startRegistration('once@example.test');
+        $code = $this->sentCodeFor('once@example.test');
 
         $this->post(route('verification-code.verify'), ['code' => $code])
             ->assertRedirect('/');
 
-        $this->assertAuthenticatedAs($user);
+        $this->assertAuthenticatedAs(User::query()->where('email', 'once@example.test')->sole());
 
         $this->post(route('verification-code.verify'), ['code' => $code])
             ->assertRedirect(route('login'));
     }
 
-    public function test_incorrect_code_does_not_authenticate(): void
+    public function test_incorrect_code_does_not_create_the_account(): void
     {
         Notification::fake();
-        $user = User::factory()->create();
-        $this->post(route('login.store'), [
-            'email' => $user->email,
-            'password' => 'password',
-        ]);
+        $this->startRegistration('wrong.code@example.test');
 
         $this->from(route('verification-code.challenge'))
             ->post(route('verification-code.verify'), ['code' => '000000'])
@@ -97,17 +81,14 @@ class EmailTwoFactorAuthenticationTest extends TestCase
             ->assertSessionHasErrors('code');
 
         $this->assertGuest();
+        $this->assertDatabaseMissing('users', ['email' => 'wrong.code@example.test']);
     }
 
     public function test_expired_code_is_rejected_and_resend_replaces_it(): void
     {
         Notification::fake();
-        $user = User::factory()->create();
-        $this->post(route('login.store'), [
-            'email' => $user->email,
-            'password' => 'password',
-        ]);
-        $codes = $this->sentCodesFor($user->email);
+        $this->startRegistration('expired@example.test');
+        $codes = $this->sentCodesFor('expired@example.test');
         $this->travel(61)->seconds();
 
         $this->from(route('verification-code.challenge'))
@@ -118,14 +99,14 @@ class EmailTwoFactorAuthenticationTest extends TestCase
         $this->post(route('verification-code.resend'))
             ->assertRedirect(route('verification-code.challenge'));
 
-        $codes = $this->sentCodesFor($user->email);
+        $codes = $this->sentCodesFor('expired@example.test');
         $this->assertCount(2, $codes);
         $this->assertNotSame($codes[0], $codes[1]);
 
         $this->post(route('verification-code.verify'), ['code' => $codes[1]])
             ->assertRedirect('/');
 
-        $this->assertAuthenticatedAs($user);
+        $this->assertAuthenticatedAs(User::query()->where('email', 'expired@example.test')->sole());
     }
 
     public function test_registration_creates_the_user_only_after_email_verification(): void
@@ -186,16 +167,16 @@ class EmailTwoFactorAuthenticationTest extends TestCase
 
         $code = $this->sentCodeFor($user->email);
         $this->post(route('verification-code.verify'), ['code' => $code])
-            ->assertRedirect(route('password.reset'));
+            ->assertRedirect(route('otp.password.reset'));
 
-        $this->get(route('password.reset'))->assertOk();
+        $this->get(route('otp.password.reset'))->assertOk();
 
         $this->post(route('password.update'), [
-            'password' => 'new-strong-password',
-            'password_confirmation' => 'new-strong-password',
+            'password' => 'New-strong-password1!',
+            'password_confirmation' => 'New-strong-password1!',
         ])->assertRedirect(route('login'));
 
-        $this->assertTrue(Hash::check('new-strong-password', $user->fresh()->password));
+        $this->assertTrue(Hash::check('New-strong-password1!', $user->fresh()->password));
         $this->assertGuest();
     }
 
@@ -214,32 +195,18 @@ class EmailTwoFactorAuthenticationTest extends TestCase
             ->assertRedirect(route('verification-code.challenge'))
             ->assertSessionHasErrors('code');
 
-        $this->get(route('password.reset'))->assertRedirect(route('forgot-password'));
+        $this->get(route('otp.password.reset'))->assertRedirect(route('password.request'));
     }
 
-    public function test_each_new_login_sends_a_new_code(): void
+    private function startRegistration(string $email): void
     {
-        Notification::fake();
-        $user = User::factory()->create();
-
-        $this->post(route('login.store'), [
-            'email' => $user->email,
-            'password' => 'password',
-        ]);
-        $firstCode = $this->sentCodeFor($user->email);
-        $this->post(route('verification-code.verify'), ['code' => $firstCode])
-            ->assertRedirect('/');
-        $this->post(route('logout'))->assertRedirect(route('login'));
-
-        $this->post(route('login.store'), [
-            'email' => $user->email,
-            'password' => 'password',
+        $this->post(route('register.store'), [
+            'username' => strstr($email, '@', true),
+            'email' => $email,
+            'birthday' => '2001-06-15',
+            'password' => 'Strong-password1!',
+            'password_confirmation' => 'Strong-password1!',
         ])->assertRedirect(route('verification-code.challenge'));
-
-        $codes = $this->sentCodesFor($user->email);
-        $this->assertCount(2, $codes);
-        $this->assertNotSame($codes[0], $codes[1]);
-        $this->assertGuest();
     }
 
     private function sentCodeFor(string $email): string
