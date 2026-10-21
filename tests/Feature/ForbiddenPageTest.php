@@ -59,4 +59,18 @@ class ForbiddenPageTest extends TestCase
         $response->assertSee('action="'.route('logout').'"', false);
         $response->assertDontSee('Back to home');
     }
+
+    public function test_member_banned_while_signed_in_can_still_sign_out(): void
+    {
+        $member = User::factory()->create();
+        $this->actingAs($member)->get(route('home'))->assertOk();
+
+        $member->forceFill(['banned_at' => now(), 'ban_reason' => 'Confirmed report'])->save();
+
+        $this->get(route('home'))->assertForbidden();
+        $this->post(route('logout'))->assertRedirect(route('login'));
+
+        $this->assertGuest();
+        $this->get(route('home'))->assertRedirect(route('login'));
+    }
 }
