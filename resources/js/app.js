@@ -65,6 +65,11 @@ confirmationSubmit?.addEventListener('click', () => {
     }
 });
 
+// Filter menus (admin user management) apply as soon as an option is picked.
+document.querySelectorAll('select[data-auto-submit]').forEach((select) => {
+    select.addEventListener('change', () => select.form?.requestSubmit());
+});
+
 document.querySelectorAll('[data-table-search]').forEach((input) => {
     input.addEventListener('input', () => {
         const query = input.value.trim().toLocaleLowerCase();

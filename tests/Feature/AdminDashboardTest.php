@@ -434,6 +434,20 @@ class AdminDashboardTest extends TestCase
         ]);
     }
 
+    public function test_user_filters_stay_visible_and_apply_on_change_when_nothing_matches(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        User::factory()->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard', ['section' => 'users', 'status' => 'banned']))
+            ->assertOk()
+            ->assertSee('No users match these filters')
+            ->assertSee('<select name="status" aria-label="Filter by status" data-auto-submit>', false)
+            ->assertSee('<option value="banned" selected>Banned</option>', false)
+            ->assertSee('Clear filters');
+    }
+
     public function test_admin_can_manage_categories_and_restricted_terms(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

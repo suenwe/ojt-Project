@@ -1,25 +1,28 @@
+@unless ($compact)
+    {{-- The filter bar stays visible when nothing matches, so the filters can be changed back. --}}
+    <form method="GET" action="{{ route('admin.dashboard') }}" class="user-filter-bar">
+        <input type="hidden" name="section" value="users">
+        <label class="search-box"><span>⌕</span><input type="search" name="search" value="{{ $userFilters['search'] }}" placeholder="Search username or email..." aria-label="Search by username or email"></label>
+        <select name="role" aria-label="Filter by role" data-auto-submit>
+            <option value="">All roles</option>
+            <option value="user" @selected($userFilters['role'] === 'user')>Member</option>
+            <option value="admin" @selected($userFilters['role'] === 'admin')>Admin</option>
+        </select>
+        <select name="status" aria-label="Filter by status" data-auto-submit>
+            <option value="">All statuses</option>
+            <option value="active" @selected($userFilters['status'] === 'active')>Active</option>
+            <option value="banned" @selected($userFilters['status'] === 'banned')>Banned</option>
+        </select>
+        <button class="button button-outline button-small" type="submit">Filter users</button>
+        @if ($userFilters['search'] !== '' || $userFilters['role'] !== '' || $userFilters['status'] !== '')
+            <a class="text-link" href="{{ route('admin.dashboard', ['section' => 'users']) }}">Clear filters</a>
+        @endif
+    </form>
+@endunless
 @if ($users->isEmpty())
     <div class="empty-state"><span class="empty-symbol">♙</span><strong>{{ $compact ? 'No member accounts yet' : 'No users match these filters' }}</strong><p>{{ $compact ? 'Newly registered members will appear here.' : 'Try a different email, username, role, or status filter.' }}</p></div>
 @else
     @unless ($compact)
-        <form method="GET" action="{{ route('admin.dashboard') }}" class="user-filter-bar">
-            <input type="hidden" name="section" value="users">
-            <label class="search-box"><span>⌕</span><input type="search" name="search" value="{{ $userFilters['search'] }}" placeholder="Search username or email..." aria-label="Search by username or email"></label>
-            <select name="role" aria-label="Filter by role">
-                <option value="">All roles</option>
-                <option value="user" @selected($userFilters['role'] === 'user')>Member</option>
-                <option value="admin" @selected($userFilters['role'] === 'admin')>Admin</option>
-            </select>
-            <select name="status" aria-label="Filter by status">
-                <option value="">All statuses</option>
-                <option value="active" @selected($userFilters['status'] === 'active')>Active</option>
-                <option value="banned" @selected($userFilters['status'] === 'banned')>Banned</option>
-            </select>
-            <button class="button button-outline button-small" type="submit">Filter users</button>
-            @if ($userFilters['search'] !== '' || $userFilters['role'] !== '' || $userFilters['status'] !== '')
-                <a class="text-link" href="{{ route('admin.dashboard', ['section' => 'users']) }}">Clear filters</a>
-            @endif
-        </form>
         <div class="table-tools"><span class="table-help">Profile and latest recorded browser/IP. Admin accounts are protected from bans.</span></div>
     @endunless
     <div class="table-scroll">
