@@ -52,6 +52,25 @@ class ReportControllerTest extends TestCase
         $this->assertStringContainsString('Post that needs review', $mail);
     }
 
+    public function test_member_cannot_send_a_second_report_while_the_first_is_pending(): void
+    {
+        Notification::fake();
+        User::factory()->create(['role' => 'admin']);
+        $reporter = User::factory()->create();
+        $post = Post::query()->create([
+            'user_id' => User::factory()->create()->user_id,
+            'descriptions' => 'Post reported twice',
+        ]);
+        $report = ['post_id' => $post->post_id, 'report_type' => 'Bullying, harassment or abuse'];
+
+        $this->actingAs($reporter)->post(route('report.store'), $report)->assertSessionHasNoErrors();
+        $this->post(route('report.store'), $report)
+            ->assertSessionHasErrors(['report_type' => 'You have already reported this post. An admin will review it soon.']);
+
+        $this->assertSame(1, Report::query()->count());
+        Notification::assertCount(1);
+    }
+
     public function test_member_cannot_report_their_own_post(): void
     {
         Notification::fake();

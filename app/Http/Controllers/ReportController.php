@@ -29,6 +29,18 @@ class ReportController extends Controller
             ]);
         }
 
+        $alreadyReported = Report::query()
+            ->where('reporter_id', $request->user()->user_id)
+            ->where('target_id', $post->post_id)
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($alreadyReported) {
+            throw ValidationException::withMessages([
+                'report_type' => 'You have already reported this post. An admin will review it soon.',
+            ]);
+        }
+
         $report = Report::query()->create([
             'reporter_id' => $request->user()->user_id,
             'target_id' => $post->post_id,
