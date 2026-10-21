@@ -6,7 +6,17 @@ Laravel 13 application configured to use PostgreSQL.
 
 - PHP 8.3 or later with the `pdo_pgsql` extension enabled
 - Composer
+- Node.js and npm
 - PostgreSQL
+
+In `php.ini`, allow post uploads (up to 10 files of 25 MB each):
+
+```ini
+upload_max_filesize = 25M
+post_max_size = 260M
+```
+
+Restart `php artisan serve` after changing `php.ini`.
 
 ## Setup
 
@@ -30,7 +40,8 @@ Laravel 13 application configured to use PostgreSQL.
    ```
 
    Set `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` in
-   `.env` to match your PostgreSQL server.
+   `.env` to match your PostgreSQL server. Keep `APP_TIMEZONE=Asia/Yangon`;
+   without it, scheduled posts go live at the wrong time.
 
 4. Generate the application key and run the migrations:
 
@@ -38,6 +49,23 @@ Laravel 13 application configured to use PostgreSQL.
    php artisan key:generate
    php artisan migrate --seed
    ```
+
+5. Build the frontend and start the site:
+
+   ```powershell
+   npm install
+   npm run build
+   php artisan serve
+   ```
+
+   Open http://localhost:8000. Sign-up and password reset send a six-digit code
+   by email. With the default `MAIL_MAILER=log`, no email is sent: the code is
+   written at the end of `storage/logs/laravel.log`. Fill in the `MAIL_*`
+   settings in `.env` to send real emails.
+
+After pulling new changes, run `composer install`, `npm install`,
+`php artisan migrate`, `php artisan db:seed` and `npm run build`. All of them
+are safe to repeat.
 
 The PHPUnit configuration uses an in-memory SQLite database for tests, so the
 test suite does not require a running PostgreSQL server.
@@ -77,8 +105,11 @@ web requests. Query-string values are not logged. Access entries remain availabl
 if the associated account is deleted.
 
 The report queue displays the report category, member-provided reason, post,
-author, and reporter. Confirming a report records the review and bans the post
-author; dismissing it records an invalid decision without banning anyone.
+author, and reporter, including the post's photos and videos. Confirming a
+report hides the post (it stays in the database with the state `hidden`) and
+suspends its author for three days; dismissing it records an invalid decision
+without banning anyone. A member can only have one pending report per post.
+While a member is suspended, their posts are hidden from everyone else.
 
 Categories support create, edit, and delete actions.
 The original 15 post categories are inserted idempotently by migration. The
