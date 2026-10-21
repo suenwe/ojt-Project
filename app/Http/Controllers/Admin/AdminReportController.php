@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Post;
 use App\Models\Report;
 use App\Models\User;
 use App\Notifications\ReportConfirmed;
@@ -54,6 +55,8 @@ class AdminReportController extends Controller
                     ])->save();
                 }
 
+                $report->post->forceFill(['state' => Post::STATE_HIDDEN])->save();
+
                 $authorId = (int) $author->user_id;
             } else {
                 $authorId = null;
@@ -75,8 +78,8 @@ class AdminReportController extends Controller
         return to_route('admin.dashboard', ['section' => 'reports'])
             ->with('status', $validated['decision'] === 'valid'
                 ? ($banExpiresAt === null
-                    ? 'Report confirmed. The post author remains under an indefinite admin suspension.'
-                    : 'Report confirmed. The post author has been suspended for three days.')
+                    ? 'Report confirmed. The post is hidden, and its author remains under an indefinite admin suspension.'
+                    : 'Report confirmed. The post is hidden, and its author has been suspended for three days.')
                 : 'Report dismissed.');
     }
 }

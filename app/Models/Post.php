@@ -15,6 +15,12 @@ class Post extends Model
 
     public $timestamps = false;
 
+    /**
+     * State of a post hidden by an admin after a confirmed report. It stays in the database,
+     * so it can be restored by setting the state back to "published".
+     */
+    public const STATE_HIDDEN = 'hidden';
+
     protected $fillable = [
         'photos_and_videos',
         'descriptions',

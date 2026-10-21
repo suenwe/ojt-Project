@@ -24,7 +24,8 @@ class ReportConfirmed extends Notification
             ->subject('Update about your account suspension')
             ->greeting('Hello '.$notifiable->username.',')
             ->line('An admin reviewed a report about one of your posts and confirmed it as valid.')
-            ->line('Report reason: '.$this->reportType);
+            ->line('Report reason: '.$this->reportType)
+            ->line('The reported post has been hidden from other members.');
 
         if ($this->expiresAt === null) {
             return $message->line('Your account was already under an indefinite admin suspension, and that suspension remains in place.');

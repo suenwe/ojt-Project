@@ -369,6 +369,10 @@ class AdminDashboardTest extends TestCase
         $this->assertNotNull($author->fresh()->banned_at);
         $this->assertSame('2026-10-22 12:00:00', $author->fresh()->ban_expires_at->format('Y-m-d H:i:s'));
         NotificationFacade::assertSentTo($author, ReportConfirmed::class);
+
+        $this->assertSame(Post::STATE_HIDDEN, $post->fresh()->state);
+        $this->travel(4)->days();
+        $this->actingAs($reporter)->get(route('home'))->assertOk()->assertDontSee('Reported post content');
     }
 
     public function test_dismissing_a_report_does_not_ban_the_post_author(): void
@@ -384,6 +388,7 @@ class AdminDashboardTest extends TestCase
 
         $this->assertDatabaseHas('reports', ['report_id' => $report->report_id, 'status' => 'invalid']);
         $this->assertNull($author->fresh()->banned_at);
+        $this->assertSame('published', $report->post->fresh()->state);
         NotificationFacade::assertNothingSent();
     }
 
@@ -401,7 +406,7 @@ class AdminDashboardTest extends TestCase
         $this->actingAs($admin)
             ->patch(route('admin.reports.review', $report), ['decision' => 'valid'])
             ->assertRedirect(route('admin.dashboard', ['section' => 'reports']))
-            ->assertSessionHas('status', 'Report confirmed. The post author remains under an indefinite admin suspension.');
+            ->assertSessionHas('status', 'Report confirmed. The post is hidden, and its author remains under an indefinite admin suspension.');
 
         $this->assertDatabaseHas('users', [
             'user_id' => $author->user_id,
