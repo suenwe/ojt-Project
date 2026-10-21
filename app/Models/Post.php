@@ -52,22 +52,33 @@ class Post extends Model
      *
      * @return array<string, int> hashtag => number of posts that use it
      */
-    public static function popularHashtags(int $limit = 5, int $days = 30): array
+        public static function popularHashtags(int $limit = 5, int $days = 30): array
     {
         $counts = [];
 
         static::query()
             ->visibleInFeed()
             ->whereNotNull('hashtag')
+            ->where('hashtag', '!=', '')
             ->where('date_time', '>=', now()->subDays($days))
             ->latest('date_time')
             ->limit(500)
             ->pluck('hashtag')
             ->each(function (string $hashtags) use (&$counts): void {
-                preg_match_all('/#[\pL\pN_]+/u', $hashtags, $matches);
-
-                foreach (array_unique(array_map('mb_strtolower', $matches[0])) as $tag) {
-                    $counts[$tag] = ($counts[$tag] ?? 0) + 1;
+                // Split by spaces or commas safely for Unicode
+                $tags = preg_split('/[\s,]+/u', $hashtags, -1, PREG_SPLIT_NO_EMPTY);
+                
+                foreach ($tags as $tag) {
+                    // Clean the tag: remove any leading #, then add exactly one #
+                    $cleanTag = '#' . ltrim($tag, '#');
+                    
+                    // Convert to lowercase for counting
+                    $normalizedTag = mb_strtolower($cleanTag, 'UTF-8');
+                    
+                    if (!isset($counts[$normalizedTag])) {
+                        $counts[$normalizedTag] = 0;
+                    }
+                    $counts[$normalizedTag]++;
                 }
             });
 

@@ -119,7 +119,9 @@
                             <div><div class="heading-with-icon"><span class="heading-icon icon-amber">⚑</span><h2>Reports needing review</h2></div><p>Review the reason and post before deciding on an action.</p></div>
                             <a class="text-link" href="{{ route('admin.dashboard', ['section' => 'reports']) }}">View report queue <span>→</span></a>
                         </div>
-                        @php($pendingReports = $reports->getCollection()->where('status', 'pending')->take(4))
+                        @php
+                            $pendingReports = $reports->getCollection()->where('status', 'pending')->take(4);
+                        @endphp
                         @if ($pendingReports->isEmpty())
                             <div class="empty-state compact-empty"><span class="empty-symbol">✓</span><strong>You’re all caught up</strong><p>There are no reports waiting for review.</p></div>
                         @else
@@ -168,14 +170,19 @@
                                                 <span class="small-label">POST CONTENT</span>
                                                 <p>{{ $report->post?->descriptions ?: 'Post content is unavailable.' }}</p>
                                                 @if ($report->post?->media->isNotEmpty())
-                                                    <div class="post-media-grid post-media-count-{{ min($report->post->media->count(), 4) }}">
-                                                        @foreach ($report->post->media as $media)
-                                                            @if (str_starts_with($media->mime_type, 'video/'))
-                                                                <video class="post-media-item" src="{{ route('media.show', $media) }}" controls preload="metadata"></video>
-                                                            @else
-                                                                <img class="post-media-item" src="{{ route('media.show', $media) }}" alt="Image attached to reported post" loading="lazy">
-                                                            @endif
-                                                        @endforeach
+                                                    @php
+                                                        $reportMediaItems = array_map(fn (array $item): array => $item + ['alt' => 'Image attached to reported post'], $report->post->mediaPreviewItems());
+                                                    @endphp
+                                                    <div class="post-media report-media" data-media-carousel='@json($reportMediaItems)'>
+                                                        <div class="post-media-grid post-media-count-{{ min($report->post->media->count(), 4) }}">
+                                                            @foreach ($report->post->media as $media)
+                                                                @if (str_starts_with($media->mime_type, 'video/'))
+                                                                    <video class="post-media-item" src="{{ route('media.show', $media) }}" controls preload="metadata"></video>
+                                                                @else
+                                                                    <img class="post-media-item" src="{{ route('media.show', $media) }}" alt="Image attached to reported post" loading="lazy">
+                                                                @endif
+                                                            @endforeach
+                                                        </div>
                                                     </div>
                                                 @endif
                                                 @if ($report->post?->category)

@@ -222,6 +222,25 @@ class PostControllerTest extends TestCase
         $response->assertSee('Keep this draft');
     }
 
+    public function test_home_and_profile_feeds_have_a_refresh_button_and_pull_indicator(): void
+    {
+        $member = User::factory()->create();
+
+        $this->actingAs($member)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('aria-label="Refresh feed" data-feed-refresh', false)
+            ->assertSee('data-pull-refresh', false);
+
+        $this->get(route('users.show', $member))
+            ->assertOk()
+            ->assertSee('aria-label="Refresh feed" data-feed-refresh', false);
+
+        $this->get(route('profile.edit'))
+            ->assertOk()
+            ->assertDontSee('data-feed-refresh', false);
+    }
+
     public function test_feed_shows_an_empty_state_when_there_are_no_posts(): void
     {
         $this->actingAs(User::factory()->create())

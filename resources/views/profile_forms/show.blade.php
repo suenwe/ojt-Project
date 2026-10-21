@@ -22,6 +22,10 @@
     @endif
 </section>
 
+<div class="feed-sort">
+    @include('partials.feed-refresh-button')
+</div>
+
 <section class="feed-list" aria-label="Posts by {{ $member->username }}" data-live-feed>
     @forelse ($posts as $post)
         @include('post_forms.card', ['post' => $post])

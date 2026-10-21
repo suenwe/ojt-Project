@@ -1,15 +1,20 @@
 @php
     $reactionTypes = \App\Models\Reaction::TYPES;
     $viewerReaction = $post->viewer_reaction;
+    
+    // Unicode-safe splitting for hashtags (supports Burmese, English, etc.)
+    $rawHashtags = preg_split('/[\s,]+/u', trim((string) $post->hashtag), -1, PREG_SPLIT_NO_EMPTY);
     $hashtags = array_map(
-        fn (string $tag): string => '#'.ltrim($tag, '#'),
-        preg_split('/[\s,]+/', trim((string) $post->hashtag), -1, PREG_SPLIT_NO_EMPTY),
+        fn (string $tag): string => '#' . ltrim($tag, '#'),
+        $rawHashtags
     );
 @endphp
+
 <article class="panel post-card" id="post-{{ $post->post_id }}" data-post-card data-view-url="{{ route('posts.views.store', $post) }}" @if ($post->user_id === auth()->id()) data-own-post @endif
     data-search-text="{{ mb_strtolower($post->descriptions.' '.implode(' ', $hashtags).' '.($post->user?->username ?? '').' '.($post->category?->category_type ?? '')) }}"
     data-search-category="{{ $post->category?->category_type ?? '' }}"
     data-search-hashtags="{{ mb_strtolower(implode(' ', $hashtags)) }}">
+    
     <div class="post-header">
         @include('post_forms.avatar-link', ['user' => $post->user])
         <div class="post-author">
@@ -47,16 +52,7 @@
     <p class="post-text">{{ $post->descriptions }}</p>
     
     {{-- Clickable hashtags inside the post card --}}
-    @php
-        $hashtags = preg_split(
-            '/\s+/',
-            trim((string) $post->hashtag),
-            -1,
-            PREG_SPLIT_NO_EMPTY
-        );
-    @endphp
-
-    @if ($hashtags !== [])
+    @if (!empty($hashtags))
         <div class="post-hashtags">
             @foreach ($hashtags as $tag)
                 <a class="hashtag-link" href="#" data-search-hashtag="{{ $tag }}">{{ $tag }}</a>
@@ -97,6 +93,7 @@
             @endcan
         </span>
     </div>
+    
     <div class="post-actions">
         <form class="reaction-control" method="POST" action="{{ route('posts.reactions.store', $post) }}" data-reaction-control>
             @csrf
@@ -112,5 +109,6 @@
         </form>
         <button class="post-action" type="button" data-comments-toggle aria-expanded="false" aria-controls="comments-{{ $post->post_id }}">💬 Comment</button>
     </div>
+    
     <section class="post-comments" id="comments-{{ $post->post_id }}" aria-label="Comments" data-comments data-comments-url="{{ route('posts.comments.index', $post) }}" hidden></section>
 </article>
