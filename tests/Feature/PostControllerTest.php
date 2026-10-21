@@ -109,6 +109,36 @@ class PostControllerTest extends TestCase
         $this->assertSame(0, Post::query()->count());
     }
 
+    public function test_restricted_keyword_in_hashtags_blocks_the_post(): void
+    {
+        $author = User::factory()->create();
+        $category = Category::query()->firstOrCreate(['category_type' => 'Technology']);
+        Keyword::query()->create(['keyword_text' => 'Suicide']);
+
+        $this->actingAs($author)
+            ->post(route('posts.store'), [
+                'content' => 'A normal sentence.',
+                'hashtag' => '#news #suicide',
+                'category_id' => $category->category_id,
+                'post_type' => 'Discussion',
+            ])
+            ->assertSessionHasErrors([
+                'hashtag' => 'Your hashtags contain the restricted keyword "Suicide" and cannot be published.',
+            ]);
+
+        $this->actingAs($author)
+            ->post(route('schedule-post.store'), [
+                'content' => 'A normal sentence.',
+                'hashtag' => '#SUICIDE',
+                'category_id' => $category->category_id,
+                'post_type' => 'Discussion',
+                'scheduled_at' => now()->addDay()->format('Y-m-d\TH:i'),
+            ])
+            ->assertSessionHasErrors('hashtag');
+
+        $this->assertSame(0, Post::query()->count());
+    }
+
     public function test_sidebar_shows_real_popular_hashtags_from_recent_posts(): void
     {
         $author = User::factory()->create();

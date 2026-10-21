@@ -87,6 +87,17 @@ class StorePostRequest extends FormRequest
                     }
                 }
 
+                if (! $validator->errors()->has('hashtag')) {
+                    $matchingKeyword = Keyword::firstFoundIn((string) $this->input('hashtag', ''));
+
+                    if ($matchingKeyword !== null) {
+                        $validator->errors()->add(
+                            'hashtag',
+                            'Your hashtags contain the restricted keyword "'.$matchingKeyword.'" and cannot be published.',
+                        );
+                    }
+                }
+
                 foreach ($this->file('media') ?? [] as $index => $file) {
                     if (str_starts_with((string) $file->getMimeType(), 'image/') && $file->getSize() > 5 * 1024 * 1024) {
                         $validator->errors()->add("media.{$index}", 'Images must be 5 MB or smaller.');
