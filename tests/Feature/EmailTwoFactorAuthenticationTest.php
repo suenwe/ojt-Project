@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Notifications\SendTwoFactorCode;
+use App\Services\EmailOtpService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
@@ -89,7 +90,9 @@ class EmailTwoFactorAuthenticationTest extends TestCase
         Notification::fake();
         $this->startRegistration('expired@example.test');
         $codes = $this->sentCodesFor('expired@example.test');
-        $this->travel(61)->seconds();
+        $this->travel(9)->minutes();
+        $this->assertFalse(app(EmailOtpService::class)->hasExpired());
+        $this->travel(2)->minutes();
 
         $this->from(route('verification-code.challenge'))
             ->post(route('verification-code.verify'), ['code' => $codes[0]])

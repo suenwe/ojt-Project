@@ -31,7 +31,7 @@ class SendTwoFactorCode extends Notification
             ->subject('Your Knowvia verification code')
             ->greeting('Hello!')
             ->line('Your verification code is: '.$this->code)
-            ->line('This code expires in one minute and can only be used once.')
+            ->line('This code expires in ten minutes and can only be used once.')
             ->line(match ($this->purpose) {
                 'registration' => 'Use this code to verify your email and finish creating your account.',
                 'password_reset' => 'Use this code to verify your email before resetting your password.',

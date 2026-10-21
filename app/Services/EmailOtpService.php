@@ -11,6 +11,11 @@ class EmailOtpService
     private const SESSION_KEY = 'email_otp_challenge';
 
     /**
+     * How long a code can be used. Email can take a while to arrive, so one minute was too short.
+     */
+    public const CODE_LIFETIME_MINUTES = 10;
+
+    /**
      * @param  array<string, mixed>  $data
      */
     public function issue(
@@ -29,7 +34,7 @@ class EmailOtpService
             'purpose' => $purpose,
             'user_id' => $userId,
             'code_hash' => $code === null ? null : Hash::make($code),
-            'expires_at' => now()->addMinute()->toISOString(),
+            'expires_at' => now()->addMinutes(self::CODE_LIFETIME_MINUTES)->toISOString(),
             'data' => $data,
         ]);
 

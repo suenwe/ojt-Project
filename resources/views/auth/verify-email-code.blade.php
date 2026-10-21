@@ -4,9 +4,9 @@
 @section('auth-heading', 'Check your email')
 @section('auth-description')
     @if ($purpose === 'admin_login')
-        Enter the six-digit code sent to {{ $email }} to access the administrator console. Codes expire after one minute and can only be used once.
+        Enter the six-digit code sent to {{ $email }} to access the administrator console. Codes expire after ten minutes and can only be used once.
     @else
-        Enter the six-digit code sent to {{ $email }}. Codes expire after one minute and can only be used once.
+        Enter the six-digit code sent to {{ $email }}. Codes expire after ten minutes and can only be used once.
     @endif
 @endsection
 
