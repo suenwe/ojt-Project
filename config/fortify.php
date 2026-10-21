@@ -166,11 +166,10 @@ return [
         // Features::registration(),
         // Features::resetPasswords(),
         // Features::emailVerification(),
+        // Passkeys are off: no page lets members add or use one.
+        // Features::passkeys(['confirmPassword' => true]),
         Features::updateProfileInformation(),
         Features::updatePasswords(),
-        Features::passkeys([
-            'confirmPassword' => true,
-        ]),
     ],
 
 ];
