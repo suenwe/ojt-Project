@@ -476,7 +476,10 @@ class AdminDashboardTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertSee('<a class="button button-outline button-small" href="'.route('home').'">View feed</a>', false);
+            ->assertSee('<details class="account-settings admin-account-menu">', false)
+            ->assertSee('<a href="'.route('home').'">View feed</a>', false)
+            ->assertSee('<a href="'.route('profile.edit').'">Profile settings</a>', false)
+            ->assertSee('action="'.route('admin.logout').'"', false);
 
         $this->get(route('home'))
             ->assertOk()

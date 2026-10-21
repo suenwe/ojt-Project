@@ -65,6 +65,23 @@ confirmationSubmit?.addEventListener('click', () => {
     }
 });
 
+// The gear account menus (member feed and admin dashboard) close when clicking anywhere else or pressing Escape.
+document.addEventListener('click', (event) => {
+    document.querySelectorAll('details.account-settings[open]').forEach((menu) => {
+        if (!menu.contains(event.target)) {
+            menu.open = false;
+        }
+    });
+});
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        document.querySelectorAll('details.account-settings[open]').forEach((menu) => {
+            menu.open = false;
+        });
+    }
+});
+
 // Filter menus (admin user management) apply as soon as an option is picked.
 document.querySelectorAll('select[data-auto-submit]').forEach((select) => {
     select.addEventListener('change', () => select.form?.requestSubmit());

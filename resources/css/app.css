@@ -443,6 +443,9 @@ body.admin-body .system-status { align-items: center; color: #77798e; display: i
 body.admin-body .system-status i { background: #54c594; border-radius: 50%; height: 6px; width: 6px; }
 body.admin-body .topbar-avatar { height: 30px; width: 30px; }
 body.admin-body .avatar-photo-cover { flex: 0 0 auto; object-fit: cover; }
+body.admin-body .admin-gear { align-items: center; border-radius: 6px; color: #6d6d80; cursor: pointer; display: inline-flex; height: 34px; justify-content: center; list-style: none; width: 34px; }
+body.admin-body .admin-gear:hover, body.admin-body .admin-account-menu[open] .admin-gear { background: #eef1fb; color: #304ab1; }
+body.admin-body .admin-account-menu nav { min-width: 170px; z-index: 20; }
 body.admin-body .page-content { margin: 0 auto; max-width: 1440px; padding: 34px 38px 24px; }
 body.admin-body .page-heading { align-items: center; display: flex; justify-content: space-between; margin-bottom: 25px; }
 body.admin-body .eyebrow { color: #3651c0; font-size: var(--text-xs); font-weight: 750; letter-spacing: 1.35px; margin: 0 0 8px; }
@@ -711,5 +714,4 @@ body.admin-body .confirmation-actions .button { font-size: var(--text-base); min
     body.admin-body .usage-count { margin-left: 0; }
     body.admin-body .topbar { gap: 8px; }
     body.admin-body .topbar-right { gap: 8px; }
-    body.admin-body .breadcrumbs > span:not(.crumb-divider), body.admin-body .breadcrumbs .crumb-divider { display: none; }
 }

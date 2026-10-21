@@ -76,13 +76,24 @@
                     'restricted' => 'Keywords',
                 ][$section] }}</strong></div>
                 <div class="topbar-right">
-                    <a class="button button-outline button-small" href="{{ route('home') }}">View feed</a>
                     @if ($adminPhotoDataUri)
                         <img class="topbar-avatar avatar-photo-cover" src="{{ $adminPhotoDataUri }}" alt="{{ $admin->username }} profile photo">
                     @else
                         <span class="topbar-avatar">{{ $adminInitial }}</span>
                     @endif
-                    <form method="POST" action="{{ route('admin.logout') }}">@csrf<button class="button button-quiet button-small" type="submit">Sign out</button></form>
+                    <details class="account-settings admin-account-menu">
+                        <summary class="admin-gear" title="Account" aria-label="Open account menu">
+                            @include('partials.gear-icon')
+                        </summary>
+                        <nav aria-label="Account menu">
+                            <a href="{{ route('home') }}">View feed</a>
+                            <a href="{{ route('profile.edit') }}">Profile settings</a>
+                            <form method="POST" action="{{ route('admin.logout') }}">
+                                @csrf
+                                <button class="account-menu-button" type="submit">Sign out</button>
+                            </form>
+                        </nav>
+                    </details>
                 </div>
             </header>
 
