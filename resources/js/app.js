@@ -336,6 +336,18 @@ if (scheduleCalendar && scheduleToggle && scheduleDataElement) {
         scheduledAtField.value = `${selectedDate}T${timeField.value}`;
     });
 
+    document.addEventListener('schedule:edit-post', (event) => {
+        const post = posts.find((item) => item.id === event.detail.postId);
+
+        if (!post) {
+            return;
+        }
+
+        event.detail.handled = true;
+        setCalendarOpen(true);
+        openForm(post.date, post);
+    });
+
     const publishDuePosts = () => {
         const duePosts = posts.filter((post) => Date.parse(post.publishAt) <= Date.now());
 
@@ -546,6 +558,8 @@ async function refreshLiveFeed(statusText) {
 
         feed.replaceChildren(...freshFeed.childNodes);
         initMediaCarousels(feed);
+        watchPostViews(feed);
+        filterFeed();
 
         let status = document.querySelector('[data-live-feed-status]');
 
@@ -560,5 +574,585 @@ async function refreshLiveFeed(statusText) {
         status.textContent = statusText;
     } catch (error) {
         // A failed refresh is harmless; the post still shows after the next page load.
+    }
+}
+
+/**
+ * Search box, topic filter and hashtag links: hide the post cards on this page that do not match.
+ * Words starting with # only match posts tagged with exactly that hashtag (#test does not match "test" in the text or #testing);
+ * other words search post text, hashtags, usernames and topics. Clicking a hashtag searches for it.
+ * Pages without a post list send the search to the home page (?search= or ?hashtag=).
+ */
+const feedSearchForm = document.querySelector('[data-feed-search-form]');
+const feedSearchInput = document.querySelector('[data-feed-search]');
+const feedCategoryFilter = document.querySelector('[data-feed-category]');
+
+function normalizeHashtag(tag) {
+    return `#${String(tag ?? '').trim().replace(/^#+/, '')}`.toLowerCase();
+}
+
+function filterFeed() {
+    const feed = document.querySelector('[data-live-feed]');
+
+    if (!feed || !feedSearchInput) {
+        return;
+    }
+
+    const words = feedSearchInput.value.trim().toLowerCase().split(/[\s,]+/).filter((word) => word !== '' && word !== '#');
+    const hashtags = words.filter((word) => word.startsWith('#')).map(normalizeHashtag);
+    const textWords = words.filter((word) => !word.startsWith('#'));
+    const category = feedCategoryFilter?.value ?? '';
+    const cards = [...feed.querySelectorAll('[data-post-card]')];
+
+    cards.forEach((card) => {
+        const postHashtags = card.dataset.searchHashtags.split(' ');
+        const matchesSearch = hashtags.every((tag) => postHashtags.includes(tag))
+            && textWords.every((word) => card.dataset.searchText.includes(word));
+        const matchesCategory = category === '' || card.dataset.searchCategory === category;
+
+        card.hidden = !(matchesSearch && matchesCategory);
+    });
+
+    let emptyMessage = feed.querySelector('[data-feed-search-empty]');
+
+    if (cards.length > 0 && cards.every((card) => card.hidden)) {
+        if (!emptyMessage) {
+            emptyMessage = document.createElement('p');
+            emptyMessage.className = 'panel feed-search-empty';
+            emptyMessage.dataset.feedSearchEmpty = '';
+            emptyMessage.textContent = 'No posts match your search.';
+            feed.append(emptyMessage);
+        }
+    } else {
+        emptyMessage?.remove();
+    }
+}
+
+function searchHashtag(tag) {
+    feedSearchInput.value = normalizeHashtag(tag);
+
+    if (feedCategoryFilter) {
+        feedCategoryFilter.value = '';
+    }
+
+    filterFeed();
+    document.querySelector('[data-live-feed]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+if (feedSearchForm && feedSearchInput) {
+    const hasFeed = () => document.querySelector('[data-live-feed]') !== null;
+
+    feedSearchForm.addEventListener('submit', (event) => {
+        if (hasFeed()) {
+            event.preventDefault();
+        }
+    });
+
+    feedSearchInput.addEventListener('input', filterFeed);
+
+    feedCategoryFilter?.addEventListener('change', filterFeed);
+
+    // The topic filter is only visible while "By topic" is picked, so leaving that option clears it.
+    document.getElementById('post-sort')?.addEventListener('change', (event) => {
+        if (feedCategoryFilter && event.target.value !== 'category') {
+            feedCategoryFilter.value = '';
+            filterFeed();
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        const hashtagLink = event.target.closest('[data-search-hashtag]');
+
+        if (!hashtagLink) {
+            return;
+        }
+
+        event.preventDefault();
+
+        if (hasFeed()) {
+            searchHashtag(hashtagLink.dataset.searchHashtag);
+        } else {
+            window.location.href = `${feedSearchForm.action}?hashtag=${encodeURIComponent(hashtagLink.dataset.searchHashtag)}`;
+        }
+    });
+
+    const searchFromUrl = new URLSearchParams(window.location.search);
+
+    if (searchFromUrl.get('hashtag')) {
+        searchHashtag(searchFromUrl.get('hashtag'));
+    } else if (searchFromUrl.get('search')) {
+        feedSearchInput.value = searchFromUrl.get('search');
+        filterFeed();
+    }
+}
+
+/**
+ * Reactions, comments, replies and view counts on post cards.
+ * Each action sends the form with fetch() and updates the card from the server's answer, so the page never reloads.
+ */
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+async function sendFormInBackground(form, submitter = null) {
+    const response = await fetch(form.action, {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+        body: new FormData(form, submitter),
+    });
+    const data = await response.json().catch(() => ({}));
+
+    return { ok: response.ok, data };
+}
+
+function setCountText(element, count) {
+    if (element) {
+        element.textContent = `${count} ${count === 1 ? element.dataset.singular : element.dataset.plural}`;
+    }
+}
+
+function firstErrorMessage(data) {
+    const messages = Object.values(data.errors ?? {}).flat();
+
+    return messages[0] ?? data.message ?? 'Something went wrong. Please try again.';
+}
+
+/* Reactions */
+
+function updateReactionControl(control, viewerReaction) {
+    const options = [...control.querySelectorAll('.reaction-option')];
+    const mainButton = control.querySelector('[data-reaction-main]');
+    const chosen = options.find((option) => option.value === viewerReaction);
+
+    options.forEach((option) => option.setAttribute('aria-pressed', String(option === chosen)));
+    mainButton.value = viewerReaction ?? 'like';
+    mainButton.className = `post-action reaction-main${chosen ? ` is-reacted reaction-${viewerReaction}` : ''}`;
+    mainButton.setAttribute('aria-pressed', String(Boolean(chosen)));
+    mainButton.querySelector('[data-reaction-main-emoji]').textContent = chosen ? chosen.textContent.trim() : '👍';
+    mainButton.querySelector('[data-reaction-main-label]').textContent = chosen ? chosen.title : 'Like';
+}
+
+function closeReactionPickers(except = null) {
+    document.querySelectorAll('[data-reaction-control].is-open').forEach((control) => {
+        if (control !== except) {
+            control.classList.remove('is-open');
+        }
+    });
+}
+
+document.addEventListener('submit', async (event) => {
+    const control = event.target.closest('[data-reaction-control]');
+
+    if (!control || event.defaultPrevented) {
+        return;
+    }
+
+    event.preventDefault();
+    closeReactionPickers();
+
+    const card = control.closest('[data-post-card]');
+    const { ok, data } = await sendFormInBackground(control, event.submitter);
+
+    if (!ok) {
+        return;
+    }
+
+    updateReactionControl(control, data.viewerReaction);
+    setCountText(card.querySelector('[data-reaction-count]'), data.reactionCount);
+    card.querySelector('[data-reaction-emojis]').textContent = data.topReactionTypes
+        .map((type) => control.querySelector(`.reaction-option[value="${type}"]`)?.textContent.trim() ?? '')
+        .join('');
+});
+
+let reactionHoverTimer = null;
+let reactionLongPressTimer = null;
+let ignoreNextReactionClick = false;
+
+document.addEventListener('pointerover', (event) => {
+    const control = event.target.closest('[data-reaction-control]');
+
+    if (!control || event.pointerType !== 'mouse') {
+        return;
+    }
+
+    clearTimeout(reactionHoverTimer);
+    reactionHoverTimer = setTimeout(() => {
+        closeReactionPickers(control);
+        control.classList.add('is-open');
+    }, 400);
+});
+
+document.addEventListener('pointerout', (event) => {
+    const control = event.target.closest('[data-reaction-control]');
+
+    if (!control || event.pointerType !== 'mouse' || control.contains(event.relatedTarget)) {
+        return;
+    }
+
+    clearTimeout(reactionHoverTimer);
+    reactionHoverTimer = setTimeout(() => control.classList.remove('is-open'), 300);
+});
+
+document.addEventListener('pointerdown', (event) => {
+    const mainButton = event.target.closest('[data-reaction-main]');
+
+    if (!mainButton || event.pointerType === 'mouse') {
+        return;
+    }
+
+    clearTimeout(reactionLongPressTimer);
+    reactionLongPressTimer = setTimeout(() => {
+        const control = mainButton.closest('[data-reaction-control]');
+        closeReactionPickers(control);
+        control.classList.add('is-open');
+        ignoreNextReactionClick = true;
+    }, 450);
+});
+
+['pointerup', 'pointercancel'].forEach((type) => {
+    document.addEventListener(type, () => clearTimeout(reactionLongPressTimer));
+});
+
+document.addEventListener('contextmenu', (event) => {
+    if (event.target.closest('[data-reaction-main]')) {
+        event.preventDefault();
+    }
+});
+
+document.addEventListener('click', (event) => {
+    if (ignoreNextReactionClick && event.target.closest('[data-reaction-main]')) {
+        event.preventDefault();
+        ignoreNextReactionClick = false;
+
+        return;
+    }
+
+    if (!event.target.closest('[data-reaction-control]')) {
+        closeReactionPickers();
+    }
+}, true);
+
+/* Comments and replies */
+
+async function openComments(card, focusInput) {
+    const section = card.querySelector('[data-comments]');
+
+    if (!section.dataset.loaded) {
+        const response = await fetch(section.dataset.commentsUrl, { headers: { Accept: 'text/html' } });
+
+        if (!response.ok) {
+            return;
+        }
+
+        section.innerHTML = await response.text();
+        section.dataset.loaded = 'true';
+    }
+
+    section.hidden = false;
+    card.querySelectorAll('[data-comments-toggle]').forEach((toggle) => toggle.setAttribute('aria-expanded', 'true'));
+
+    if (focusInput) {
+        section.querySelector('.comment-form:not(.reply-form) input[name="content"]')?.focus();
+    }
+}
+
+document.addEventListener('click', (event) => {
+    const toggle = event.target.closest('[data-comments-toggle]');
+
+    if (toggle) {
+        const card = toggle.closest('[data-post-card]');
+        const section = card.querySelector('[data-comments]');
+
+        if (!section.hidden && toggle.classList.contains('post-action')) {
+            section.hidden = true;
+            card.querySelectorAll('[data-comments-toggle]').forEach((button) => button.setAttribute('aria-expanded', 'false'));
+        } else {
+            openComments(card, toggle.classList.contains('post-action'));
+        }
+
+        return;
+    }
+
+    const replyButton = event.target.closest('[data-reply-to]');
+
+    if (replyButton) {
+        const section = replyButton.closest('[data-comments]');
+        const replyForm = section.querySelector(`[data-reply-form="${replyButton.dataset.replyTo}"]`);
+        const input = replyForm.querySelector('input[name="content"]');
+        const mention = `@${replyButton.dataset.replyName} `;
+
+        replyForm.hidden = false;
+
+        if (replyButton.hasAttribute('data-reply-mention') && replyButton.dataset.replyName && !input.value.startsWith(mention)) {
+            input.value = mention + input.value;
+        }
+
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+
+        return;
+    }
+
+    const editButton = event.target.closest('[data-comment-edit]');
+    const cancelButton = event.target.closest('[data-comment-edit-cancel]');
+
+    if (editButton || cancelButton) {
+        const commentId = (editButton ?? cancelButton).dataset.commentEdit ?? cancelButton.dataset.commentEditCancel;
+        const section = (editButton ?? cancelButton).closest('[data-comments]');
+        const editForm = section.querySelector(`[data-comment-edit-form="${commentId}"]`);
+        const isEditing = Boolean(editButton);
+
+        section.querySelector(`[data-comment-view="${commentId}"]`).hidden = isEditing;
+        section.querySelector(`[data-comment-meta="${commentId}"]`).hidden = isEditing;
+        editForm.hidden = !isEditing;
+
+        const textarea = editForm.querySelector('textarea');
+
+        if (isEditing) {
+            textarea.focus();
+            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        } else {
+            textarea.value = textarea.defaultValue;
+        }
+    }
+});
+
+document.addEventListener('submit', async (event) => {
+    const form = event.target.closest('form[data-comment-action]');
+
+    if (!form || event.defaultPrevented) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const section = form.closest('[data-comments]');
+    const card = form.closest('[data-post-card]');
+    const wasMainForm = !form.matches('.reply-form') && form.method.toLowerCase() === 'post' && !form.querySelector('input[name="_method"]');
+    const submitButton = form.querySelector('[type="submit"]');
+    submitButton.disabled = true;
+
+    try {
+        const { ok, data } = await sendFormInBackground(form);
+
+        if (!ok) {
+            const error = section.querySelector('[data-comment-error]');
+            error.textContent = firstErrorMessage(data);
+            error.hidden = false;
+
+            return;
+        }
+
+        section.innerHTML = data.html;
+        setCountText(card.querySelector('[data-comment-count]'), data.commentCount);
+
+        if (wasMainForm) {
+            section.querySelector('.comment-form:not(.reply-form) input[name="content"]')?.focus();
+        }
+    } finally {
+        submitButton.disabled = false;
+    }
+});
+
+/* View counts: a post counts as viewed once at least half of it stays on screen for one second. */
+
+const viewTimers = new WeakMap();
+
+const viewObserver = 'IntersectionObserver' in window
+    ? new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            const card = entry.target;
+
+            if (!entry.isIntersecting) {
+                clearTimeout(viewTimers.get(card));
+
+                return;
+            }
+
+            viewTimers.set(card, setTimeout(async () => {
+                viewObserver.unobserve(card);
+                card.dataset.viewed = 'true';
+
+                const response = await fetch(card.dataset.viewUrl, {
+                    method: 'POST',
+                    headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+                }).catch(() => null);
+
+                if (response?.ok) {
+                    setCountText(card.querySelector('[data-view-count]'), (await response.json()).viewCount);
+                }
+            }, 1000));
+        });
+    }, { threshold: 0.5 })
+    : null;
+
+function watchPostViews(root) {
+    if (!viewObserver) {
+        return;
+    }
+
+    root.querySelectorAll('[data-post-card][data-view-url]:not([data-own-post]):not([data-viewed])').forEach((card) => {
+        viewObserver.observe(card);
+    });
+}
+
+watchPostViews(document);
+
+/* "Who reacted" and "who viewed" pop-up */
+
+const peopleDialog = document.getElementById('people-dialog');
+
+if (peopleDialog) {
+    document.addEventListener('click', async (event) => {
+        const opener = event.target.closest('[data-people-url]');
+
+        if (opener) {
+            const response = await fetch(opener.dataset.peopleUrl, { headers: { Accept: 'text/html' } });
+
+            if (!response.ok) {
+                return;
+            }
+
+            peopleDialog.querySelector('[data-people-title]').textContent = opener.dataset.peopleTitle;
+            peopleDialog.querySelector('[data-people-body]').innerHTML = await response.text();
+            peopleDialog.showModal();
+
+            return;
+        }
+
+        const tab = event.target.closest('[data-people-filter]');
+
+        if (tab) {
+            const filter = tab.dataset.peopleFilter;
+
+            peopleDialog.querySelectorAll('[data-people-filter]').forEach((button) => {
+                button.setAttribute('aria-pressed', String(button === tab));
+            });
+            peopleDialog.querySelectorAll('[data-people-type]').forEach((row) => {
+                row.hidden = filter !== 'all' && row.dataset.peopleType !== filter;
+            });
+        }
+    });
+
+    peopleDialog.querySelector('[data-people-close]').addEventListener('click', () => peopleDialog.close());
+    peopleDialog.addEventListener('click', (event) => {
+        if (event.target === peopleDialog) {
+            peopleDialog.close();
+        }
+    });
+}
+
+/* Notification bell: open the list, mark it read, and refresh the red number every 30 seconds. */
+
+const notificationBell = document.querySelector('[data-notification-bell]');
+
+if (notificationBell) {
+    const toggle = notificationBell.querySelector('[data-notification-toggle]');
+    const panel = notificationBell.querySelector('[data-notification-panel]');
+    const list = notificationBell.querySelector('[data-notification-list]');
+    const badge = notificationBell.querySelector('[data-notification-badge]');
+
+    const setUnreadCount = (count) => {
+        badge.hidden = count === 0;
+        badge.textContent = count > 99 ? '99+' : String(count);
+        toggle.setAttribute('aria-label', count ? `Notifications, ${count} unread` : 'Notifications');
+    };
+
+    const closePanel = () => {
+        panel.hidden = true;
+        toggle.setAttribute('aria-expanded', 'false');
+    };
+
+    toggle.addEventListener('click', async () => {
+        if (!panel.hidden) {
+            closePanel();
+
+            return;
+        }
+
+        const response = await fetch(notificationBell.dataset.listUrl, { headers: { Accept: 'text/html' } });
+
+        if (!response.ok) {
+            return;
+        }
+
+        list.innerHTML = await response.text();
+        panel.hidden = false;
+        toggle.setAttribute('aria-expanded', 'true');
+
+        if (!badge.hidden) {
+            await fetch(notificationBell.dataset.readUrl, {
+                method: 'POST',
+                headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+            }).catch(() => null);
+            setUnreadCount(0);
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!panel.hidden && !notificationBell.contains(event.target)) {
+            closePanel();
+        }
+    });
+
+    panel.addEventListener('click', (event) => {
+        const editLink = event.target.closest('[data-reminder-edit]');
+
+        if (!editLink) {
+            return;
+        }
+
+        const detail = { postId: Number(editLink.dataset.reminderEdit), handled: false };
+        document.dispatchEvent(new CustomEvent('schedule:edit-post', { detail }));
+
+        if (detail.handled) {
+            event.preventDefault();
+            closePanel();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !panel.hidden) {
+            closePanel();
+            toggle.focus();
+        }
+    });
+
+    setInterval(async () => {
+        if (document.hidden) {
+            return;
+        }
+
+        const response = await fetch(notificationBell.dataset.countUrl, { headers: { Accept: 'application/json' } }).catch(() => null);
+
+        if (response?.ok) {
+            setUnreadCount((await response.json()).unreadCount);
+        }
+    }, 30000);
+}
+
+/* Arriving from a notification: jump to the post, open its comments and highlight the comment. */
+
+const notificationTarget = new URLSearchParams(window.location.search);
+
+if (notificationTarget.has('open_post')) {
+    const targetCard = document.getElementById(`post-${notificationTarget.get('open_post')}`);
+
+    const jumpToTarget = () => {
+        targetCard.classList.add('is-highlighted');
+        targetCard.scrollIntoView({ block: 'start', behavior: 'instant' });
+
+        if (notificationTarget.get('comment')) {
+            openComments(targetCard, false).then(() => {
+                const targetComment = targetCard.querySelector(`#comment-${notificationTarget.get('comment')}`);
+
+                targetComment?.classList.add('is-highlighted');
+                targetComment?.scrollIntoView({ block: 'center', behavior: 'instant' });
+            });
+        }
+    };
+
+    if (targetCard && document.readyState === 'complete') {
+        jumpToTarget();
+    } else if (targetCard) {
+        window.addEventListener('load', jumpToTarget, { once: true });
     }
 }

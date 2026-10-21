@@ -139,6 +139,49 @@ class PostControllerTest extends TestCase
             ->assertDontSee('#postgresql');
     }
 
+    public function test_feed_cards_carry_search_data_clickable_hashtags_and_real_topics(): void
+    {
+        $author = User::factory()->create(['username' => 'skywalker']);
+        $category = Category::query()->firstOrCreate(['category_type' => 'Technology']);
+        Post::query()->create([
+            'descriptions' => 'Exam Tips',
+            'hashtag' => 'Laravel, #php',
+            'category_id' => $category->category_id,
+            'state' => 'published',
+            'date_time' => now(),
+            'user_id' => $author->user_id,
+        ]);
+
+        $this->actingAs($author)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-search-text="exam tips #laravel #php skywalker technology"', false)
+            ->assertSee('data-search-category="Technology"', false)
+            ->assertSee('data-search-hashtags="#laravel #php"', false)
+            ->assertSee('<a class="hashtag-link" href="#" data-search-hashtag="#Laravel">#Laravel</a>', false)
+            ->assertSee('<a class="hashtag-link" href="#" data-search-hashtag="#php">#php</a>', false)
+            ->assertSee('<option value="Technology">Technology</option>', false)
+            ->assertDontSee('<option>Community</option>', false);
+    }
+
+    public function test_hashtags_are_escaped_in_search_links(): void
+    {
+        $author = User::factory()->create();
+        Post::query()->create([
+            'descriptions' => 'Tagged post',
+            'hashtag' => '#a"><script>alert(1)</script>',
+            'state' => 'published',
+            'date_time' => now(),
+            'user_id' => $author->user_id,
+        ]);
+
+        $this->actingAs($author)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('&lt;script&gt;', false)
+            ->assertDontSee('<script>alert(1)</script>', false);
+    }
+
     public function test_schedule_is_reached_from_the_round_calendar_button(): void
     {
         $this->actingAs(User::factory()->create())

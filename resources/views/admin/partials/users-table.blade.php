@@ -24,7 +24,7 @@
     @endunless
     <div class="table-scroll">
         <table class="data-table member-table">
-            <thead><tr><th>USER</th><th>EMAIL</th>@unless ($compact)<th>ROLE</th>@endunless<th>BIRTHDAY</th><th>BROWSER</th><th>IP ADDRESS</th><th>STATUS</th></tr></thead>
+            <thead><tr><th>USER</th><th>EMAIL</th>@unless ($compact)<th>ROLE</th>@endunless<th>BIRTHDAY</th><th>BROWSER</th><th>IP ADDRESS</th><th>STATUS</th>@unless ($compact)<th>ACTION</th>@endunless</tr></thead>
             <tbody data-searchable-rows>
                 @foreach ($users->when($compact, fn ($paginator) => $paginator->take(5)) as $user)
                     <tr>
@@ -42,6 +42,19 @@
                         <td><span class="browser-cell">{{ $user->browser ?: 'Not recorded' }}</span></td>
                         <td><code class="ip-cell">{{ $user->IP_address ?: 'Not recorded' }}</code></td>
                         <td><span class="status-pill {{ $user->isBanned() ? 'status-banned' : 'status-active' }}">{{ $user->isBanned() ? 'Banned' : 'Active' }}</span></td>
+                        @unless ($compact)
+                            <td>
+                                @if ($user->isBanned() && $user->role !== 'admin' && $user->user_id !== auth()->id())
+                                    <form method="POST" action="{{ route('admin.users.ban', $user) }}" data-confirm="This member will be able to access their account again." data-confirm-title="Restore member access?" data-confirm-action="Unban user">
+                                        @csrf @method('PATCH')
+                                        <input type="hidden" name="action" value="unban">
+                                        <button class="button button-outline button-small" type="submit">Unban</button>
+                                    </form>
+                                @else
+                                    <span class="muted-cell">—</span>
+                                @endif
+                            </td>
+                        @endunless
                     </tr>
                 @endforeach
             </tbody>

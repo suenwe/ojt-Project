@@ -167,6 +167,17 @@
                                             <div class="post-preview">
                                                 <span class="small-label">POST CONTENT</span>
                                                 <p>{{ $report->post?->descriptions ?: 'Post content is unavailable.' }}</p>
+                                                @if ($report->post?->media->isNotEmpty())
+                                                    <div class="post-media-grid post-media-count-{{ min($report->post->media->count(), 4) }}">
+                                                        @foreach ($report->post->media as $media)
+                                                            @if (str_starts_with($media->mime_type, 'video/'))
+                                                                <video class="post-media-item" src="{{ route('media.show', $media) }}" controls preload="metadata"></video>
+                                                            @else
+                                                                <img class="post-media-item" src="{{ route('media.show', $media) }}" alt="Image attached to reported post" loading="lazy">
+                                                            @endif
+                                                        @endforeach
+                                                    </div>
+                                                @endif
                                                 @if ($report->post?->category)
                                                     <span class="category-tag">{{ $report->post->category->category_type }}</span>
                                                 @endif

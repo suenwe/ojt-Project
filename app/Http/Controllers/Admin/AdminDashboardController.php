@@ -96,7 +96,7 @@ class AdminDashboardController extends Controller
         $reports = null;
         if (in_array($section, ['overview', 'reports'], true)) {
             $reports = Report::query()
-                ->with(['reporter:user_id,username,email', 'reviewer:user_id,username', 'post.user:user_id,username,email', 'post.category:category_id,category_type'])
+                ->with(['reporter:user_id,username,email', 'reviewer:user_id,username', 'post.user:user_id,username,email', 'post.category:category_id,category_type', 'post.media'])
                 ->orderByRaw("CASE WHEN status = 'pending' THEN 0 ELSE 1 END")
                 ->latest('report_id')
                 ->paginate(8, ['*'], 'reports_page')

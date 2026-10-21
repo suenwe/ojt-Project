@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -17,11 +18,11 @@ class MemberProfileController extends Controller
 
         $posts = $user->posts()
             ->visibleInFeed()
-            ->with(['user:user_id,username,photo', 'category:category_id,category_type', 'media'])
-            ->withCount(['reactions', 'comments', 'views'])
+            ->withFeedDetails($request->user())
             ->latest('date_time')
             ->limit(50)
             ->get();
+        Post::loadTopReactionTypes($posts);
 
         return view('welcome', [
             'member' => $user,

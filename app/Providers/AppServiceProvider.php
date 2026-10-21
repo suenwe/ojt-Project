@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\ActivityNotification;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\User;
+use App\Services\ActivityNotifier;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -31,6 +33,8 @@ class AppServiceProvider extends ServiceProvider
             if ($member instanceof User) {
                 $view->with('scheduleCalendar', $this->scheduleCalendarFor($member));
                 $view->with('scheduleCategories', Category::query()->orderBy('category_type')->get());
+                app(ActivityNotifier::class)->createDueScheduleReminders($member);
+                $view->with('unreadNotificationCount', ActivityNotification::query()->where('user_id', $member->user_id)->unread()->count());
             }
         });
     }

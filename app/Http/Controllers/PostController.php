@@ -6,8 +6,10 @@ use App\Http\Requests\StorePostRequest;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\PostMedia;
+use App\Services\ActivityNotifier;
 use App\Services\PostPublisher;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -22,15 +24,15 @@ class PostController extends Controller
      * Show the main feed with published posts and scheduled posts whose time has come.
      * Categories are included for the post form that opens from "What's on your mind?".
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $posts = Post::query()
             ->visibleInFeed()
-            ->with(['user:user_id,username,photo', 'category:category_id,category_type', 'media'])
-            ->withCount(['reactions', 'comments', 'views'])
+            ->withFeedDetails($request->user())
             ->latest('date_time')
             ->limit(50)
             ->get();
+        Post::loadTopReactionTypes($posts);
 
         return view('welcome', [
             'posts' => $posts,
@@ -92,11 +94,12 @@ class PostController extends Controller
     /**
      * Save changes to one of the member's own posts.
      */
-    public function update(StorePostRequest $request, Post $post, PostPublisher $publisher): RedirectResponse
+    public function update(StorePostRequest $request, Post $post, PostPublisher $publisher, ActivityNotifier $notifier): RedirectResponse
     {
         Gate::authorize('update', $post);
 
         $isRescheduling = $request->isReschedulingPost();
+        $previousPublishAt = $post->date_time?->copy();
 
         try {
             $publisher->update(
@@ -114,6 +117,10 @@ class PostController extends Controller
         }
 
         if ($isRescheduling) {
+            if (! $post->fresh()->date_time?->equalTo($previousPublishAt)) {
+                $notifier->forgetScheduleReminder($post);
+            }
+
             return ScheduledPostController::redirectAfterChange($request, 'Your scheduled post was updated.');
         }
 
