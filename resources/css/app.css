@@ -709,4 +709,7 @@ body.admin-body .confirmation-actions .button { font-size: var(--text-base); min
     body.admin-body .button-group { flex-wrap: wrap; }
     body.admin-body .inline-edit-form { flex-wrap: wrap; }
     body.admin-body .usage-count { margin-left: 0; }
+    body.admin-body .topbar { gap: 8px; }
+    body.admin-body .topbar-right { gap: 8px; }
+    body.admin-body .breadcrumbs > span:not(.crumb-divider), body.admin-body .breadcrumbs .crumb-divider { display: none; }
 }

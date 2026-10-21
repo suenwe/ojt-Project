@@ -469,6 +469,20 @@ class AdminDashboardTest extends TestCase
             ->assertSee('<span class="topbar-avatar">Z</span>', false);
     }
 
+    public function test_admin_can_go_from_the_dashboard_to_the_member_feed(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('<a class="button button-outline button-small" href="'.route('home').'">View feed</a>', false);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('href="'.route('admin.dashboard').'"', false);
+    }
+
     public function test_admin_tables_use_the_dashboard_page_buttons(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

@@ -76,7 +76,7 @@
                     'restricted' => 'Keywords',
                 ][$section] }}</strong></div>
                 <div class="topbar-right">
-                    
+                    <a class="button button-outline button-small" href="{{ route('home') }}">View feed</a>
                     @if ($adminPhotoDataUri)
                         <img class="topbar-avatar avatar-photo-cover" src="{{ $adminPhotoDataUri }}" alt="{{ $admin->username }} profile photo">
                     @else
