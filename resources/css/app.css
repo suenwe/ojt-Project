@@ -120,7 +120,18 @@ a.account-card:hover strong, a.account-card:focus-visible strong { color: var(--
 .composer-prompt { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
 .composer-prompt-input { flex: 1; min-width: 0; padding: 9px 15px; text-align: left; cursor: text; color: var(--muted); background: var(--page); border: 1px solid var(--line); border-radius: 999px; }
 .composer-prompt-input:hover, .composer-prompt-input:focus-visible { color: var(--ink); border-color: var(--brand); }
-.feed-sort { display: flex; justify-content: flex-end; margin: -8px 0 -6px; }
+.feed-sort { display: flex; justify-content: flex-end; align-items: center; gap: 2px; margin: -8px 0 -6px; }
+.feed-refresh-button { width: 30px; height: 30px; padding: 0; background: transparent; cursor: pointer; }
+.feed-refresh-button:hover, .feed-refresh-button:focus-visible { color: var(--brand); background: var(--brand-soft); }
+.feed-refresh-button:disabled { cursor: progress; }
+html:has([data-live-feed]) { overscroll-behavior-y: contain; }
+.pull-refresh { position: fixed; z-index: 4; top: 66px; left: 50%; display: grid; place-items: center; width: 40px; height: 40px; margin-left: -20px; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 50%; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transform: translateY(calc(var(--pull, 0px) - 48px)); transition: transform .2s ease, opacity .2s ease; }
+.pull-refresh.is-pulling { transition: none; }
+.pull-refresh.is-visible { opacity: 1; }
+.pull-refresh.is-ready, .pull-refresh.is-refreshing { color: var(--brand); }
+.pull-refresh svg { transform: rotate(var(--pull-turn, 0deg)); }
+.pull-refresh.is-refreshing svg, .feed-refresh-button.is-refreshing svg { animation: feed-refresh-spin .8s linear infinite; }
+@keyframes feed-refresh-spin { to { transform: rotate(360deg); } }
 .sort-control { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: var(--text-sm); }
 .sort-select { padding: 4px 6px; color: var(--muted); background: transparent; border: 0; border-radius: 5px; font-size: var(--text-sm); font-weight: 650; cursor: pointer; }
 .sort-select:hover { color: var(--ink); background: var(--brand-soft); }

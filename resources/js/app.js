@@ -533,48 +533,196 @@ function initMediaCarousels(root) {
 initMediaCarousels(document);
 
 /**
- * Reload just the post list of the current page (used when a scheduled post goes live while the page is open).
+ * Reload just the post list of the current page (when a scheduled post goes live, or the member pulls down / presses refresh).
+ * Returns whether the list was replaced; a failed refresh is harmless, the posts still show after the next page load.
  */
-async function refreshLiveFeed(statusText) {
+async function refreshLiveFeed(statusText = '') {
     const feed = document.querySelector('[data-live-feed]');
 
     if (!feed) {
-        return;
+        return false;
     }
 
     try {
-        const response = await fetch(window.location.href, { headers: { Accept: 'text/html' } });
+        const response = await fetch(window.location.href, { headers: { Accept: 'text/html' }, cache: 'no-store' });
 
         if (!response.ok) {
-            return;
+            return false;
         }
 
         const freshPage = new DOMParser().parseFromString(await response.text(), 'text/html');
         const freshFeed = freshPage.querySelector('[data-live-feed]');
 
         if (!freshFeed) {
-            return;
+            return false;
         }
 
         feed.replaceChildren(...freshFeed.childNodes);
         initMediaCarousels(feed);
         watchPostViews(feed);
         filterFeed();
+        showFeedStatus(statusText);
 
-        let status = document.querySelector('[data-live-feed-status]');
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
 
-        if (!status) {
-            status = document.createElement('p');
-            status.className = 'form-status';
-            status.setAttribute('role', 'status');
-            status.dataset.liveFeedStatus = '';
-            feed.before(status);
+/**
+ * Show a short message above the post list, or remove the old one when the text is empty.
+ */
+function showFeedStatus(statusText) {
+    const feed = document.querySelector('[data-live-feed]');
+    let status = document.querySelector('[data-live-feed-status]');
+
+    if (!statusText) {
+        status?.remove();
+
+        return;
+    }
+
+    if (!status && feed) {
+        status = document.createElement('p');
+        status.className = 'form-status';
+        status.setAttribute('role', 'status');
+        status.dataset.liveFeedStatus = '';
+        feed.before(status);
+    }
+
+    if (status) {
+        status.textContent = statusText;
+    }
+}
+
+/**
+ * Pull down at the top of the feed on a touch screen, or press the refresh button, to load the latest posts.
+ * The browser's own pull-to-refresh (which reloads the whole page) is turned off on feed pages in app.css.
+ */
+const pullIndicator = document.querySelector('[data-pull-refresh]');
+const PULL_TRIGGER_DISTANCE = 70;
+const PULL_MAX_DISTANCE = 110;
+let pullStartY = null;
+let pullDistance = 0;
+let isFeedRefreshing = false;
+
+function setPullDistance(distance) {
+    pullDistance = distance;
+
+    if (!pullIndicator) {
+        return;
+    }
+
+    pullIndicator.style.setProperty('--pull', `${distance}px`);
+    pullIndicator.style.setProperty('--pull-turn', `${distance * 3}deg`);
+    pullIndicator.classList.toggle('is-visible', distance > 0);
+    pullIndicator.classList.toggle('is-ready', distance >= PULL_TRIGGER_DISTANCE);
+}
+
+function hasUnsentComment(feed) {
+    return [...feed.querySelectorAll('textarea')].some((box) => box.value !== box.defaultValue);
+}
+
+async function runFeedRefresh() {
+    const feed = document.querySelector('[data-live-feed]');
+
+    if (!feed || isFeedRefreshing) {
+        return;
+    }
+
+    if (hasUnsentComment(feed)) {
+        setPullDistance(0);
+        showFeedStatus('Send or clear your comment first, then refresh.');
+
+        return;
+    }
+
+    const refreshButtons = document.querySelectorAll('[data-feed-refresh]');
+
+    isFeedRefreshing = true;
+    refreshButtons.forEach((button) => {
+        button.disabled = true;
+        button.classList.add('is-refreshing');
+    });
+    pullIndicator?.classList.add('is-refreshing');
+
+    // A pull keeps the icon spinning just below the top bar; the button spins its own icon instead.
+    if (pullDistance > 0) {
+        setPullDistance(PULL_TRIGGER_DISTANCE);
+    }
+
+    // Keep the spinner for at least half a second so a fast answer still shows that something happened.
+    const [isRefreshed] = await Promise.all([refreshLiveFeed(), new Promise((resolve) => setTimeout(resolve, 500))]);
+
+    if (!isRefreshed) {
+        showFeedStatus('The feed could not be refreshed. Please try again.');
+    }
+
+    isFeedRefreshing = false;
+    refreshButtons.forEach((button) => {
+        button.disabled = false;
+        button.classList.remove('is-refreshing');
+    });
+    pullIndicator?.classList.remove('is-refreshing');
+    setPullDistance(0);
+}
+
+document.addEventListener('click', (event) => {
+    if (event.target.closest('[data-feed-refresh]')) {
+        runFeedRefresh();
+    }
+});
+
+if (pullIndicator) {
+    document.addEventListener('touchstart', (event) => {
+        pullStartY = null;
+
+        if (isFeedRefreshing
+            || event.touches.length !== 1
+            || window.scrollY > 0
+            || !document.querySelector('[data-live-feed]')
+            || event.target.closest('dialog, textarea, input, select, .media-carousel-track, [data-schedule-calendar]')) {
+            return;
         }
 
-        status.textContent = statusText;
-    } catch (error) {
-        // A failed refresh is harmless; the post still shows after the next page load.
-    }
+        pullStartY = event.touches[0].clientY;
+        pullIndicator.style.top = `${document.querySelector('.topbar')?.getBoundingClientRect().bottom ?? 0}px`;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (event) => {
+        if (pullStartY === null) {
+            return;
+        }
+
+        if (window.scrollY > 0) {
+            pullStartY = null;
+            pullIndicator.classList.remove('is-pulling');
+            setPullDistance(0);
+
+            return;
+        }
+
+        // The icon moves at half the finger's speed, so it feels like pulling against a spring.
+        pullIndicator.classList.add('is-pulling');
+        setPullDistance(Math.min(Math.max(0, event.touches[0].clientY - pullStartY) / 2, PULL_MAX_DISTANCE));
+    }, { passive: true });
+
+    ['touchend', 'touchcancel'].forEach((type) => {
+        document.addEventListener(type, (event) => {
+            if (pullStartY === null) {
+                return;
+            }
+
+            pullStartY = null;
+            pullIndicator.classList.remove('is-pulling');
+
+            if (event.type === 'touchend' && pullDistance >= PULL_TRIGGER_DISTANCE) {
+                runFeedRefresh();
+            } else {
+                setPullDistance(0);
+            }
+        });
+    });
 }
 
 /**

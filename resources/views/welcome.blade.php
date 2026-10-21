@@ -81,6 +81,10 @@
         </div>
     </header>
 
+    <div class="pull-refresh" data-pull-refresh aria-hidden="true">
+        @include('partials.refresh-icon')
+    </div>
+
     <div class="app-layout">
         <aside class="sidebar">
             <a class="panel account-card" href="{{ route('users.show', auth()->user()) }}">
@@ -146,6 +150,7 @@
                         @endforeach
                     </select>
                 </label>
+                @include('partials.feed-refresh-button')
             </div>
             @endif
 
