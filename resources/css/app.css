@@ -515,10 +515,14 @@ body.admin-body .muted-cell { color: #9192a1 !important; }
 body.admin-body .browser-cell { color: #646578; white-space: nowrap; }
 body.admin-body .ip-cell { background: #f7f7fa; border-radius: 4px; color: #747588; font-size: var(--text-xs); padding: 4px 6px; white-space: nowrap; }
 body.admin-body .pagination-wrap { border-top: 1px solid #f0eff5; padding: 12px 19px; }
-body.admin-body .pagination-wrap nav { align-items: center; display: flex; justify-content: space-between; }
-body.admin-body .pagination-wrap p { color: #999aaa; font-size: var(--text-sm); }
-body.admin-body .pagination-wrap a, body.admin-body .pagination-wrap span[aria-current] { border: 1px solid #ecebf2; border-radius: 5px; color: #6d6d80; font-size: var(--text-sm); margin-left: 4px; padding: 6px 9px; }
-body.admin-body .pagination-wrap span[aria-current] { background: #304ab1; border-color: #304ab1; color: white; }
+body.admin-body .pager { align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; }
+body.admin-body .pager-summary { color: #999aaa; font-size: var(--text-sm); margin: 0; white-space: nowrap; }
+body.admin-body .pager-links { align-items: center; display: flex; flex-wrap: wrap; gap: 4px; }
+body.admin-body .pager-button { align-items: center; background: #fff; border: 1px solid #ecebf2; border-radius: 6px; color: #6d6d80; display: inline-flex; font-size: var(--text-sm); font-weight: 600; height: 32px; justify-content: center; min-width: 32px; padding: 0 10px; text-decoration: none; }
+body.admin-body a.pager-button:hover { border-color: #304ab1; color: #304ab1; }
+body.admin-body .pager-button.is-current { background: #304ab1; border-color: #304ab1; color: #fff; }
+body.admin-body .pager-button.is-disabled { cursor: default; opacity: .45; }
+body.admin-body .pager-gap { color: #999aaa; padding: 0 4px; }
 body.admin-body .empty-state { align-items: center; color: #8d8ea0; display: flex; flex-direction: column; min-height: 190px; justify-content: center; padding: 25px; text-align: center; }
 body.admin-body .compact-empty { min-height: 130px; }
 body.admin-body .empty-symbol { align-items: center; background: #f5f6fc; border-radius: 50%; color: #324ec0; display: flex; font-size: var(--text-xl); height: 38px; justify-content: center; margin-bottom: 11px; width: 38px; }

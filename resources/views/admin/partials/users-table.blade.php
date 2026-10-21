@@ -64,6 +64,6 @@
         </table>
     </div>
     @unless ($compact)
-        <div class="pagination-wrap">{{ $users->links() }}</div>
+        <div class="pagination-wrap">{{ $users->onEachSide(1)->links('admin.partials.pagination') }}</div>
     @endunless
 @endif

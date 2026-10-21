@@ -448,6 +448,19 @@ class AdminDashboardTest extends TestCase
             ->assertSee('Clear filters');
     }
 
+    public function test_admin_tables_use_the_dashboard_page_buttons(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        User::factory()->count(9)->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard', ['section' => 'users']))
+            ->assertOk()
+            ->assertSee('Showing 1–8 of 10')
+            ->assertSee('<span class="pager-button is-current" aria-current="page">1</span>', false)
+            ->assertSee('rel="next">Next ›</a>', false);
+    }
+
     public function test_admin_can_manage_categories_and_restricted_terms(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

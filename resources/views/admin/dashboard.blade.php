@@ -215,7 +215,7 @@
                                     </article>
                                 @endforeach
                             </div>
-                            <div class="pagination-wrap">{{ $reports->links() }}</div>
+                            <div class="pagination-wrap">{{ $reports->onEachSide(1)->links('admin.partials.pagination') }}</div>
                         @endif
                     </section>
                 @elseif ($section === 'users')
@@ -270,7 +270,7 @@
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="pagination-wrap">{{ $accessLogs->links() }}</div>
+                            <div class="pagination-wrap">{{ $accessLogs->onEachSide(1)->links('admin.partials.pagination') }}</div>
                         @endif
                     </section>
                 @elseif ($section === 'categories')
