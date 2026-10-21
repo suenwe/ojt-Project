@@ -140,7 +140,6 @@
                 <label class="sort-control" for="post-sort">
                     <select class="sort-select" id="post-sort" name="sort" aria-label="Sort posts">
                         <option value="newest">Newest</option>
-                        <option value="reacted">Most reacted</option>
                         <option value="category">By topic</option>
                     </select>
                     <select class="sort-select category-filter" name="category" aria-label="Filter by topic" data-feed-category>
