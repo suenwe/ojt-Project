@@ -64,7 +64,8 @@ class Post extends Model
             ->limit(500)
             ->pluck('hashtag')
             ->each(function (string $hashtags) use (&$counts): void {
-                preg_match_all('/#[\pL\pN_]+/u', $hashtags, $matches);
+                // \pM keeps vowel signs and other marks, which Burmese (Myanmar) words are built from.
+                preg_match_all('/#[\pL\pM\pN_]+/u', $hashtags, $matches);
 
                 foreach (array_unique(array_map('mb_strtolower', $matches[0])) as $tag) {
                     $counts[$tag] = ($counts[$tag] ?? 0) + 1;

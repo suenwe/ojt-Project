@@ -130,6 +130,20 @@ class PostControllerTest extends TestCase
             ->assertDontSee('#postgresql');
     }
 
+    public function test_popular_hashtags_keep_whole_burmese_words(): void
+    {
+        $author = User::factory()->create();
+        Post::query()->create([
+            'descriptions' => 'Burmese tags',
+            'hashtag' => '#မြန်မာ #ရန်ကုန်သား',
+            'state' => 'published',
+            'date_time' => now()->subDay(),
+            'user_id' => $author->user_id,
+        ]);
+
+        $this->assertSame(['#မြန်မာ' => 1, '#ရန်ကုန်သား' => 1], Post::popularHashtags());
+    }
+
     public function test_feed_cards_carry_search_data_clickable_hashtags_and_real_topics(): void
     {
         $author = User::factory()->create(['username' => 'skywalker']);
