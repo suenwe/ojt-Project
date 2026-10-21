@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -59,6 +60,17 @@ class User extends Authenticatable
     {
         return $this->banned_at !== null
             && ($this->ban_expires_at === null || $this->ban_expires_at->isFuture());
+    }
+
+    /**
+     * Limit to members whose suspension is still running (the same rule as isBanned()).
+     */
+    public function scopeCurrentlyBanned(Builder $query): Builder
+    {
+        return $query->whereNotNull('banned_at')
+            ->where(function (Builder $query): void {
+                $query->whereNull('ban_expires_at')->orWhere('ban_expires_at', '>', now());
+            });
     }
 
     public function clearExpiredBan(): void

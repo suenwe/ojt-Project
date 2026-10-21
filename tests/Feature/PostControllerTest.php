@@ -130,6 +130,30 @@ class PostControllerTest extends TestCase
             ->assertDontSee('#postgresql');
     }
 
+    public function test_posts_of_suspended_members_are_hidden_until_the_ban_ends(): void
+    {
+        $viewer = User::factory()->create();
+        $banned = User::factory()->create(['banned_at' => now(), 'ban_expires_at' => now()->addDays(3)]);
+        $post = Post::query()->create([
+            'descriptions' => 'Post by a suspended member',
+            'hashtag' => '#hiddentag',
+            'state' => 'published',
+            'date_time' => now()->subHour(),
+            'user_id' => $banned->user_id,
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertDontSee('Post by a suspended member')
+            ->assertDontSee('#hiddentag');
+        $this->post(route('posts.reactions.store', $post), ['type' => 'like'])->assertNotFound();
+
+        $this->travel(4)->days();
+
+        $this->get(route('home'))->assertSee('Post by a suspended member');
+    }
+
     public function test_popular_hashtags_keep_whole_burmese_words(): void
     {
         $author = User::factory()->create();

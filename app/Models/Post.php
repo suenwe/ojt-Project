@@ -35,16 +35,19 @@ class Post extends Model
     }
 
     /**
-     * Limit to posts members can see: published ones, and scheduled ones whose time has come.
+     * Limit to posts members can see: published ones, and scheduled ones whose time has come,
+     * from authors who are not suspended right now.
      */
     public function scopeVisibleInFeed(Builder $query): Builder
     {
-        return $query->where(function (Builder $query): void {
-            $query->where('state', 'published')
-                ->orWhere(function (Builder $query): void {
-                    $query->where('state', 'scheduled')->where('date_time', '<=', now());
-                });
-        });
+        return $query
+            ->where(function (Builder $query): void {
+                $query->where('state', 'published')
+                    ->orWhere(function (Builder $query): void {
+                        $query->where('state', 'scheduled')->where('date_time', '<=', now());
+                    });
+            })
+            ->whereDoesntHave('user', fn (Builder $author) => $author->currentlyBanned());
     }
 
     /**
@@ -133,8 +136,10 @@ class Post extends Model
      */
     public function isVisibleInFeed(): bool
     {
-        return $this->state === 'published'
+        $isLive = $this->state === 'published'
             || ($this->state === 'scheduled' && $this->date_time?->isPast() === true);
+
+        return $isLive && $this->user?->isBanned() !== true;
     }
 
     public function scopeUpcomingScheduled(Builder $query): Builder
