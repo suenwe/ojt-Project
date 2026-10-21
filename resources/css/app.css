@@ -442,6 +442,7 @@ body.admin-body .topbar-right { align-items: center; display: flex; gap: 19px; }
 body.admin-body .system-status { align-items: center; color: #77798e; display: inline-flex; font-size: var(--text-sm); gap: 7px; }
 body.admin-body .system-status i { background: #54c594; border-radius: 50%; height: 6px; width: 6px; }
 body.admin-body .topbar-avatar { height: 30px; width: 30px; }
+body.admin-body .avatar-photo-cover { flex: 0 0 auto; object-fit: cover; }
 body.admin-body .page-content { margin: 0 auto; max-width: 1440px; padding: 34px 38px 24px; }
 body.admin-body .page-heading { align-items: center; display: flex; justify-content: space-between; margin-bottom: 25px; }
 body.admin-body .eyebrow { color: #3651c0; font-size: var(--text-xs); font-weight: 750; letter-spacing: 1.35px; margin: 0 0 8px; }

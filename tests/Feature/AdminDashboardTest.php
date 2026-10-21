@@ -448,6 +448,27 @@ class AdminDashboardTest extends TestCase
             ->assertSee('Clear filters');
     }
 
+    public function test_admin_sees_their_own_profile_photo_or_initial_in_the_dashboard(): void
+    {
+        $withPhoto = User::factory()->create([
+            'role' => 'admin',
+            'username' => 'photoadmin',
+            'photo' => base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADUlEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC'),
+        ]);
+
+        $this->actingAs($withPhoto)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('<img class="identity-avatar avatar-photo-cover" src="data:image/png;base64,', false)
+            ->assertSee('<img class="topbar-avatar avatar-photo-cover" src="data:image/png;base64,', false);
+
+        $this->actingAs(User::factory()->create(['role' => 'admin', 'username' => 'zeta']))
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('<span class="identity-avatar">Z</span>', false)
+            ->assertSee('<span class="topbar-avatar">Z</span>', false);
+    }
+
     public function test_admin_tables_use_the_dashboard_page_buttons(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

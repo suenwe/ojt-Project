@@ -44,9 +44,17 @@
                 </a>
             </nav>
 
+            @php
+                $adminPhotoDataUri = $admin->photoDataUri();
+                $adminInitial = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($admin->username, 0, 1));
+            @endphp
             <div class="sidebar-bottom">
                 <div class="admin-identity">
-                    <span class="identity-avatar">{{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($admin->username, 0, 1)) }}</span>
+                    @if ($adminPhotoDataUri)
+                        <img class="identity-avatar avatar-photo-cover" src="{{ $adminPhotoDataUri }}" alt="" aria-hidden="true">
+                    @else
+                        <span class="identity-avatar">{{ $adminInitial }}</span>
+                    @endif
                     <span class="identity-copy"><strong>{{ $admin->username }}</strong><small>Administrator</small></span>
                     <span class="identity-dot" title="Signed in"></span>
                 </div>
@@ -69,7 +77,11 @@
                 ][$section] }}</strong></div>
                 <div class="topbar-right">
                     
-                    <span class="topbar-avatar">{{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($admin->username, 0, 1)) }}</span>
+                    @if ($adminPhotoDataUri)
+                        <img class="topbar-avatar avatar-photo-cover" src="{{ $adminPhotoDataUri }}" alt="{{ $admin->username }} profile photo">
+                    @else
+                        <span class="topbar-avatar">{{ $adminInitial }}</span>
+                    @endif
                     <form method="POST" action="{{ route('admin.logout') }}">@csrf<button class="button button-quiet button-small" type="submit">Sign out</button></form>
                 </div>
             </header>
