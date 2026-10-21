@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Keyword;
-use App\Models\Notification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -62,37 +61,6 @@ class AdminSettingsController extends Controller
         $keyword->delete();
 
         return $this->backTo('restricted', 'Restricted text removed.');
-    }
-
-    public function storeNotification(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'notification_type' => ['required', 'string', 'max:255'],
-            'notification_text' => ['required', 'string', 'max:5000'],
-        ]);
-
-        Notification::query()->create($validated);
-
-        return $this->backTo('notifications', 'Notification template created.');
-    }
-
-    public function updateNotification(Request $request, Notification $notification): RedirectResponse
-    {
-        $validated = $request->validate([
-            'notification_type' => ['required', 'string', 'max:255'],
-            'notification_text' => ['required', 'string', 'max:5000'],
-        ]);
-
-        $notification->update($validated);
-
-        return $this->backTo('notifications', 'Notification template updated.');
-    }
-
-    public function destroyNotification(Notification $notification): RedirectResponse
-    {
-        $notification->delete();
-
-        return $this->backTo('notifications', 'Notification template removed.');
     }
 
     private function backTo(string $section, string $message): RedirectResponse

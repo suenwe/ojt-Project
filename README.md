@@ -80,14 +80,13 @@ The report queue displays the report category, member-provided reason, post,
 author, and reporter. Confirming a report records the review and bans the post
 author; dismissing it records an invalid decision without banning anyone.
 
-Categories and notification templates support create, edit, and delete actions.
+Categories support create, edit, and delete actions.
 The original 15 post categories are inserted idempotently by migration. The
 additional `Music` category and restricted keywords are included in the
 database seeders. Run `php artisan migrate --seed` on a new database, or
 `php artisan db:seed` after pulling changes to add the seed data to an existing
 database. The seeders are idempotent and do not remove entries managed by admins.
-Removing a category leaves its posts uncategorized; deleting a notification
-template also deletes its associated delivered notification records. Keywords
+Removing a category leaves its posts uncategorized. Keywords
 support add and remove actions and are checked when posts and comments are
 submitted.
 

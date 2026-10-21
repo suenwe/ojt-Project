@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Keyword;
-use App\Models\Notification;
 use App\Models\Post;
 use App\Models\Report;
 use App\Models\User;
@@ -435,7 +434,7 @@ class AdminDashboardTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_manage_categories_restricted_terms_and_notifications(): void
+    public function test_admin_can_manage_categories_and_restricted_terms(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
 
@@ -452,22 +451,6 @@ class AdminDashboardTest extends TestCase
         $keyword = Keyword::query()->where('keyword_text', 'restricted phrase')->firstOrFail();
         $this->delete(route('admin.keywords.destroy', $keyword))->assertRedirect();
         $this->assertDatabaseMissing('keywords', ['keyword_id' => $keyword->keyword_id]);
-
-        $this->post(route('admin.notifications.store'), [
-            'notification_type' => 'Community update',
-            'notification_text' => 'A new update is available.',
-        ])->assertRedirect();
-
-        $notification = Notification::query()->where('notification_type', 'Community update')->firstOrFail();
-        $this->put(route('admin.notifications.update', $notification), [
-            'notification_type' => 'Community news',
-            'notification_text' => 'A refreshed message.',
-        ])->assertRedirect();
-        $this->assertDatabaseHas('notifications', [
-            'notification_id' => $notification->notification_id,
-            'notification_type' => 'Community news',
-            'notification_text' => 'A refreshed message.',
-        ]);
     }
 
     public function test_admin_creates_another_admin_account_from_the_dashboard(): void

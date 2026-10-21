@@ -156,11 +156,4 @@ Route::middleware(['auth', 'admin'])
             ->name('keywords.store');
         Route::delete('/restricted-terms/{keyword}', [AdminSettingsController::class, 'destroyKeyword'])
             ->name('keywords.destroy');
-
-        Route::post('/notifications', [AdminSettingsController::class, 'storeNotification'])
-            ->name('notifications.store');
-        Route::put('/notifications/{notification}', [AdminSettingsController::class, 'updateNotification'])
-            ->name('notifications.update');
-        Route::delete('/notifications/{notification}', [AdminSettingsController::class, 'destroyNotification'])
-            ->name('notifications.destroy');
     });
