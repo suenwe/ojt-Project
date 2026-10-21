@@ -5,10 +5,12 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 #[Fillable([
     'username',
@@ -21,10 +23,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'two_factor_expires_at',
     'website',
     'ip_address',
-    'birthday' => 'date',
+    'browser',
+    'banned_at',
+    'ban_expires_at',
+    'ban_reason',
+    'birthday',
 ])]
 
-#[Hidden(['password', 'two_factor_code'])]
+#[Hidden(['password', 'remember_token', 'two_factor_code'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -44,7 +50,86 @@ class User extends Authenticatable
             'created_date' => 'datetime',
             'password' => 'hashed',
             'two_factor_expires_at' => 'datetime',
+            'banned_at' => 'datetime',
+            'ban_expires_at' => 'datetime',
+            'birthday' => 'date',
         ];
+    }
+
+    public function isBanned(): bool
+    {
+        return $this->banned_at !== null
+            && ($this->ban_expires_at === null || $this->ban_expires_at->isFuture());
+    }
+
+    /**
+     * Limit to members whose suspension is still running (the same rule as isBanned()).
+     */
+    public function scopeCurrentlyBanned(Builder $query): Builder
+    {
+        return $query->whereNotNull('banned_at')
+            ->where(function (Builder $query): void {
+                $query->whereNull('ban_expires_at')->orWhere('ban_expires_at', '>', now());
+            });
+    }
+
+    public function clearExpiredBan(): void
+    {
+        if ($this->banned_at !== null && ! $this->isBanned()) {
+            $this->forceFill([
+                'banned_at' => null,
+                'ban_expires_at' => null,
+                'ban_reason' => null,
+            ])->save();
+        }
+    }
+
+    /**
+     * Get the profile photo bytes and their image type, or null when the member has no usable photo.
+     *
+     * @return array{bytes: string, mimeType: string}|null
+     */
+    public function photoFile(): ?array
+    {
+        $photo = $this->photo;
+
+        if (is_resource($photo)) {
+            $photo = stream_get_contents($photo, -1, 0);
+        }
+
+        if (! is_string($photo) || $photo === '') {
+            return null;
+        }
+
+        $mimeType = (new \finfo(FILEINFO_MIME_TYPE))->buffer($photo);
+
+        if (! in_array($mimeType, ['image/jpeg', 'image/png'], true)) {
+            return null;
+        }
+
+        return ['bytes' => $photo, 'mimeType' => $mimeType];
+    }
+
+    /**
+     * Get the profile photo as a data URI, or null when the member has no usable photo.
+     */
+    public function photoDataUri(): ?string
+    {
+        $photoFile = $this->photoFile();
+
+        if ($photoFile === null) {
+            return null;
+        }
+
+        return 'data:'.$photoFile['mimeType'].';base64,'.base64_encode($photoFile['bytes']);
+    }
+
+    /**
+     * Get up to two uppercase letters of the username for the avatar fallback.
+     */
+    public function initials(): string
+    {
+        return Str::upper(Str::substr($this->username, 0, 2));
     }
 
     public function posts(): HasMany
@@ -75,5 +160,10 @@ class User extends Authenticatable
     public function receivedNotifications(): HasMany
     {
         return $this->hasMany(ShowNotification::class, 'user_id', 'user_id');
+    }
+
+    public function accessLogs(): HasMany
+    {
+        return $this->hasMany(UserAccessLog::class, 'user_id', 'user_id');
     }
 }

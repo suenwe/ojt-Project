@@ -1,7 +1,159 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminReportController;
+use App\Http\Controllers\Admin\AdminSettingsController;
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Auth\EmailOtpController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\DeleteAccountController;
+use App\Http\Controllers\MemberProfileController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PostController;
+use App\Http\Controllers\PostViewController;
+use App\Http\Controllers\ReactionController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ScheduledPostController;
+use App\Http\Controllers\UserPhotoController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
+Route::middleware('auth')->group(function (): void {
+    Route::get('/', [PostController::class, 'index'])->name('home');
+
+    Route::get('/create-post', [PostController::class, 'create'])->name('posts.create');
+    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+    Route::get('/posts/{post}/edit', [PostController::class, 'edit'])
+        ->whereNumber('post')
+        ->name('posts.edit');
+    Route::put('/posts/{post}', [PostController::class, 'update'])
+        ->whereNumber('post')
+        ->name('posts.update');
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])
+        ->whereNumber('post')
+        ->name('posts.destroy');
+    Route::get('/posts/{post}/reactions', [ReactionController::class, 'index'])
+        ->whereNumber('post')
+        ->name('posts.reactions.index');
+    Route::post('/posts/{post}/reactions', [ReactionController::class, 'store'])
+        ->whereNumber('post')
+        ->middleware('throttle:60,1')
+        ->name('posts.reactions.store');
+    Route::get('/posts/{post}/comments', [CommentController::class, 'index'])
+        ->whereNumber('post')
+        ->name('posts.comments.index');
+    Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
+        ->whereNumber('post')
+        ->middleware('throttle:30,1')
+        ->name('posts.comments.store');
+    Route::put('/comments/{comment}', [CommentController::class, 'update'])
+        ->whereNumber('comment')
+        ->middleware('throttle:30,1')
+        ->name('comments.update');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
+        ->whereNumber('comment')
+        ->name('comments.destroy');
+    Route::get('/posts/{post}/views', [PostViewController::class, 'index'])
+        ->whereNumber('post')
+        ->name('posts.views.index');
+    Route::post('/posts/{post}/views', [PostViewController::class, 'store'])
+        ->whereNumber('post')
+        ->middleware('throttle:120,1')
+        ->name('posts.views.store');
+    Route::get('/media/{media}', [PostController::class, 'media'])
+        ->whereNumber('media')
+        ->name('media.show');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::post('/notifications/read', [NotificationController::class, 'markAllRead'])->name('notifications.read');
+
+    Route::get('/schedule-post', [ScheduledPostController::class, 'index'])->name('posts.schedule');
+    Route::post('/schedule-post', [ScheduledPostController::class, 'store'])->name('schedule-post.store');
+    Route::delete('/schedule-post/{post}', [ScheduledPostController::class, 'destroy'])
+        ->whereNumber('post')
+        ->name('schedule-post.destroy');
+
+    Route::get('/users/{user}', MemberProfileController::class)
+        ->whereNumber('user')
+        ->name('users.show');
+
+    Route::get('/users/{user}/photo', UserPhotoController::class)
+        ->whereNumber('user')
+        ->name('users.photo');
+
+    Route::get('/profile', function () {
+        return view('welcome', ['showProfileSettings' => true]);
+    })->name('profile.edit');
+
+    Route::delete('/profile', DeleteAccountController::class)->name('profile.destroy');
+
+    Route::post('/report-post', [ReportController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('report.store');
 });
+
+Route::middleware('guest')->group(function (): void {
+    Route::get('/login', [LoginController::class, 'create'])->name('login');
+    Route::post('/login', [LoginController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('login.store');
+
+    Route::get('/register', [LoginController::class, 'register'])->name('register');
+    Route::post('/register', [LoginController::class, 'storeRegistration'])
+        ->middleware('throttle:3,1')
+        ->name('register.store');
+
+    Route::get('/forgot-password', [PasswordResetController::class, 'create'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendCode'])
+        ->middleware('throttle:3,1')
+        ->name('password.email');
+
+    Route::get('/reset-password', [PasswordResetController::class, 'edit'])->name('otp.password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'update'])
+        ->middleware('throttle:3,1')
+        ->name('password.update');
+
+    Route::get('/admin/login', [AdminAuthController::class, 'create'])->name('admin.login');
+});
+
+Route::get('/verify-email-code', [EmailOtpController::class, 'create'])->name('verification-code.challenge');
+Route::post('/verify-email-code', [EmailOtpController::class, 'verify'])
+    ->middleware('throttle:6,1')
+    ->name('verification-code.verify');
+Route::post('/verify-email-code/resend', [EmailOtpController::class, 'resend'])
+    ->middleware('throttle:3,1')
+    ->name('verification-code.resend');
+
+Route::post('/logout', [LoginController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('logout');
+
+Route::middleware(['auth', 'admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function (): void {
+        Route::get('/', AdminDashboardController::class)->name('dashboard');
+        Route::post('/logout', [AdminAuthController::class, 'destroy'])->name('logout');
+
+        Route::patch('/reports/{report}', [AdminReportController::class, 'review'])
+            ->name('reports.review');
+
+        Route::post('/admins', [AdminUserController::class, 'storeAdmin'])->name('admins.store');
+        Route::patch('/users/{user}/ban', [AdminUserController::class, 'updateBan'])
+            ->name('users.ban');
+
+        Route::post('/categories', [AdminSettingsController::class, 'storeCategory'])
+            ->name('categories.store');
+        Route::put('/categories/{category}', [AdminSettingsController::class, 'updateCategory'])
+            ->name('categories.update');
+        Route::delete('/categories/{category}', [AdminSettingsController::class, 'destroyCategory'])
+            ->name('categories.destroy');
+
+        Route::post('/restricted-terms', [AdminSettingsController::class, 'storeKeyword'])
+            ->name('keywords.store');
+        Route::delete('/restricted-terms/{keyword}', [AdminSettingsController::class, 'destroyKeyword'])
+            ->name('keywords.destroy');
+    });

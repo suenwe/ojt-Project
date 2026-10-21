@@ -16,6 +16,7 @@ class PostMedia extends Model
         'mime_type',
         'original_filename',
         'media_data',
+        'media_path',
         'file_size',
     ];
 
